@@ -7,6 +7,9 @@ Classée du plus critique au plus anecdotique. `[x]` = fait. L'ordre à l'intér
 - [x] Temps réellement écoulé et plafonné : une veille ne fausse plus statistiques ni cadeaux.
 - [x] Récompense de concentration conditionnée à la présence (≥ 50 %).
 - [x] Bulle lisible quel que soit le thème Windows (fond dessiné, texte forcé foncé, taille liée à l'échelle du chat).
+- [x] **Chat au travail entièrement visible.** Il se posait à 32 px du bord de l'écran : l'ordinateur (ou la queue) sortait de
+  l'écran. Il se place maintenant pour que tout le sprite tienne, sur l'écran ou sur la fenêtre où il est perché, et se
+  replace si un écran est débranché. Signalé par une capture d'écran.
 - [x] **Journal d'erreurs** (`desktopcat/log.py`) : exceptions, messages Qt et plantages fatals dans
   `%APPDATA%/DesktopCat/desktopcat.log` (rotation 1 Mo), accessible depuis le menu de l'icône. Voir [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 - [x] **Téléportation à l'atterrissage.** Un chat qui sautait vers une fenêtre déplacée pendant le saut atterrissait

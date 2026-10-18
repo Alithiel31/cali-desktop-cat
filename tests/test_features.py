@@ -506,6 +506,63 @@ class MultiScreenTest(PetCase):
         self.assertEqual(pet.stand, 111)
         self.assertAlmostEqual(pet.fy, 400, delta=0.5)
 
+    def visible_columns(self, pet):
+        """Colonnes d'écran (min, max) réellement occupées par des pixels du chat, ordinateur compris."""
+        img = pet.grab().toImage()
+        # Avec une mise à l'échelle Windows (125 %, 150 %...), grab() rend des pixels physiques :
+        # on ramène les colonnes en pixels logiques pour les comparer aux coordonnées d'écran.
+        ratio = img.devicePixelRatio() or 1.0
+        cols = [x for x in range(img.width()) if any(img.pixelColor(x, y).alpha() > 0 for y in range(img.height()))]
+        return pet.x() + int(cols[0] / ratio), pet.x() + int(cols[-1] / ratio)
+
+    def work_and_measure(self, pet):
+        self.game.start_focus(5)
+        self.run_until(lambda: pet.state == "work", n=6000)
+        self.run_steps(5)
+        return self.visible_columns(pet)
+
+    def test_at_work_the_whole_cat_and_its_laptop_stay_on_screen(self):
+        """Il se posait à 32 px du bord : la moitié du sprite, ordinateur compris, sortait de l'écran."""
+        for direction in (1, -1):
+            with self.subTest(direction=direction):
+                pet = self.make_pet([screen(0, 0, 1000, 800)])
+                self.place(950, pet.floor_y)
+                pet.dir = direction
+                left, right = self.work_and_measure(pet)
+                self.assertGreaterEqual(left, 0)
+                self.assertLess(right, 1000)
+
+    def test_work_spot_is_the_far_edge_of_the_screen_chain(self):
+        pet = self.make_pet(self.SIDE_BY_SIDE)
+        self.place(100, pet.floor_y)
+        left, right = self.work_and_measure(pet)
+        self.assertLess(right, 2000)
+        self.assertGreater(left, 1800)                            # il a traversé jusqu'au bout, pas resté à gauche
+
+    def test_at_work_on_a_window_the_cat_does_not_overhang_it(self):
+        pet = self.make_pet([screen(0, 0, 1000, 800)])
+        self.desk.put(111, (100, 400, 700, 560))
+        self.place(300, pet.floor_y)
+        self.run_steps(3)
+        self.assertTrue(pet._jump_somewhere(prefer_hwnd=111, reach_up=600))
+        self.run_until(lambda: pet.state != "jump")
+        self.assertEqual(pet.stand, 111)
+        left, right = self.work_and_measure(pet)
+        self.assertGreaterEqual(left, 100)
+        self.assertLessEqual(right, 700)
+
+    def test_work_spot_is_corrected_when_the_screen_shrinks(self):
+        pet = self.make_pet([screen(0, 0, 1000, 800), screen(1000, 0, 2000, 800)])
+        self.place(100, pet.floor_y)
+        self.work_and_measure(pet)
+        self.screens = [screen(0, 0, 1000, 800)]                  # l'écran de droite est débranché
+        self.run_steps(60)
+        self.run_until(lambda: pet.state == "work", n=2000)
+        self.run_steps(10)
+        left, right = self.visible_columns(pet)
+        self.assertGreaterEqual(left, 0)
+        self.assertLess(right, 1000)
+
     def test_long_life_on_three_screens_never_leaves_the_desktop(self):
         # Le chat va parfois « voir la souris » : sa position fait partie du hasard, on en essaie plusieurs
         # (462 reproduisait un bug réel : atterrissage sur une fenêtre déplacée pendant le saut).

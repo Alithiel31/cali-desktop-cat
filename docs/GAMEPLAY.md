@@ -25,7 +25,8 @@ On ne vend que les doublons (il en reste toujours un exemplaire).
 
 ## Concentration
 - Session de 1 à 180 min (25 min depuis l'icône ou le menu).
-- Pendant la session, le chat travaille à côté de toi et affiche le temps restant.
+- Pendant la session, le chat va au bout de l'écran (ou sur le bord de la fenêtre où il est perché), s'assoit devant son
+  ordinateur portable, entièrement visible, et affiche le temps restant.
 - Fin d'une session de **10 min ou plus** : `10 + durée en minutes` croquettes et un cadeau immédiat.
 - En dessous de 10 min : aucune récompense.
 - Il faut avoir été **présent au moins la moitié de la session** (activité clavier/souris dans les 60 dernières secondes).

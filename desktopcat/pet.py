@@ -175,6 +175,8 @@ class Pet(QWidget):
             self._refresh_screen()
             if self.stand is None and self.state not in ("drag", "fall", "jump"):
                 self._snap_to_floor()
+            if self.state == "work" and self.game.focus:
+                self._go_work()                       # l'écran a changé : il se replace pour rester entièrement visible
             self._update_hidden()
 
     def _snap_to_floor(self) -> None:
@@ -315,8 +317,11 @@ class Pet(QWidget):
             return
         _y, x0, x1 = surf
         x0, x1 = self._clip(x0, x1)
-        m = self.CW * 0.25
-        self._walk_to(max(x0 + m, x1 - m), then="work")
+        # Au travail, tout le sprite doit être visible : l'ordinateur occupe son côté droit (ou gauche s'il est
+        # retourné). Pour marcher, le chat peut déborder un peu (marges transparentes) ; pas ici.
+        m = self.CW / 2 + self.S
+        target = x1 - m if x1 - x0 >= 2 * m else (x0 + x1) / 2        # surface trop étroite : au milieu
+        self._walk_to(target, then="work")
 
     def _step_stand(self, dt: float) -> None:
         surf = self._current_surface()
