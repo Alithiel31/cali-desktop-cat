@@ -13,12 +13,14 @@ if sys.platform != "win32":
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from PySide6.QtCore import QRect
+from PySide6.QtCore import QPoint, QRect
 from PySide6.QtWidgets import QApplication
 
 from desktopcat import hats, winapi
+from desktopcat import pet as pet_module
 from desktopcat.game import Game
 from desktopcat.pet import Pet
+from desktopcat.screens import ScreenInfo
 from desktopcat.store import Store
 from desktopcat.surfaces import LWin, compute_surfaces, subtract
 from desktopcat.widgets import Bubble, FxLayer, GiftBox
@@ -121,6 +123,36 @@ class FakeDesk:
         return None if w is None or w[2] else w[0]
 
 
+class RealScreensTest(unittest.TestCase):
+    """Le seul endroit où l'on regarde les vrais écrans : la fonction de production elle-même."""
+
+    def test_qt_screens_describes_at_least_one_screen(self):
+        screens = pet_module.qt_screens()
+        self.assertGreaterEqual(len(screens), 1)
+        for s in screens:
+            self.assertGreater(s.geom[2] - s.geom[0], 0)
+            self.assertGreater(s.dpr, 0)
+            self.assertTrue(s.geom[0] <= s.work[0] and s.work[2] <= s.geom[2] + 1)     # zone utile dans l'écran
+
+
+class FixedCursor:
+    """Fausse souris à une abscisse donnée : sans elle, les tests dépendent de l'endroit où se trouve ta vraie souris."""
+
+    def __init__(self, x: int = 960):
+        self.x = x
+
+    def pos(self):
+        return QPoint(self.x, 400)
+
+
+DEFAULT_SCREENS = (ScreenInfo((0, 0, 1920, 1080), (0, 0, 1920, 1040), 1.0),)     # un écran 1920 × 1080, barre des tâches 40 px
+
+
+def _no_real_screens():
+    raise AssertionError("Ce test lit les VRAIS écrans : crée le chat avec Pet(..., screens=lambda: [ScreenInfo(...)]) "
+                         "(sinon il réussit ou échoue selon la machine).")
+
+
 class GameTestCase(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -135,6 +167,7 @@ class GameTestCase(unittest.TestCase):
             mock.patch.object(winapi, "window_rect", self.desk.window_rect),
             mock.patch.object(winapi, "idle_seconds", lambda: self.idle),
             mock.patch.object(winapi, "foreground", lambda: self.fg),
+            mock.patch.object(pet_module, "qt_screens", _no_real_screens),      # garde : jamais les vrais écrans en test
         ]
         for p in patches:
             p.start()
@@ -228,7 +261,12 @@ class PetTest(GameTestCase):
         super().setUp()
         self.bubble, self.gift = Bubble(), GiftBox(4)
         self.fxl = FxLayer(QRect(0, 0, 800, 800))
-        self.pet = Pet(self.game, self.bubble, self.gift, self.fxl, rng=random.Random(1))
+        # Écrans et souris factices : le résultat ne dépend ni de ta configuration d'écrans ni de ta souris.
+        cursor = mock.patch.object(pet_module, "QCursor", FixedCursor())
+        cursor.start()
+        self.addCleanup(cursor.stop)
+        self.pet = Pet(self.game, self.bubble, self.gift, self.fxl, rng=random.Random(1),
+                       screens=lambda: list(DEFAULT_SCREENS))
         self.pet.loop.stop()
         self.pet.anim.stop()
         self.addCleanup(lambda: [w.close() for w in (self.pet, self.bubble, self.gift, self.fxl)])

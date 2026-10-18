@@ -79,7 +79,11 @@ Si la surface disparaît (fenêtre fermée, réduite, déplacée), il tombe jusq
 |---|---|
 | `test_logic.py` | Store, règles du jeu, chapeaux, surfaces. |
 | `test_screens.py` | Géométrie multi-écrans. |
-| `test_features.py` | Comportement du chat et du panneau (états, sauts, plein écran, miaous...). |
+| `test_features.py` | Comportement du chat et du panneau (états, sauts, plein écran, miaous, bulle...). |
+| `test_log.py` | Journal d'erreurs : exceptions, slots Qt, fils, messages Qt, échecs de sauvegarde. |
+
+Les tests sont **indépendants de la machine** : faux écrans (`ScreenInfo`), fausse souris (`FixedCursor`), faux bureau.
+Une garde dans `GameTestCase` fait échouer tout test qui lirait les vrais écrans.
 
 Non couvert : l'API Windows réelle (`winapi.py`) et les échelles d'affichage mixtes. Ils se valident à la main, voir
 `tools/run_test_instance.bat`.

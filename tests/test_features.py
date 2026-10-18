@@ -27,21 +27,11 @@ from desktopcat.pet import Pet
 from desktopcat.screens import ScreenInfo
 from desktopcat.store import Store
 from desktopcat.widgets import Bubble, FxLayer, GiftBox
-from test_logic import GameTestCase
+from test_logic import FixedCursor, GameTestCase
 
 APP = QApplication.instance() or QApplication([])
 
 ALL_MEOWS = {m for pool in phrases.MEOWS.values() for m in pool}
-
-
-class FixedCursor:
-    """Fausse souris à une abscisse donnée : sans elle, les tests dépendent de l'endroit où se trouve ta vraie souris."""
-
-    def __init__(self, x: int):
-        self.x = x
-
-    def pos(self):
-        return QPoint(self.x, 400)
 
 
 def screen(l, t, r, b, dpr=1.0, work_bottom=None):

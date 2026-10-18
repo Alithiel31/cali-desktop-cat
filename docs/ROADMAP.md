@@ -14,8 +14,8 @@ Classée du plus critique au plus anecdotique. `[x]` = fait. L'ordre à l'intér
   de la fenêtre en se posant. Trouvé grâce à un test qui échouait seulement selon la place de la souris.
 - [ ] **Sauvegarde.** Le `.bak` est écrasé à chaque fichier illisible ; garder 3 copies horodatées. Utiliser le champ
   `version` pour des migrations réelles (aujourd'hui il est ignoré).
-- [ ] **Tests indépendants de l'écran.** `PetTest` (dans `test_logic.py`) lit les vrais écrans : le même test passe ou
-  échoue selon la machine. Lui fournir de faux écrans et une fausse souris (comme `PetCase` et `FixedCursor`).
+- [x] **Tests indépendants de la machine.** Faux écrans et fausse souris (`FixedCursor`) partout ; une garde fait échouer
+  tout futur test qui lirait les vrais écrans, au lieu de le laisser réussir ou échouer selon l'ordinateur.
 
 ## Niveau 2 — Important : fiabilité de l'ensemble et confiance
 - [ ] **Intégration continue** (GitHub Actions, runner Windows) : tests à chaque push.

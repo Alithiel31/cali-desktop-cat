@@ -104,4 +104,5 @@ sur un autre système (tests, Linux), c'est normal.
 - Les tests ont été validés avec **Python 3.12** et PySide6 6.x : utilise cette version.
 - Lance-les depuis la racine du projet : `python -m unittest discover -s tests`.
 - Sous Linux, il faut les bibliothèques système de Qt (par exemple `libegl1`).
-- Certains tests de `PetTest` dépendent encore de ta vraie configuration d'écrans (voir la feuille de route).
+- Les tests ne dépendent ni de tes écrans ni de ta souris (faux écrans, fausse souris). Si un test échoue chez toi
+  et pas ailleurs, c'est une piste sérieuse : joins le nom du test et la sortie complète.
