@@ -2,6 +2,7 @@
 
 Tournent aussi hors Windows : Qt en mode « offscreen » et de fausses fenêtres à la place de l'API Windows.
 """
+import glob
 import os
 import random
 import sys
@@ -91,8 +92,9 @@ class StoreTest(unittest.TestCase):
             with open(path, "w") as f:
                 f.write("{pas du json")
             broken = Store(path)
-            self.assertEqual(broken.data["hats"], {})
-            self.assertTrue(os.path.exists(path + ".bak"))
+            self.assertEqual(broken.data["hats"], {"crown": 2})      # restauré depuis la copie quotidienne
+            self.assertIsNotNone(broken.recovered_from)
+            self.assertEqual(len(glob.glob(path + ".*.bak")), 1)     # le fichier illisible est gardé, horodaté
 
     def test_unknown_or_badly_typed_settings_are_ignored(self):
         with tempfile.TemporaryDirectory() as tmp:

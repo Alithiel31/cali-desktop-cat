@@ -21,7 +21,7 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 
 | Module | Rôle | Dépend de Qt ? | Dépend de Windows ? |
 |---|---|---|---|
-| `store.py` | Sauvegarde JSON (`%APPDATA%/DesktopCat/save.json`), valeurs par défaut, nettoyage d'un fichier abîmé, statistiques par jour. Écriture atomique (`.tmp` puis `os.replace`). | non | non |
+| `store.py` | Sauvegarde JSON (`%APPDATA%/DesktopCat/save.json`), valeurs par défaut, nettoyage d'un fichier abîmé, statistiques par jour. Écriture atomique (`.tmp` puis `os.replace`). Copies de sécurité, copie quotidienne avec restauration automatique, migrations de format. | non | non |
 | `game.py` | Règles du jeu : minuterie d'une seconde, cadeaux, chapeaux, concentration, temps d'écran, réglages validés (`SETTING_RULES`). Émet des signaux ; aucune interface. | oui (`QObject`, signaux) | via `winapi` |
 | `pet.py` | Le chat : fenêtre transparente, physique, états (idle, walk, nap, sleep, work, wait, drag, fall, jump), souris, bulle, cadeau. | oui | via `winapi` |
 | `screens.py` | Géométrie multi-écrans (conversion pixels physiques ↔ logiques, sols, chaînes d'écrans collés). Fonctions pures. | non | non |
@@ -93,5 +93,8 @@ Non couvert : l'API Windows réelle (`winapi.py`) et les échelles d'affichage m
 - **Nouveau chapeau** : ajouter une entrée dans `HATS` (`hats.py`). Aucun autre fichier à modifier.
 - **Nouveau réglage** : valeur par défaut dans `store.DEFAULTS["settings"]`, règle de validation dans
   `game.SETTING_RULES`, contrôle dans `Panel._build_settings`.
+- **Changer le format de la sauvegarde** : incrémenter `store.SCHEMA_VERSION` et ajouter dans `store.MIGRATIONS` la
+  fonction `{ancienne_version: fonction(dict) -> dict}` qui transforme l'ancien format. Le fichier est copié en
+  `save.json.v<N>.bak` avant migration. Ajouter un test dans `tests/test_store_backups.py`.
 - **Nouvelle phrase** : `phrases.MEOWS`.
 - **Nouvel état du chat** : voir `Pet.step` / `_step_stand` ; penser à la pose correspondante dans `paintEvent`.

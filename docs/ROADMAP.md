@@ -12,8 +12,8 @@ Classée du plus critique au plus anecdotique. `[x]` = fait. L'ordre à l'intér
 - [x] **Téléportation à l'atterrissage.** Un chat qui sautait vers une fenêtre déplacée pendant le saut atterrissait
   sur son ancienne position puis la « suivait » d'un bond (parfois hors du bureau). Il relit maintenant la position réelle
   de la fenêtre en se posant. Trouvé grâce à un test qui échouait seulement selon la place de la souris.
-- [ ] **Sauvegarde.** Le `.bak` est écrasé à chaque fichier illisible ; garder 3 copies horodatées. Utiliser le champ
-  `version` pour des migrations réelles (aujourd'hui il est ignoré).
+- [x] **Sauvegarde.** Fichier illisible mis de côté sous un nom horodaté (3 gardés), copie quotidienne (7 gardées) avec
+  restauration automatique, version du format et migrations (`MIGRATIONS` dans `store.py`).
 - [x] **Tests indépendants de la machine.** Faux écrans et fausse souris (`FixedCursor`) partout ; une garde fait échouer
   tout futur test qui lirait les vrais écrans, au lieu de le laisser réussir ou échouer selon l'ordinateur.
 

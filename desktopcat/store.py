@@ -1,17 +1,33 @@
-"""Sauvegarde locale (un fichier JSON) : rien ne quitte le PC."""
+"""Sauvegarde locale (un fichier JSON) : rien ne quitte le PC.
+
+Trois protections contre la perte de progression :
+- un fichier illisible est mis de côté sous un nom horodaté (les 3 dernières copies sont gardées) ;
+- une copie quotidienne est faite au premier lancement du jour (les 7 dernières sont gardées, dossier `backups/`),
+  et sert à restaurer automatiquement si le fichier principal est illisible ;
+- un numéro de version et des migrations permettent de faire évoluer le format sans casser les anciennes sauvegardes.
+"""
 from __future__ import annotations
 
 import copy
+import glob
 import json
 import logging
 import os
+import shutil
 import sys
-from datetime import date
+from datetime import date, datetime
 
 log = logging.getLogger("desktopcat.store")
 
+SCHEMA_VERSION = 1
+# Migrations : {version de départ: fonction(dict brut) -> dict brut à la version suivante}.
+# Pour passer à la version 2 : SCHEMA_VERSION = 2 et MIGRATIONS = {1: _v1_vers_v2}.
+MIGRATIONS: dict = {}
+KEEP_CORRUPT = 3        # copies de fichiers illisibles conservées
+KEEP_DAILY = 7          # copies quotidiennes conservées
+
 DEFAULTS = {
-    "version": 1,
+    "version": SCHEMA_VERSION,
     "name": "Miso",
     "fur": "ecaille",
     "hats": {},                 # {id_chapeau: quantité}
@@ -80,6 +96,14 @@ def _sanitize(d: dict) -> dict:
     return d
 
 
+def _today() -> str:
+    return date.today().isoformat()
+
+
+def _stamp() -> str:
+    return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+
 def default_path() -> str:
     if sys.platform == "win32":
         base = os.environ.get("APPDATA") or os.path.expanduser("~")
@@ -95,22 +119,63 @@ class Store:
         self.load()
 
     # ───────── lecture / écriture
+    @property
+    def backup_dir(self) -> str:
+        return os.path.join(os.path.dirname(self.path), "backups")
+
+    @staticmethod
+    def _read(path: str) -> dict:
+        with open(path, "r", encoding="utf-8") as f:
+            saved = json.load(f)
+        if not isinstance(saved, dict):
+            raise ValueError("la sauvegarde n'est pas un objet JSON")
+        return saved
+
     def load(self) -> None:
+        self.recovered_from: str | None = None       # copie quotidienne restaurée, le cas échéant
         try:
-            with open(self.path, "r", encoding="utf-8") as f:
-                saved = json.load(f)
+            saved = self._read(self.path)
         except FileNotFoundError:
             return
         except (OSError, ValueError):
-            # Fichier illisible : on le met de côté au lieu de l'écraser silencieusement.
-            log.warning("Sauvegarde illisible, mise de côté en .bak : %s", self.path, exc_info=True)
+            log.warning("Sauvegarde illisible : %s", self.path, exc_info=True)
+            self._set_aside()
+            self._recover_from_daily_backup()
+            return
+        version = self._version_of(saved)
+        if version != SCHEMA_VERSION:
+            # Ancien format (on va migrer) ou format d'une version plus récente de l'appli (on va peut-être
+            # perdre des champs inconnus) : dans les deux cas, on garde le fichier tel quel avant d'y toucher.
+            self._keep_copy(f".v{version}.bak")
+            if version > SCHEMA_VERSION:
+                log.warning("La sauvegarde est au format v%s, plus récent que cette appli (v%s)", version, SCHEMA_VERSION)
+        self._daily_backup()
+        self._apply(self._upgrade(saved))
+
+    @staticmethod
+    def _version_of(saved: dict) -> int:
+        v = saved.get("version")
+        return v if isinstance(v, int) and not isinstance(v, bool) and v >= 1 else 1
+
+    def _upgrade(self, saved: dict) -> dict:
+        """Applique les migrations une à une, de la version du fichier jusqu'à la version courante."""
+        version = self._version_of(saved)
+        while version < SCHEMA_VERSION:
+            step = MIGRATIONS.get(version)
             try:
-                os.replace(self.path, self.path + ".bak")
-            except OSError:
-                log.warning("Impossible de mettre la sauvegarde de côté", exc_info=True)
-            return
-        if not isinstance(saved, dict):
-            return
+                if step is None:
+                    raise LookupError(f"aucune migration depuis la version {version}")
+                saved = step(copy.deepcopy(saved))
+            except Exception:
+                log.error("Migration v%s -> v%s impossible : la sauvegarde est chargée telle quelle", version,
+                          version + 1, exc_info=True)
+                return saved
+            version += 1
+            saved["version"] = version
+            log.info("Sauvegarde migrée en v%s", version)
+        return saved
+
+    def _apply(self, saved: dict) -> None:
         merged = copy.deepcopy(DEFAULTS)
         for key, value in saved.items():
             if key == "settings" and isinstance(value, dict):
@@ -120,8 +185,63 @@ class Store:
             elif key in DEFAULTS and key != "version":
                 merged[key] = value
         self.data = _sanitize(merged)
+        self.data["version"] = SCHEMA_VERSION            # ce qu'on a en mémoire est au format courant
+
+    # ───────── copies de sécurité
+    def _keep_copy(self, suffix: str) -> None:
+        """Copie le fichier actuel vers `<fichier><suffix>`, sans écraser une copie déjà faite."""
+        dest = self.path + suffix
+        try:
+            if not os.path.exists(dest):
+                shutil.copy2(self.path, dest)
+        except OSError:
+            log.warning("Impossible de copier la sauvegarde vers %s", dest, exc_info=True)
+
+    def _set_aside(self) -> None:
+        """Met le fichier illisible de côté sous un nom horodaté, et ne garde que les plus récents."""
+        dest = f"{self.path}.{_stamp()}.bak"
+        try:
+            os.replace(self.path, dest)
+            log.warning("Sauvegarde illisible mise de côté : %s", dest)
+        except OSError:
+            log.warning("Impossible de mettre la sauvegarde de côté", exc_info=True)
+            return
+        for old in sorted(glob.glob(self.path + ".????-??-??_??-??-??.bak"))[:-KEEP_CORRUPT]:
+            try:
+                os.remove(old)
+            except OSError:
+                log.warning("Impossible de supprimer l'ancienne copie %s", old, exc_info=True)
+
+    def _daily_backups(self) -> list:
+        return sorted(glob.glob(os.path.join(self.backup_dir, "save-????-??-??.json")))
+
+    def _daily_backup(self) -> None:
+        """Au premier lancement du jour, copie la sauvegarde telle qu'elle était à la fin de la veille."""
+        dest = os.path.join(self.backup_dir, f"save-{_today()}.json")
+        try:
+            os.makedirs(self.backup_dir, exist_ok=True)
+            if not os.path.exists(dest):
+                shutil.copy2(self.path, dest)
+            for old in self._daily_backups()[:-KEEP_DAILY]:
+                os.remove(old)
+        except OSError:
+            log.warning("Copie quotidienne impossible", exc_info=True)
+
+    def _recover_from_daily_backup(self) -> None:
+        for path in reversed(self._daily_backups()):
+            try:
+                saved = self._read(path)
+            except (OSError, ValueError):
+                log.warning("Copie quotidienne inutilisable : %s", path)
+                continue
+            self._apply(self._upgrade(saved))
+            self.recovered_from = path
+            log.warning("Sauvegarde restaurée depuis la copie du jour : %s", path)
+            return
+        log.warning("Aucune copie quotidienne utilisable : on repart d'une sauvegarde neuve")
 
     def save(self) -> bool:
+        self.data["version"] = SCHEMA_VERSION
         try:
             os.makedirs(os.path.dirname(self.path), exist_ok=True)
             tmp = self.path + ".tmp"
@@ -135,7 +255,7 @@ class Store:
 
     # ───────── statistiques
     def day(self, key: str | None = None) -> dict:
-        key = key or date.today().isoformat()
+        key = key or _today()
         days = self.data["days"]
         if key not in days:
             days[key] = {"active": 0, "focus": 0, "gifts": 0, "apps": {}}

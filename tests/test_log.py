@@ -2,6 +2,7 @@
 
     python -m unittest discover -s tests -v
 """
+import glob
 import logging
 import os
 import sys
@@ -136,7 +137,7 @@ class AppErrorsTest(LogTestCase):
         with open(save, "w", encoding="utf-8") as f:
             f.write("{pas du json")
         Store(save)
-        self.assertTrue(os.path.exists(save + ".bak"))
+        self.assertEqual(len(glob.glob(save + ".*.bak")), 1)
         self.assertIn("Sauvegarde illisible", self.content())
 
 

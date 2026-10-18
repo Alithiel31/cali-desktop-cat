@@ -9,7 +9,9 @@ Tout est dans `%APPDATA%\DesktopCat\` (dans Git Bash : `$APPDATA/DesktopCat/`).
 | Fichier | Contenu |
 |---|---|
 | `save.json` | Ta progression : chapeaux, croquettes, réglages, statistiques des 60 derniers jours. |
-| `save.json.bak` | Ancienne sauvegarde, mise de côté automatiquement quand `save.json` était illisible. |
+| `save.json.AAAA-MM-JJ_HH-MM-SS.bak` | Un `save.json` illisible, mis de côté automatiquement (les 3 plus récents sont gardés). |
+| `backups/save-AAAA-MM-JJ.json` | Copie quotidienne, faite au premier lancement du jour (les 7 plus récentes sont gardées). |
+| `save.json.vN.bak` | Copie faite avant une migration du format (ou si la sauvegarde vient d'une version plus récente de l'appli). Jamais écrasée. |
 | `desktopcat.log` | Le journal : démarrages, avertissements, erreurs. 1 Mo maximum, 2 anciens fichiers conservés (`.log.1`, `.log.2`). |
 | `desktopcat.log.crash` | Trace d'un plantage fatal de l'interpréteur (très rare). Vide si tout va bien. |
 
@@ -89,8 +91,11 @@ chemin du projet. Si tu as déplacé le dossier, décoche puis recoche « Lancer
 
 ## Ma sauvegarde est perdue ou illisible
 
-- Si `save.json` est corrompu, l'appli le renomme en `save.json.bak` et repart d'une sauvegarde neuve : tu peux
-  récupérer le `.bak` à la main. Le journal le mentionne (`Sauvegarde illisible`).
+- Si `save.json` est corrompu, l'appli le met de côté (`save.json.<date>.bak`) puis **restaure automatiquement la copie
+  quotidienne la plus récente** et te prévient par une notification. Tu perds au plus la progression du jour.
+- Si aucune copie n'est utilisable, elle repart d'une sauvegarde neuve ; le fichier illisible reste récupérable à la main.
+- Restaurer à la main : quitte l'appli, copie un fichier de `backups/` par-dessus `save.json`, relance.
+- Le journal raconte tout (`Sauvegarde illisible`, `Sauvegarde restaurée depuis la copie du jour`).
 - Pour repartir de zéro volontairement : quitte l'appli, supprime `save.json`.
 - `Sauvegarde impossible` dans le journal : le disque est plein ou le dossier est protégé en écriture.
 

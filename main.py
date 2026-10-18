@@ -70,6 +70,10 @@ def main() -> int:
     tray.setContextMenu(menu)
     tray.activated.connect(lambda reason: open_panel() if reason == QSystemTrayIcon.ActivationReason.Trigger else None)
     tray.show()
+    if store.recovered_from:        # fichier illisible : on prévient, car les dernières heures de progression manquent
+        day = os.path.basename(store.recovered_from)[5:15]
+        tray.showMessage("Sauvegarde restaurée", f"Ta sauvegarde était illisible : la copie du {day} a été restaurée.",
+                         QSystemTrayIcon.MessageIcon.Warning, 10000)
 
     game.notice.connect(lambda title, msg: tray.showMessage(title, msg, QSystemTrayIcon.MessageIcon.NoIcon, 6000)
                         if game.settings["notifications"] else None)
