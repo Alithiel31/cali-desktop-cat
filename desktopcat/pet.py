@@ -162,7 +162,8 @@ class Pet(QWidget):
         self.game.set_monitors(native_rects(screens))
         b = self.bounds
         self.fx_area = QRect(int(b[0]), int(b[1]), int(b[2] - b[0]), int(b[3] - b[1]))
-        self.fxl.set_area(self.fx_area)
+        self.fxl.set_areas([QRect(round(g[0]), round(g[1]), round(g[2] - g[0]), round(g[3] - g[1]))
+                            for g in (sc.geom for sc in screens)])
 
     @staticmethod
     def _signature(screens) -> tuple:
@@ -223,7 +224,7 @@ class Pet(QWidget):
 
     def _own_hwnds(self):
         out = []
-        for w in (self, self.bubble, self.gift, self.fxl):
+        for w in (self, self.bubble, self.gift, *self.fxl.windows()):
             if w.isVisible():
                 out.append(int(w.winId()))
         return out

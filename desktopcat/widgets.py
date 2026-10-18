@@ -158,9 +158,10 @@ class GiftBox(QWidget):
             self.clicked.emit()
 
 
-class FxLayer(QWidget):
-    """Particules (cœurs, étoiles, « z »). Fenêtre plein écran transparente aux clics,
-    visible seulement tant qu'il reste des particules."""
+class _FxTile(QWidget):
+    """Fenêtre de particules couvrant UN écran. Une fenêtre à cheval sur plusieurs écrans d'échelles différentes
+    (125 %, 100 %...) est mise à l'échelle du seul écran où se trouve son coin haut-gauche : sur les autres, les
+    particules se retrouvaient décalées. Une fenêtre par écran évite ce piège."""
     COLORS = {"heart": "#ff5c8a", "star": "#ffd23f", "zzz": "#8fb8ff"}
     GLYPHS = {"heart": "♥", "star": "✦", "zzz": "z"}
 
@@ -172,16 +173,8 @@ class FxLayer(QWidget):
         self.particles: list[dict] = []
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
-        self.enabled = True
 
-    def set_area(self, area: QRect) -> None:
-        self.setGeometry(area)
-
-    def spawn(self, kind: str, gx: float, gy: float) -> None:
-        """gx, gy : position globale (pixels logiques de l'écran)."""
-        if not self.enabled:
-            return
-        life = 2.2 if kind == "zzz" else 1.4
+    def spawn(self, kind: str, gx: float, gy: float, life: float) -> None:
         self.particles.append({"kind": kind, "x": gx - self.x(), "y": gy - self.y(), "born": time.monotonic(), "life": life})
         if not self.isVisible():
             self.show()
@@ -214,3 +207,61 @@ class FxLayer(QWidget):
             p.setPen(col)
             p.drawText(int(q["x"]), int(q["y"] - 46 * k), self.GLYPHS[q["kind"]])
         p.end()
+
+
+class FxLayer(QWidget):
+    """Particules (cœurs, étoiles, « z »). Façade : elle n'est jamais affichée elle-même, elle répartit les
+    particules sur une fenêtre transparente aux clics par écran (visible seulement tant qu'il reste des particules)."""
+
+    def __init__(self, area: QRect | None = None):
+        super().__init__(None, _FLOATING | Qt.WindowType.WindowTransparentForInput)
+        self.enabled = True
+        self._tiles: list[_FxTile] = []
+        if area is not None:
+            self.set_areas([area])
+
+    def set_area(self, area: QRect) -> None:
+        self.set_areas([area])
+
+    def set_areas(self, areas) -> None:
+        """Une fenêtre par rectangle (un rectangle = un écran, en pixels logiques)."""
+        areas = list(areas)
+        if [t.geometry() for t in self._tiles] == areas:
+            return
+        self.clear()
+        for t in self._tiles:
+            t.close()
+            t.deleteLater()
+        self._tiles = [_FxTile(a) for a in areas]
+
+    def windows(self) -> list:
+        """Les fenêtres réellement affichées (pour que le chat ne se pose pas dessus)."""
+        return list(self._tiles)
+
+    def _tile_at(self, gx: float, gy: float):
+        best, best_d = None, float("inf")
+        for t in self._tiles:
+            g = t.geometry()
+            dx = max(g.left() - gx, 0, gx - g.right())
+            dy = max(g.top() - gy, 0, gy - g.bottom())
+            d = dx * dx + dy * dy
+            if d < best_d:
+                best, best_d = t, d
+        return best
+
+    def spawn(self, kind: str, gx: float, gy: float) -> None:
+        """gx, gy : position globale (pixels logiques de l'écran)."""
+        tile = self._tile_at(gx, gy)
+        if not self.enabled or tile is None:
+            return
+        tile.spawn(kind, gx, gy, 2.2 if kind == "zzz" else 1.4)
+
+    def clear(self) -> None:
+        for t in self._tiles:
+            t.clear()
+
+    def close(self) -> bool:
+        self.clear()
+        for t in self._tiles:
+            t.close()
+        return super().close()
