@@ -21,7 +21,7 @@ def main() -> int:
     app.setQuitOnLastWindowClosed(False)
 
     lock = QLockFile(os.path.join(tempfile.gettempdir(), "desktopcat.lock"))
-    lock.setStaleLockTime(0)
+    lock.setStaleLockTime(30_000)   # un verrou laissé par un plantage (processus disparu) est repris après 30 s
     if not lock.tryLock(100):
         print("Desktop Cat est déjà lancé.")
         return 0
