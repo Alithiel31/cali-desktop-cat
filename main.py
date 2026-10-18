@@ -3,10 +3,11 @@ import os
 import sys
 import tempfile
 
-from PySide6.QtCore import QLockFile
-from PySide6.QtGui import QIcon
+from PySide6.QtCore import QLockFile, QUrl
+from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
+from desktopcat import log
 from desktopcat.game import Game
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet
@@ -25,6 +26,7 @@ def main() -> int:
     if not lock.tryLock(100):
         print("Desktop Cat est déjà lancé.")
         return 0
+    log_file = log.setup()              # après le verrou : une 2e instance n'écrit pas dans le journal de la 1re
 
     store = Store()
     game = Game(store)
@@ -60,6 +62,8 @@ def main() -> int:
         menu.addAction("Afficher le chat" if pet.user_hidden else "Cacher le chat",
                        lambda: pet.set_user_hidden(not pet.user_hidden))
         menu.addSeparator()
+        if log_file:
+            menu.addAction("Ouvrir le journal", lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(log_file)))
         menu.addAction("Quitter", app.quit)
 
     menu.aboutToShow.connect(rebuild_menu)
@@ -78,6 +82,7 @@ def main() -> int:
     game.start()
     code = app.exec()
     lock.unlock()
+    log.shutdown()
     return code
 
 

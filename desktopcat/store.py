@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import os
 import sys
 from datetime import date
+
+log = logging.getLogger("desktopcat.store")
 
 DEFAULTS = {
     "version": 1,
@@ -100,10 +103,11 @@ class Store:
             return
         except (OSError, ValueError):
             # Fichier illisible : on le met de côté au lieu de l'écraser silencieusement.
+            log.warning("Sauvegarde illisible, mise de côté en .bak : %s", self.path, exc_info=True)
             try:
                 os.replace(self.path, self.path + ".bak")
             except OSError:
-                pass
+                log.warning("Impossible de mettre la sauvegarde de côté", exc_info=True)
             return
         if not isinstance(saved, dict):
             return
@@ -126,7 +130,7 @@ class Store:
             os.replace(tmp, self.path)          # écriture atomique : pas de fichier à moitié écrit
             return True
         except OSError as e:
-            print("Sauvegarde impossible :", e, file=sys.stderr)
+            log.error("Sauvegarde impossible : %s", e)
             return False
 
     # ───────── statistiques

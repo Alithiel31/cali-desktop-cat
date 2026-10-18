@@ -1,8 +1,11 @@
 """Lancement avec Windows (clé de registre de l'utilisateur, sans droits administrateur)."""
 from __future__ import annotations
 
+import logging
 import os
 import sys
+
+log = logging.getLogger("desktopcat.autostart")
 
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 VALUE_NAME = "DesktopCat"
@@ -34,5 +37,5 @@ def set_enabled(enabled: bool) -> bool:
                     pass
         return True
     except OSError as e:
-        print("Démarrage automatique impossible :", e, file=sys.stderr)
+        log.error("Démarrage automatique impossible : %s", e)
         return False

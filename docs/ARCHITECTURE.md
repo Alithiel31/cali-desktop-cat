@@ -32,6 +32,7 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 | `phrases.py` | Textes des miaous et délai aléatoire (le hasard est passé en paramètre). | non | non |
 | `widgets.py` | `Bubble` (bulle), `GiftBox` (cadeau), `FxLayer` (cœurs, étoiles, « z »). | oui | non |
 | `panel.py` | Fenêtre de contrôle : garde-robe, concentration, statistiques, réglages. | oui | non |
+| `log.py` | Journal d'erreurs : fichier tournant, capture des exceptions (dont celles des slots Qt), des messages Qt et des plantages fatals. | oui (messages Qt) | non |
 | `autostart.py` | Clé de registre `HKCU\...\Run`. | non | oui |
 
 ## Boucles et temps
