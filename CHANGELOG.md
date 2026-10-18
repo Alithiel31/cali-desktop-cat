@@ -7,9 +7,17 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- Réglage « Noter les applications utilisées » pour couper le suivi des exécutables actifs.
+- Bouton « Effacer mes statistiques » (avec confirmation) : vide l'historique, copies de sécurité lisibles comprises.
+
 - Documentation de projet : `CONTRIBUTING.md`, `SECURITY.md`, `SUPPORT.md`, `CODE_OF_CONDUCT.md`, ce `CHANGELOG.md`,
   modèles d'issues et de PR, `CODEOWNERS`, Dependabot, et dans `docs/` : `DEVELOPPEMENT.md`, `DISTRIBUTION.md`,
   `GUIDE-DE-REPRISE.md`, `ACCESSIBILITE.md` (ébauche), `VEILLE-DEPENDANCES.md`.
+
+### Changed
+
+- Batterie : plus de `timeBeginPeriod(1)` (minuterie système forcée à 1 ms en permanence) ; la boucle du chat passe
+  de ~60 à 10 passages par seconde quand il est caché ou endormi parce que l'utilisateur est absent.
 
 ## [0.3.0] - 2026-10-18
 

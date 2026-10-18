@@ -817,5 +817,94 @@ class BubbleLookTest(unittest.TestCase):
         self.assertEqual(clicked, [1])
 
 
+# ─────────────────────────────────────────────────────────── vie privée
+
+
+class PrivacyTest(GameTestCase):
+    FIREFOX = winapi.Foreground(6, 1, "firefox.exe", "Mozilla", (0, 0, 10, 10), "X")
+
+    def test_app_tracking_can_be_turned_off(self):
+        self.fg = self.FIREFOX
+        self.assertTrue(self.game.set_setting("track_apps", False))
+        self.game.tick()
+        self.assertEqual(self.store.day()["apps"], {})
+        self.assertEqual(self.store.day()["active"], 1)            # le temps d'écran, lui, continue de compter
+        self.game.set_setting("track_apps", True)
+        self.game.tick()
+        self.assertEqual(self.store.day()["apps"], {"firefox.exe": 1})
+
+    def test_old_save_without_the_setting_keeps_tracking(self):
+        with open(self.store.path, "w", encoding="utf-8") as f:
+            json.dump({"version": 1, "settings": {"meows": False}}, f)
+        self.assertTrue(Store(self.store.path).data["settings"]["track_apps"])
+
+    def test_clear_stats_wipes_days_and_backup_copies_but_keeps_progress(self):
+        self.fg = self.FIREFOX
+        self.work(2)
+        self.store.data["hats"] = {"cap": 2}
+        self.store.data["fish"] = 42
+        self.store.save()
+        Store(self.store.path)                                     # 1er lancement du jour : copie quotidienne
+        self.store._keep_copy(".v1.bak")                           # copie faite avant une migration
+        corrupt = self.store.path + ".2026-01-01_00-00-00.bak"
+        with open(corrupt, "w", encoding="utf-8") as f:
+            f.write("{pas du json")
+        changed = []
+        self.game.changed.connect(lambda: changed.append(1))
+
+        self.game.clear_stats()
+
+        self.assertEqual(changed, [1])
+        again = Store(self.store.path)
+        self.assertEqual(again.data["days"], {})
+        self.assertEqual(again.data["hats"], {"cap": 2})
+        self.assertEqual(again.data["fish"], 42)
+        self.assertTrue(again._daily_backups())
+        for path in again._daily_backups() + [self.store.path + ".v1.bak"]:
+            with open(path, encoding="utf-8") as f:
+                self.assertNotIn("firefox", f.read(), path)
+        with open(corrupt, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "{pas du json")             # illisible : laissée telle quelle
+
+    def test_panel_checkbox_and_clear_button(self):
+        self.fg = self.FIREFOX
+        self.game.tick()
+        panel = Panel(self.game)
+        self.addCleanup(panel.deleteLater)
+        self.assertTrue(panel.checks["track_apps"].isChecked())
+        panel.checks["track_apps"].setChecked(False)
+        self.assertFalse(self.game.settings["track_apps"])
+        self.assertIn("désactivé", panel.apps.empty_text)
+
+        with mock.patch.object(Panel, "_confirm_clear", lambda self: False):
+            panel.clear_btn.click()
+        self.assertNotEqual(self.store.data["days"], {})           # refusé : rien n'est effacé
+        with mock.patch.object(Panel, "_confirm_clear", lambda self: True):
+            panel.clear_btn.click()
+        self.assertEqual(self.store.data["days"], {})
+
+
+# ─────────────────────────────────────────────────────────── rythme de la boucle
+
+
+class LoopRateTest(PetCase):
+    def test_loop_slows_down_while_asleep_or_hidden(self):
+        pet = self.make_pet([screen(0, 0, 1920, 1080, work_bottom=1040)])
+        self.assertEqual(pet.loop_interval(), pet_module.LOOP_MS)
+        pet._on_sleeping(True)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_SLOW_MS)
+        pet._on_sleeping(False)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_MS)
+        pet.set_user_hidden(True)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_SLOW_MS)
+        pet.set_user_hidden(False)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_MS)
+
+    def test_nap_keeps_the_normal_rate(self):
+        pet = self.make_pet([screen(0, 0, 1920, 1080, work_bottom=1040)])
+        pet._nap()
+        self.assertEqual(pet.loop_interval(), pet_module.LOOP_MS)
+
+
 if __name__ == "__main__":
     unittest.main()

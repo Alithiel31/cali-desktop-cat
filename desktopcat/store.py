@@ -45,6 +45,7 @@ DEFAULTS = {
         "jump_between_windows": True,   # saute d'une fenêtre à l'autre
         "follow_active": False,         # rejoint la fenêtre qu'on vient d'activer
         "meows": True,                  # bulles « miaou » spontanées
+        "track_apps": True,             # note le nom de l'exécutable actif pour les statistiques
     },
     "focus": None,              # session de concentration en cours : {"ends_at": epoch, "total_min": n}
     "days": {},                 # {"2026-10-18": {"active": s, "focus": s, "gifts": n, "apps": {exe: s}}}
@@ -254,6 +255,30 @@ class Store:
             return False
 
     # ───────── statistiques
+    def clear_stats(self) -> int:
+        """Efface toutes les statistiques (temps, concentration, cadeaux, applis), y compris dans les copies de
+        sécurité lisibles. Renvoie le nombre de copies nettoyées. Une copie illisible (fichier abîmé mis de côté)
+        ne peut pas être nettoyée : elle est laissée telle quelle, comme toute copie qu'on n'arrive pas à réécrire."""
+        self.data["days"] = {}
+        self.save()
+        copies = self._daily_backups() + glob.glob(self.path + ".*.bak")
+        cleaned = 0
+        for path in copies:
+            try:
+                saved = self._read(path)
+                if not saved.get("days"):
+                    continue
+                saved["days"] = {}
+                tmp = path + ".tmp"
+                with open(tmp, "w", encoding="utf-8") as f:
+                    json.dump(saved, f, ensure_ascii=False)
+                os.replace(tmp, path)
+                cleaned += 1
+            except (OSError, ValueError):
+                log.warning("Copie non nettoyée (illisible ou inaccessible) : %s", path)
+        log.info("Statistiques effacées (%d copie(s) de sécurité nettoyée(s))", cleaned)
+        return cleaned
+
     def day(self, key: str | None = None) -> dict:
         key = key or _today()
         days = self.data["days"]

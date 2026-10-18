@@ -37,6 +37,10 @@ On ne vend que les doublons (il en reste toujours un exemplaire).
 ## Statistiques
 - Temps actif, temps de concentration et cadeaux ouverts par jour, sur 60 jours conservés.
 - Applis les plus utilisées du jour (40 maximum), d'après le nom de l'exécutable de la fenêtre active.
+  Désactivable dans les Réglages (« Noter les applications utilisées ») : le temps d'écran continue de compter.
+- **Effacer mes statistiques** (onglet Statistiques, avec confirmation) : vide l'historique, y compris dans les copies
+  quotidiennes et les copies de migration. Chapeaux, croquettes et réglages sont conservés. Une copie illisible
+  (`save.json.<date>.bak`) ne peut pas être nettoyée : la supprimer à la main si besoin.
 - Tout reste dans `%APPDATA%/DesktopCat/save.json` (et ses copies de sécurité, voir [TROUBLESHOOTING.md](TROUBLESHOOTING.md)) ;
   rien n'est envoyé nulle part.
 

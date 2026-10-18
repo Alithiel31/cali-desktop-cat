@@ -22,7 +22,7 @@ Desktop Cat est une application **locale** : aucun serveur, aucun compte, aucune
 
 | Surface | Détail |
 |---|---|
-| Données locales | `%APPDATA%\DesktopCat\` : sauvegarde JSON, journal. Les statistiques contiennent le **nom des exécutables** des fenêtres actives (40 par jour, 60 jours). Rien n'est envoyé nulle part. |
+| Données locales | `%APPDATA%\DesktopCat\` : sauvegarde JSON, journal. Les statistiques contiennent le **nom des exécutables** des fenêtres actives (40 par jour, 60 jours), sauf si le suivi est coupé dans les Réglages. « Effacer mes statistiques » les retire aussi des copies de sécurité lisibles. Rien n'est envoyé nulle part. |
 | Appels Windows | `winapi.py` lit la liste des fenêtres, la fenêtre active et l'inactivité via `ctypes`. Lecture seule. |
 | Registre | Une seule valeur écrite : `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DesktopCat` (démarrage avec Windows, désactivable). |
 | Fichier de sauvegarde | Lu et nettoyé au démarrage (`store.py`) : un fichier abîmé ou malveillant est écarté, jamais exécuté. |

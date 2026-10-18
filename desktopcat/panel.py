@@ -7,7 +7,8 @@ from datetime import date, timedelta
 from PySide6.QtCore import QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPainter
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                               QLineEdit, QMessageBox, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
+                               QWidget)
 
 from .hats import HATS, RARITIES, RARITY_ORDER
 from .sprite import FURS, render_pixmap
@@ -84,6 +85,7 @@ class AppsChart(QWidget):
     def __init__(self):
         super().__init__()
         self.rows: list[tuple[str, float]] = []
+        self.empty_text = "Pas encore de données aujourd'hui."
         self.setMinimumHeight(self.ROW)
 
     def set_rows(self, rows) -> None:
@@ -96,8 +98,7 @@ class AppsChart(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         if not self.rows:
             p.setPen(QColor(MUTED))
-            p.drawText(self.rect(), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                       "Pas encore de données aujourd'hui.")
+            p.drawText(self.rect(), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, self.empty_text)
             return
         peak = max(r[1] for r in self.rows)
         name_w, time_w = 120, 64
@@ -324,12 +325,33 @@ class Panel(QWidget):
         self.apps = AppsChart()
         lay.addWidget(self.apps)
         note = QLabel("Le temps d'écran compte les secondes où le clavier ou la souris ont servi durant la dernière minute. "
-                      "Tout reste sur ton PC.")
+                      "Le suivi des applications se coupe dans les Réglages. Tout reste sur ton PC.")
         note.setObjectName("muted")
         note.setWordWrap(True)
         lay.addWidget(note)
+        clear = QPushButton("Effacer mes statistiques")
+        clear.setToolTip("Efface le temps d'écran, la concentration, les cadeaux comptés et les applications, "
+                         "y compris dans les copies de sécurité. Chapeaux et croquettes sont conservés.")
+        clear.clicked.connect(self._clear_stats)
+        self.clear_btn = clear
+        row2 = QHBoxLayout()
+        row2.addStretch(1)
+        row2.addWidget(clear)
+        lay.addLayout(row2)
         lay.addStretch(1)
         return page
+
+    def _confirm_clear(self) -> bool:
+        answer = QMessageBox.question(
+            self, "Effacer mes statistiques",
+            "Effacer toutes les statistiques (temps d'écran, concentration, applications) ?\n"
+            "Chapeaux et croquettes sont conservés. Cette action est définitive.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+        return answer == QMessageBox.StandardButton.Yes
+
+    def _clear_stats(self) -> None:
+        if self._confirm_clear():
+            self.game.clear_stats()
 
     @staticmethod
     def _title(text: str) -> QLabel:
@@ -350,6 +372,8 @@ class Panel(QWidget):
             days.append((("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim")[day.weekday()], v.get("active", 0), v.get("focus", 0)))
         self.week.set_days(days)
         top = sorted(d.get("apps", {}).items(), key=lambda kv: kv[1], reverse=True)[:6]
+        self.apps.empty_text = "Pas encore de données aujourd'hui." if self.game.settings["track_apps"] \
+            else "Suivi des applications désactivé (Réglages)."
         self.apps.set_rows([(fmt_app(name), sec) for name, sec in top])
 
     # ───────────────────────── réglages
@@ -389,6 +413,7 @@ class Panel(QWidget):
                 ("follow_active", "Il rejoint la fenêtre qu'on vient d'activer"),
                 ("meows", "Il miaule de temps en temps (bulles)"),
                 ("notifications", "Notifications de fin de session"),
+                ("track_apps", "Noter les applications utilisées (statistiques)"),
                 ("launch_at_startup", "Lancer avec Windows")):
             cb = QCheckBox(label)
             cb.toggled.connect(lambda v, k=key: g.set_setting(k, v))

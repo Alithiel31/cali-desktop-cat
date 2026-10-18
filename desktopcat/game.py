@@ -21,6 +21,7 @@ SETTING_RULES = {
     "jump_between_windows": bool,
     "follow_active": bool,
     "meows": bool,
+    "track_apps": bool,
 }
 MIN_REWARD_MIN = 10         # en dessous, une session terminée ne rapporte rien (sinon : un cadeau par minute)
 MIN_FOCUS_ACTIVITY = 0.5    # part minimale de la session passée devant l'ordinateur pour que la récompense compte
@@ -103,7 +104,7 @@ class Game(QObject):
             d["active"] += secs
             if not self.data["gift_pending"]:
                 self.data["gift_progress"] += secs
-            if fg is not None and fg.pid != os.getpid():
+            if s["track_apps"] and fg is not None and fg.pid != os.getpid():
                 self.store.add_app_seconds(fg.exe or "", secs)
 
         if self.focus:
@@ -237,6 +238,11 @@ class Game(QObject):
         self.store.save()
         self.changed.emit()
         return True
+
+    def clear_stats(self) -> None:
+        """Efface les statistiques (et leurs traces dans les copies de sécurité). Chapeaux et croquettes restent."""
+        self.store.clear_stats()
+        self.changed.emit()
 
     def save(self) -> None:
         self.store.save()

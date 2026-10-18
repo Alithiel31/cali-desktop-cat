@@ -56,8 +56,9 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
 ## Vie privée
 Tout reste sur ton ordinateur : l'appli n'envoie rien nulle part et n'a aucun accès réseau. Pour les statistiques,
 elle note chaque seconde le **nom de l'exécutable** de la fenêtre active (40 applis par jour, 60 jours) dans
-`%APPDATA%/DesktopCat/save.json`. Un interrupteur « ne pas suivre les applis » et un bouton « effacer mes statistiques »
-sont prévus (voir la [feuille de route](docs/ROADMAP.md)). Détail : [SECURITY.md](SECURITY.md).
+`%APPDATA%/DesktopCat/save.json`. Ce suivi se coupe dans **Réglages** (« Noter les applications utilisées »), et le
+bouton **Effacer mes statistiques** (onglet Statistiques) efface tout l'historique, copies de sécurité comprises.
+Détail : [SECURITY.md](SECURITY.md).
 
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md) : modules, boucles, coordonnées, points d'extension.

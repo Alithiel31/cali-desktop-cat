@@ -40,11 +40,8 @@ if IS_WIN:
     user32 = ctypes.windll.user32
     dwmapi = ctypes.windll.dwmapi
     kernel32 = ctypes.windll.kernel32
-
-    try:
-        ctypes.windll.winmm.timeBeginPeriod(1)      # minuteries précises à 1 ms
-    except Exception:
-        pass
+    # Pas de timeBeginPeriod(1) : il force toute la machine en minuterie 1 ms (batterie), et le PreciseTimer de Qt
+    # suffit à la boucle du chat.
 
     class RECT(ctypes.Structure):
         _fields_ = [("left", ctypes.c_long), ("top", ctypes.c_long),

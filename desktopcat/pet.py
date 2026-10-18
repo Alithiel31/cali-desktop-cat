@@ -31,6 +31,8 @@ GRAVITY = 2200.0          # px/s²
 MAX_FALL = 2400.0         # px/s
 BASE_SPEED = 95.0         # px/s pour une échelle de 4
 STANDING = ("idle", "walk", "nap", "wait", "work", "sleep")
+LOOP_MS = 16              # boucle normale : ~60 images/s
+LOOP_SLOW_MS = 100        # chat caché, ou endormi parce que l'utilisateur est absent : 10 passages/s suffisent
 
 
 def _clamp(v, lo, hi):
@@ -129,7 +131,7 @@ class Pet(QWidget):
         self.loop = QTimer(self)
         self.loop.setTimerType(Qt.TimerType.PreciseTimer)
         self.loop.timeout.connect(self._on_loop)
-        self.loop.start(16)
+        self.loop.start(LOOP_MS)
         self.anim = QTimer(self)
         self.anim.timeout.connect(self.update)
         self.anim.start(80)
@@ -232,9 +234,21 @@ class Pet(QWidget):
     # ───────────────────────── boucle
     def _on_loop(self) -> None:
         now = time.perf_counter()
-        dt = min(now - self._last, 0.05)
+        dt = min(now - self._last, 2.5 * self.loop.interval() / 1000)     # plafond : un gel ne fait pas un bond
         self._last = now
         self.step(dt)
+        self._adapt_loop()
+
+    def loop_interval(self) -> int:
+        """Rythme de la boucle voulu dans l'état actuel. Endormi (utilisateur absent), le chat ne fait que respirer :
+        inutile de le recalculer 60 fois par seconde. La sieste (« nap ») garde le rythme normal : l'utilisateur
+        est là et peut déplacer la fenêtre sous le chat."""
+        return LOOP_SLOW_MS if self.hidden or self.state == "sleep" else LOOP_MS
+
+    def _adapt_loop(self) -> None:
+        want = self.loop_interval()
+        if self.loop.interval() != want:
+            self.loop.setInterval(want)
 
     def step(self, dt: float) -> None:
         """Avance la simulation de dt secondes (appelée par la minuterie, ou directement dans les tests)."""
@@ -616,6 +630,7 @@ class Pet(QWidget):
             self.happy_until = self.t + 2000
             self.say("Te revoilà !", 2500)
             self.fx_particle("heart")
+        self._adapt_loop()
 
     def _on_fullscreen(self, full: bool) -> None:
         self._fullscreen = full
@@ -646,6 +661,7 @@ class Pet(QWidget):
             self.show()
             if self.gift_visible:
                 self.gift.show()
+        self._adapt_loop()
 
     def _on_focus(self, f) -> None:
         if f:
