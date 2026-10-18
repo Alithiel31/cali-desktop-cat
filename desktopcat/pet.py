@@ -16,7 +16,7 @@ import random
 import time
 
 from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QCursor, QGuiApplication, QPainter
+from PySide6.QtGui import QColor, QCursor, QGuiApplication, QPainter
 from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QApplication, QMenu, QWidget
 
@@ -148,6 +148,7 @@ class Pet(QWidget):
         self.FOOT = FOOT_ROW * s
         self.setFixedSize(GRID_W * s, GRID_H * s)
         self.gift.set_scale(s)
+        self.bubble.set_scale(s)
 
     def _refresh_screen(self) -> None:
         """Relit les écrans (branchés, débranchés, déplacés, barre des tâches changée...)."""
@@ -582,7 +583,8 @@ class Pet(QWidget):
         hat, rar = res["hat"], res["rarity"]
         self.happy_until = self.t + 3500
         head = ("Nouveau chapeau : " + hat.name) if res["is_new"] else f"{hat.name} (doublon ×{res['count']})"
-        self.say(f"{head} — <b style='color:{rar['color']}'>{rar['label']}</b>", 6500, rar["color"])
+        label_color = QColor(rar["color"]).darker(150).name()        # le gris/jaune clair d'une rareté se lit mal sur le crème
+        self.say(f"{head} — <b style='color:{label_color}'>{rar['label']}</b>", 6500, rar["color"])
         for i in range(5):
             QTimer.singleShot(i * 150, lambda: self.fx_particle("star"))
 

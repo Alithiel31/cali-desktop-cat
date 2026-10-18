@@ -637,5 +637,49 @@ class PanelTest(GameTestCase):
         self.assertFalse(self.game.settings["meows"])
 
 
+class BubbleLookTest(unittest.TestCase):
+    """La bulle doit dessiner son propre fond : sans lui, le texte sombre est illisible devant une fenêtre sombre."""
+
+    def make(self, scale=4, html="Miaou !"):
+        b = Bubble(scale)
+        self.addCleanup(b.close)
+        b.show_html(html)
+        APP.processEvents()
+        return b
+
+    def test_background_is_painted_behind_the_text(self):
+        b = self.make()
+        img = b.grab().toImage()
+        inside = img.pixelColor(b.PAD_X // 2 + b.BORDER + 2, (b.height() - b.TAIL) // 2)
+        self.assertEqual(inside.alpha(), 255)                    # fond opaque, pas transparent
+        self.assertGreater(inside.lightness(), 200)              # clair : le texte sombre se détache
+
+    def test_text_grows_with_the_cat(self):
+        small, big = self.make(3), self.make(6)
+        self.assertLess(small.font_px, big.font_px)
+        self.assertGreaterEqual(self.make(4).font_px, 15)        # plus lisible que les anciens 13 px
+        self.assertGreater(big.width(), small.width())
+
+    def test_changing_the_scale_resizes_the_open_bubble(self):
+        b = self.make(3)
+        before = b.width()
+        b.set_scale(6)
+        self.assertGreater(b.width(), before)
+        self.assertEqual(b.text(), "Miaou !")
+
+    def test_long_text_wraps_instead_of_growing_forever(self):
+        b = self.make(4, "mot " * 60)
+        self.assertLessEqual(b.width(), 24 * b.font_px)
+        self.assertGreater(b.height(), self.make(4).height())
+
+    def test_click_closes_the_bubble(self):
+        b = self.make()
+        clicked = []
+        b.clicked.connect(lambda: clicked.append(1))
+        b.mousePressEvent(None)
+        self.assertFalse(b.isVisible())
+        self.assertEqual(clicked, [1])
+
+
 if __name__ == "__main__":
     unittest.main()
