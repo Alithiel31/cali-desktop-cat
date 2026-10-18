@@ -28,6 +28,9 @@ On ne vend que les doublons (il en reste toujours un exemplaire).
 - Pendant la session, le chat travaille à côté de toi et affiche le temps restant.
 - Fin d'une session de **10 min ou plus** : `10 + durée en minutes` croquettes et un cadeau immédiat.
 - En dessous de 10 min : aucune récompense.
+- Il faut avoir été **présent au moins la moitié de la session** (activité clavier/souris dans les 60 dernières secondes).
+  Une session passée loin de l'ordinateur, ou pendant une mise en veille du PC, se termine sans récompense.
+- La présence est conservée si l'appli redémarre en cours de session.
 - Elle survit à un redémarrage de l'appli. Si elle est finie entre-temps, elle est abandonnée sans récompense.
 
 ## Statistiques

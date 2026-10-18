@@ -23,6 +23,8 @@ SETTING_RULES = {
     "meows": bool,
 }
 MIN_REWARD_MIN = 10         # en dessous, une session terminée ne rapporte rien (sinon : un cadeau par minute)
+MIN_FOCUS_ACTIVITY = 0.5    # part minimale de la session passée devant l'ordinateur pour que la récompense compte
+MAX_TICK_S = 5.0            # un « tick » ne compte jamais plus de 5 s (veille, gel de l'appli, minuterie en retard)
 
 
 class Game(QObject):
@@ -34,21 +36,25 @@ class Game(QObject):
     focus_finished = Signal(int)
     notice = Signal(str, str)           # (titre, message) pour une notification
 
-    def __init__(self, store: Store, parent=None, clock=time.time, monitor_rects=None):
+    def __init__(self, store: Store, parent=None, clock=time.time, monitor_rects=None, mono=time.monotonic):
         super().__init__(parent)
         self.store = store
-        self.clock = clock
+        self.clock = clock                  # heure murale : sert aux échéances (fin de session)
+        self.mono = mono                    # horloge monotone : sert à mesurer le temps réellement écoulé
         self.monitor_rects = list(monitor_rects or [(0, 0, 1920, 1080)])   # pixels physiques, réglés par le chat
         self.focus: dict | None = None
         self.sleeping = False
         self.fullscreen = False
         self.fullscreen_monitor: int | None = None    # indice de l'écran couvert par une appli plein écran
         self._ticks = 0
+        self._acc = 0.0                     # fraction de seconde pas encore comptée
+        self._last_mono: float | None = None
         self._timer = QTimer(self)
-        self._timer.timeout.connect(self.tick)
+        self._timer.timeout.connect(self._on_timer)
 
     def start(self) -> None:
         self._restore_focus()
+        self._last_mono = None
         self._timer.start(1000)
 
     def set_monitors(self, rects) -> None:
@@ -59,7 +65,9 @@ class Game(QObject):
         Une session finie pendant l'absence ne rapporte rien : rien ne prouve que l'utilisateur ait travaillé."""
         f = self.data.get("focus")
         if f and f["ends_at"] > self.clock():
-            self.focus = {"ends_at": f["ends_at"], "total_min": f["total_min"]}
+            if "active" not in f:               # ancienne sauvegarde : on laisse le bénéfice du doute
+                f["active"] = max(0, int(f["total_min"] * 60 - (f["ends_at"] - self.clock())))
+            self.focus = f                      # même objet que dans la sauvegarde : il y reste à jour
             self.focus_changed.emit(self.focus)
             self.changed.emit()
         elif f:
@@ -73,22 +81,36 @@ class Game(QObject):
     def settings(self) -> dict:
         return self.store.data["settings"]
 
-    # ───────── une fois par seconde
-    def tick(self) -> None:
+    # ───────── environ une fois par seconde
+    def _on_timer(self) -> None:
+        """Mesure le temps réellement écoulé depuis le dernier passage (plafonné) et le transmet à `tick`."""
+        now = self.mono()
+        last, self._last_mono = self._last_mono, now
+        dt = 1.0 if last is None else now - last
+        self.tick(min(max(dt, 0.0), MAX_TICK_S))
+
+    def tick(self, dt: float = 1.0) -> None:
+        """Avance le jeu de `dt` secondes. Seules les secondes entières sont comptées, le reste est reporté."""
+        self._acc += dt
+        secs = int(self._acc + 1e-9)
+        self._acc = max(0.0, self._acc - secs)
         s, d = self.settings, self.store.day()
         idle = winapi.idle_seconds()
         active = idle < 60
         fg = winapi.foreground()
 
-        if active:
-            d["active"] += 1
+        if active and secs:
+            d["active"] += secs
             if not self.data["gift_pending"]:
-                self.data["gift_progress"] += 1
+                self.data["gift_progress"] += secs
             if fg is not None and fg.pid != os.getpid():
-                self.store.add_app_seconds(fg.exe or "", 1)
+                self.store.add_app_seconds(fg.exe or "", secs)
 
         if self.focus:
-            d["focus"] += 1
+            if secs:
+                d["focus"] += secs
+                if active:
+                    self.focus["active"] = self.focus.get("active", 0) + secs
             if self.clock() >= self.focus["ends_at"]:
                 self.stop_focus(completed=True)
 
@@ -159,8 +181,8 @@ class Game(QObject):
     # ───────── concentration
     def start_focus(self, minutes) -> None:
         m = max(1, min(180, int(minutes)))
-        self.focus = {"ends_at": self.clock() + m * 60, "total_min": m}
-        self.data["focus"] = dict(self.focus)                  # survit à un redémarrage de l'appli
+        self.focus = {"ends_at": self.clock() + m * 60, "total_min": m, "active": 0}
+        self.data["focus"] = self.focus                        # survit à un redémarrage de l'appli
         self.store.save()
         self.focus_changed.emit(self.focus)
         self.changed.emit()
@@ -169,6 +191,7 @@ class Game(QObject):
         if not self.focus:
             return
         total = self.focus["total_min"]
+        present = self.focus.get("active", total * 60)         # secondes passées devant l'ordinateur
         self.focus = None
         self.data["focus"] = None
         self.focus_changed.emit(None)
@@ -176,6 +199,9 @@ class Game(QObject):
             self.notice.emit(f"{self.data['name']} est content",
                              f"Session de {total} min terminée. Pas de cadeau en dessous de {MIN_REWARD_MIN} min.")
             self.focus_finished.emit(total)
+        elif completed and present < total * 60 * MIN_FOCUS_ACTIVITY:
+            self.notice.emit(f"{self.data['name']} s'est ennuyé",
+                             f"Session de {total} min terminée, mais tu étais surtout absent : pas de cadeau.")
         elif completed:
             self.data["fish"] += 10 + total
             self.data["gift_pending"] = True

@@ -72,6 +72,8 @@ def _sanitize(d: dict) -> dict:
     f = d.get("focus")
     ok = isinstance(f, dict) and _num(f.get("ends_at")) and _num(f.get("total_min")) and 1 <= f["total_min"] <= 180
     d["focus"] = {"ends_at": float(f["ends_at"]), "total_min": int(f["total_min"])} if ok else None
+    if ok and "active" in f:                       # secondes de présence réelle (ajouté après la 1re version)
+        d["focus"]["active"] = _nat(f["active"])
     return d
 
 

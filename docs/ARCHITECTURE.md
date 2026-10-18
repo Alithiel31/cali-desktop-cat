@@ -36,7 +36,9 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 
 ## Boucles et temps
 
-- **`Game.tick`** : une fois par seconde. Compte l'activité, fait avancer la progression du prochain cadeau, le temps
+- **`Game.tick(dt)`** : environ une fois par seconde. Le temps compté est le temps réellement écoulé (horloge monotone),
+  plafonné à 5 s par passage : une veille ou un gel de l'appli ne fausse donc ni les statistiques ni la progression des
+  cadeaux. Compte l'activité, fait avancer la progression du prochain cadeau, le temps
   d'écran par application, la session de concentration, détecte l'absence (endormissement) et le plein écran.
   Sauvegarde toutes les 30 s.
 - **`Pet.step(dt)`** : environ 60 fois par seconde (minuterie de 16 ms). `dt` est plafonné à 50 ms. C'est cette méthode

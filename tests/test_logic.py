@@ -141,6 +141,12 @@ class GameTestCase(unittest.TestCase):
             self.addCleanup(p.stop)
         self.addCleanup(self.tmp.cleanup)
 
+    def work(self, minutes: float) -> None:
+        """Laisse passer `minutes` minutes devant l'ordinateur : un tick d'une seconde à la fois, horloge comprise."""
+        for _ in range(int(minutes * 60)):
+            self.now += 1
+            self.game.tick()
+
 
 class GameTest(GameTestCase):
     def test_gift_claim_and_sell(self):
@@ -189,8 +195,7 @@ class GameTest(GameTestCase):
         self.game.focus_finished.connect(done.append)
         self.game.start_focus(25)
         self.assertEqual(self.game.focus["total_min"], 25)
-        self.now += 25 * 60 + 1
-        self.game.tick()
+        self.work(25)
         self.assertIsNone(self.game.focus)
         self.assertEqual(done, [25])
         self.assertTrue(self.game.data["gift_pending"])
@@ -349,7 +354,8 @@ class PetTest(GameTestCase):
 
     def test_focus_session_puts_the_cat_to_work(self):
         self.game.start_focus(5)
-        self.run_steps(400)
+        # il rejoint le bord de son écran : la durée dépend de la taille des vrais écrans, donc on attend l'état
+        self.run_until(lambda: self.pet.state == "work", n=6000)
         self.assertEqual(self.pet.state, "work")
         self.assertIn("⏱", self.bubble.text())
         self.assertFalse(self.pet.grab().isNull())

@@ -21,7 +21,7 @@ from PySide6.QtGui import QCloseEvent, QMouseEvent
 from PySide6.QtWidgets import QApplication
 
 from desktopcat import phrases, winapi
-from desktopcat.game import MIN_REWARD_MIN, Game
+from desktopcat.game import MAX_TICK_S, MIN_REWARD_MIN, Game
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet
 from desktopcat.screens import ScreenInfo
@@ -122,10 +122,55 @@ class RewardsAndFocusTest(GameTestCase):
 
     def test_minimum_session_is_rewarded(self):
         self.game.start_focus(MIN_REWARD_MIN)
-        self.now += MIN_REWARD_MIN * 60 + 1
-        self.game.tick()
+        self.work(MIN_REWARD_MIN)
         self.assertTrue(self.game.data["gift_pending"])
         self.assertEqual(self.game.data["fish"], 10 + MIN_REWARD_MIN)
+
+    def test_session_spent_away_from_the_computer_gives_no_reward(self):
+        done, notes = [], []
+        self.game.focus_finished.connect(done.append)
+        self.game.notice.connect(lambda t, m: notes.append(m))
+        self.idle = 400                                          # personne devant l'écran pendant toute la session
+        self.game.start_focus(25)
+        self.work(25)
+        self.assertIsNone(self.game.focus)
+        self.assertEqual(done, [])                               # ni « bravo » ni cadeau
+        self.assertFalse(self.game.data["gift_pending"])
+        self.assertEqual(self.game.data["fish"], 0)
+        self.assertEqual(len(notes), 1)
+
+    def test_session_suspended_by_sleep_gives_no_reward(self):
+        self.game.start_focus(25)
+        self.now += 25 * 60 + 1                                  # le PC dort 25 min : l'horloge avance, pas le jeu
+        self.game.tick()
+        self.assertIsNone(self.game.focus)
+        self.assertFalse(self.game.data["gift_pending"])
+        self.assertEqual(self.game.data["fish"], 0)
+
+    def test_half_presence_is_enough(self):
+        self.game.start_focus(20)
+        self.idle = 400
+        self.work(10)                                            # absent la première moitié
+        self.idle = 0
+        self.work(10)
+        self.assertTrue(self.game.data["gift_pending"])
+
+    def test_presence_is_kept_across_an_app_restart(self):
+        self.game.start_focus(20)
+        self.work(12)
+        again = self.new_game_on_same_save()
+        again._restore_focus()
+        self.assertGreaterEqual(again.focus["active"], 12 * 60 - 1)
+
+    def test_old_save_without_presence_gets_the_benefit_of_the_doubt(self):
+        self.game.start_focus(20)
+        self.now += 5 * 60
+        del self.game.data["focus"]["active"]
+        self.game.save()
+        again = self.new_game_on_same_save()
+        again._restore_focus()
+        self.assertAlmostEqual(again.focus["active"], 5 * 60, delta=1)
+
 
     def new_game_on_same_save(self):
         return Game(Store(self.store.path), clock=lambda: self.now)
@@ -168,6 +213,33 @@ class RewardsAndFocusTest(GameTestCase):
         self.assertTrue(self.game.settings["meows"])
         self.assertTrue(self.game.set_setting("meows", False))
         self.assertFalse(Store(self.store.path).data["settings"]["meows"])
+
+
+class TickTimingTest(GameTestCase):
+    def test_tick_counts_the_elapsed_time(self):
+        self.game.tick(3.0)
+        self.assertEqual(self.store.day()["active"], 3)
+
+    def test_fractions_of_a_second_are_carried_over(self):
+        for _ in range(5):
+            self.game.tick(0.6)                                   # 3,0 s au total
+        self.assertEqual(self.store.day()["active"], 3)
+
+    def test_timer_caps_a_long_stall(self):
+        t = [100.0]
+        game = Game(self.store, clock=lambda: self.now, mono=lambda: t[0])
+        game._on_timer()                                          # premier passage : une seconde
+        t[0] += 3600                                              # l'ordinateur a dormi une heure
+        game._on_timer()
+        self.assertEqual(self.store.day()["active"], 1 + int(MAX_TICK_S))
+
+    def test_timer_never_goes_backwards(self):
+        t = [100.0]
+        game = Game(self.store, clock=lambda: self.now, mono=lambda: t[0])
+        game._on_timer()
+        t[0] -= 50
+        game._on_timer()
+        self.assertEqual(self.store.day()["active"], 1)
 
 
 class FullscreenPerMonitorTest(GameTestCase):
