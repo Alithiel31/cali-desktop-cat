@@ -7,12 +7,15 @@ Classée du plus critique au plus anecdotique. `[x]` = fait. L'ordre à l'intér
 - [x] Temps réellement écoulé et plafonné : une veille ne fausse plus statistiques ni cadeaux.
 - [x] Récompense de concentration conditionnée à la présence (≥ 50 %).
 - [x] Bulle lisible quel que soit le thème Windows (fond dessiné, texte forcé foncé, taille liée à l'échelle du chat).
-- [ ] **Journal d'erreurs.** Lancée avec `pythonw` ou en `--noconsole`, l'appli avale ses exceptions : un plantage ne
-  laisse aucune trace. Ajouter `sys.excepthook` + fichier `%APPDATA%/DesktopCat/desktopcat.log` (rotation, 1 Mo).
+- [x] **Journal d'erreurs** (`desktopcat/log.py`) : exceptions, messages Qt et plantages fatals dans
+  `%APPDATA%/DesktopCat/desktopcat.log` (rotation 1 Mo), accessible depuis le menu de l'icône. Voir [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+- [x] **Téléportation à l'atterrissage.** Un chat qui sautait vers une fenêtre déplacée pendant le saut atterrissait
+  sur son ancienne position puis la « suivait » d'un bond (parfois hors du bureau). Il relit maintenant la position réelle
+  de la fenêtre en se posant. Trouvé grâce à un test qui échouait seulement selon la place de la souris.
 - [ ] **Sauvegarde.** Le `.bak` est écrasé à chaque fichier illisible ; garder 3 copies horodatées. Utiliser le champ
   `version` pour des migrations réelles (aujourd'hui il est ignoré).
-- [ ] **Tests indépendants de l'écran.** `PetTest` lit les vrais écrans : le même test passe ou échoue selon la machine.
-  Lui fournir de faux écrans (comme `PetCase`).
+- [ ] **Tests indépendants de l'écran.** `PetTest` (dans `test_logic.py`) lit les vrais écrans : le même test passe ou
+  échoue selon la machine. Lui fournir de faux écrans et une fausse souris (comme `PetCase` et `FixedCursor`).
 
 ## Niveau 2 — Important : fiabilité de l'ensemble et confiance
 - [ ] **Intégration continue** (GitHub Actions, runner Windows) : tests à chaque push.

@@ -20,7 +20,7 @@ from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QCloseEvent, QColor, QMouseEvent, QPalette
 from PySide6.QtWidgets import QApplication
 
-from desktopcat import phrases, winapi
+from desktopcat import pet as pet_module, phrases, winapi
 from desktopcat.game import MAX_TICK_S, MIN_REWARD_MIN, Game
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet
@@ -32,6 +32,16 @@ from test_logic import GameTestCase
 APP = QApplication.instance() or QApplication([])
 
 ALL_MEOWS = {m for pool in phrases.MEOWS.values() for m in pool}
+
+
+class FixedCursor:
+    """Fausse souris à une abscisse donnée : sans elle, les tests dépendent de l'endroit où se trouve ta vraie souris."""
+
+    def __init__(self, x: int):
+        self.x = x
+
+    def pos(self):
+        return QPoint(self.x, 400)
 
 
 def screen(l, t, r, b, dpr=1.0, work_bottom=None):
@@ -476,7 +486,45 @@ class MultiScreenTest(PetCase):
         self.run_steps(2)
         self.assertAlmostEqual(self.bubble.tail_x, self.bubble.width() / 2, delta=self.bubble.width() * 0.2)
 
+    def test_window_moved_during_a_jump_does_not_teleport_the_cat(self):
+        """Régression : il atterrissait sur l'ancienne position de la fenêtre, puis la « suivait » d'un seul bond."""
+        pet = self.make_pet(self.SIDE_BY_SIDE)
+        self.desk.put(111, (100, 400, 700, 560))
+        self.place(300, pet.floor_y)
+        self.run_steps(3)
+        self.assertTrue(pet._jump_somewhere(prefer_hwnd=111, reach_up=600))
+        self.run_steps(3)
+        self.desk.put(111, (1300, 400, 1900, 560))                # la fenêtre part sur l'autre écran, en plein saut
+        xs = [pet.cx]
+        for _ in range(240):
+            pet.step(1 / 60)
+            xs.append(pet.cx)
+            if pet.state in ("idle", "walk") and pet.stand is None:
+                break
+        biggest_step = max(abs(b - a) for a, b in zip(xs, xs[1:]))
+        self.assertLess(biggest_step, 40)                         # un saut fait ~10 px par pas ; une téléportation, des centaines
+        self.assertIsNone(pet.stand)                              # il n'est pas resté « sur » une fenêtre absente
+        self.assertEqual(pet.fy, pet.floor_y)
+
+    def test_a_window_that_stayed_put_is_still_a_perch(self):
+        pet = self.make_pet(self.SIDE_BY_SIDE)
+        self.desk.put(111, (100, 400, 700, 560))
+        self.place(300, pet.floor_y)
+        self.run_steps(3)
+        self.assertTrue(pet._jump_somewhere(prefer_hwnd=111, reach_up=600))
+        self.run_until(lambda: pet.state != "jump")
+        self.assertEqual(pet.stand, 111)
+        self.assertAlmostEqual(pet.fy, 400, delta=0.5)
+
     def test_long_life_on_three_screens_never_leaves_the_desktop(self):
+        # Le chat va parfois « voir la souris » : sa position fait partie du hasard, on en essaie plusieurs
+        # (462 reproduisait un bug réel : atterrissage sur une fenêtre déplacée pendant le saut).
+        for cursor_x in (0, 462, 1500, 2900):
+            with self.subTest(cursor_x=cursor_x), mock.patch.object(pet_module, "QCursor", FixedCursor(cursor_x)):
+                self.long_life()
+
+    def long_life(self):
+        self.desk.wins.clear()
         pet = self.make_pet([screen(0, 0, 1000, 800), screen(1000, 0, 2000, 800, work_bottom=760, dpr=1.5),
                              screen(2000, 200, 3000, 900)], seed=11)
         rng = random.Random(5)

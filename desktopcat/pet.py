@@ -272,18 +272,22 @@ class Pet(QWidget):
         surfaces += self._floor_surfaces()
         self.surfaces = surfaces
 
+    def _window_geometry(self, hwnd):
+        """(y du bord haut, gauche, droite) de la fenêtre telle qu'elle est MAINTENANT, ou None si elle a disparu."""
+        if not self.settings["perch_windows"]:
+            return None
+        r = winapi.window_rect(hwnd)
+        if r is None:
+            return None
+        l, t, rr, _b = to_logical(r, self.screens)
+        return (t, l, rr)
+
     def _current_surface(self):
         """(y, x0, x1) de la surface sous ses pieds, ou None si elle a disparu."""
         if self.stand is None:
             f = self._floor_here()
             return (f.y, f.cx0, f.cx1)
-        if not self.settings["perch_windows"]:
-            return None
-        r = winapi.window_rect(self.stand)
-        if r is None:
-            return None
-        l, t, rr, _b = to_logical(r, self.screens)
-        return (t, l, rr)
+        return self._window_geometry(self.stand)
 
     @property
     def cx(self) -> float:
@@ -474,6 +478,14 @@ class Pet(QWidget):
             self._land(best)
 
     def _land(self, s: Surface, soft: bool = False) -> None:
+        if s.hwnd is not None:
+            # La surface date du dernier scan (jusqu'à 0,2 s) ou du début du saut : la fenêtre a pu bouger depuis.
+            # Se poser sur son ancienne position téléporterait le chat quand il se mettrait à la suivre.
+            geo = self._window_geometry(s.hwnd)
+            if geo is None or abs(geo[0] - s.y) > 14 or not (geo[1] - 2 <= self.cx <= geo[2] + 2):
+                self._start_fall()
+                return
+            s = Surface(s.hwnd, geo[0], s.x0, s.x1, geo[1], s.title)
         self.fy = s.y
         self.vy = 0.0
         self.stand = s.hwnd
