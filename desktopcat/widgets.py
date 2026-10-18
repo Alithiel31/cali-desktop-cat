@@ -5,7 +5,8 @@ import math
 import time
 
 from PySide6.QtCore import QRect, QRectF, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPen, QTextDocument
+from PySide6.QtGui import QColor, QFont, QPainter, QPainterPath, QPalette, QPen, QTextDocument
+from PySide6.QtGui import QAbstractTextDocumentLayout
 from PySide6.QtWidgets import QWidget
 
 from .sprite import GIFT_SIZE, draw_gift
@@ -69,7 +70,7 @@ class Bubble(QWidget):
 
     def _relayout(self) -> None:
         doc = self._doc
-        doc.setHtml(self._html)
+        doc.setHtml(f'<span style="color:{BUBBLE_FG}">{self._html}</span>')   # couleur explicite, quel que soit le thème
         doc.setTextWidth(-1)
         text_w = min(doc.idealWidth(), 20.0 * self.font_px) + 1       # +1 : évite un retour à la ligne de trop
         doc.setTextWidth(text_w)
@@ -97,7 +98,10 @@ class Bubble(QWidget):
         p.setBrush(QColor(BUBBLE_BG))
         p.drawPath(shape)
         p.translate(b + self.PAD_X, b + self.PAD_Y)
-        self._doc.drawContents(p)
+        ctx = QAbstractTextDocumentLayout.PaintContext()
+        ctx.palette.setColor(QPalette.ColorRole.Text, QColor(BUBBLE_FG))     # sinon : couleur du thème Windows (blanc en mode sombre)
+        ctx.palette.setColor(QPalette.ColorRole.WindowText, QColor(BUBBLE_FG))
+        self._doc.documentLayout().draw(p, ctx)
         p.end()
 
     def mousePressEvent(self, event):

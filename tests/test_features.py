@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
-from PySide6.QtGui import QCloseEvent, QMouseEvent
+from PySide6.QtGui import QCloseEvent, QColor, QMouseEvent, QPalette
 from PySide6.QtWidgets import QApplication
 
 from desktopcat import phrases, winapi
@@ -653,6 +653,22 @@ class BubbleLookTest(unittest.TestCase):
         inside = img.pixelColor(b.PAD_X // 2 + b.BORDER + 2, (b.height() - b.TAIL) // 2)
         self.assertEqual(inside.alpha(), 255)                    # fond opaque, pas transparent
         self.assertGreater(inside.lightness(), 200)              # clair : le texte sombre se détache
+
+    def test_text_stays_dark_in_a_dark_windows_theme(self):
+        """En mode sombre, Windows fournit un texte blanc : il doit rester sombre sur le fond crème de la bulle."""
+        old = APP.palette()
+        dark = QPalette(old)
+        for role in (QPalette.ColorRole.Text, QPalette.ColorRole.WindowText, QPalette.ColorRole.ButtonText):
+            dark.setColor(role, QColor("#ffffff"))
+        dark.setColor(QPalette.ColorRole.Window, QColor("#202020"))
+        APP.setPalette(dark)
+        self.addCleanup(APP.setPalette, old)
+        b = self.make(4, "Miaou, un long texte bien visible")
+        img = b.grab().toImage()
+        darkest = min(img.pixelColor(x, y).lightness()
+                      for x in range(b.BORDER + b.PAD_X, b.width() - b.PAD_X)
+                      for y in range(b.BORDER + b.PAD_Y, b.height() - b.TAIL - b.PAD_Y))
+        self.assertLess(darkest, 90)                             # il y a des pixels de texte foncés
 
     def test_text_grows_with_the_cat(self):
         small, big = self.make(3), self.make(6)
