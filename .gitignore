@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build
+build/
+dist/
+*.spec
+
+# Sorties générées
+*.png
+tools/out/
+
+# Sauvegardes locales / éditeurs
+*.bak
+*.tmp
+.idea/
+.vscode/
