@@ -458,6 +458,24 @@ class MultiScreenTest(PetCase):
         self.run_steps(2)
         self.assertLessEqual(self.bubble.x() + self.bubble.width(), 2000)
 
+    def test_bubble_tail_points_at_the_cat_even_when_the_bubble_is_shifted(self):
+        pet = self.make_pet(self.SIDE_BY_SIDE)
+        self.place(1920, 800, floor_idx=1)                       # près du bord droit : la bulle est décalée
+        pet.say("Un texte assez long pour dépasser", 3000)
+        self.run_steps(2)
+        self.assertLessEqual(self.bubble.x() + self.bubble.width(), 2000)
+        head_x = pet.fx + pet.CW * (0.62 if pet.dir > 0 else 0.38)
+        self.assertGreater(self.bubble.tail_x, self.bubble.width() / 2)               # décalée vers le chat
+        self.assertAlmostEqual(self.bubble.x() + self.bubble.tail_x, head_x,
+                               delta=self.bubble.RADIUS + self.bubble.TAIL)           # sauf si les coins l'en empêchent
+
+    def test_bubble_tail_is_centered_when_there_is_room(self):
+        pet = self.make_pet(self.SIDE_BY_SIDE)
+        self.place(500, 800)
+        pet.say("Miaou", 3000)
+        self.run_steps(2)
+        self.assertAlmostEqual(self.bubble.tail_x, self.bubble.width() / 2, delta=self.bubble.width() * 0.2)
+
     def test_long_life_on_three_screens_never_leaves_the_desktop(self):
         pet = self.make_pet([screen(0, 0, 1000, 800), screen(1000, 0, 2000, 800, work_bottom=760, dpr=1.5),
                              screen(2000, 200, 3000, 900)], seed=11)
@@ -669,6 +687,13 @@ class BubbleLookTest(unittest.TestCase):
                       for x in range(b.BORDER + b.PAD_X, b.width() - b.PAD_X)
                       for y in range(b.BORDER + b.PAD_Y, b.height() - b.TAIL - b.PAD_Y))
         self.assertLess(darkest, 90)                             # il y a des pixels de texte foncés
+
+    def test_tail_never_goes_into_the_rounded_corners(self):
+        b = self.make()
+        b.set_tail_x(-500)
+        self.assertGreaterEqual(b.tail_x, b.BORDER + b.RADIUS + b.TAIL)
+        b.set_tail_x(5000)
+        self.assertLessEqual(b.tail_x, b.width() - b.BORDER - b.RADIUS - b.TAIL)
 
     def test_text_grows_with_the_cat(self):
         small, big = self.make(3), self.make(6)

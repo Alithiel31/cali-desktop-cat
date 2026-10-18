@@ -50,6 +50,7 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md) : modules, boucles, coordonnées, points d'extension.
 - [Règles du jeu](docs/GAMEPLAY.md) : cadeaux, raretés, concentration, statistiques.
+- [Feuille de route](docs/ROADMAP.md) : ce qui est fait et ce qui reste, du plus critique au plus anecdotique.
 - [Outils](tools/README.md) : lanceur de test isolé, captures du panneau.
 
 ## Développement

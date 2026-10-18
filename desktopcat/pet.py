@@ -742,4 +742,6 @@ class Pet(QWidget):
             bw, bh = self.bubble.width(), self.bubble.height()
             bx = _clamp(self.fx + self.CW / 2 - bw / 2, w0, max(w0, w1 - bw))
             by = max(self.work[1], self.fy - self.FOOT - bh - 4)
+            head_x = self.fx + self.CW * (0.62 if self.dir > 0 else 0.38)
+            self.bubble.set_tail_x(head_x - bx)          # la pointe vise la tête, même si la bulle est décalée
             self.bubble.move(round(bx), round(by))

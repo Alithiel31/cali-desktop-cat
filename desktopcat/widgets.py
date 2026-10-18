@@ -31,6 +31,7 @@ class Bubble(QWidget):
         self.S = scale
         self._html = ""
         self._border = QColor(BUBBLE_BORDER)
+        self._tail_x: float | None = None          # abscisse de la pointe dans la bulle ; None = au milieu
         self._doc = QTextDocument(self)
         self._doc.setDocumentMargin(0)
         self._doc.setDefaultStyleSheet(f"body {{ color: {BUBBLE_FG}; }}")
@@ -62,6 +63,19 @@ class Bubble(QWidget):
     def text(self) -> str:
         return self._html
 
+    @property
+    def tail_x(self) -> float:
+        """Abscisse de la pointe (dans la bulle), gardée à l'écart des coins arrondis."""
+        margin = self.BORDER + self.RADIUS + self.TAIL
+        x = self.width() / 2 if self._tail_x is None else self._tail_x
+        return max(margin, min(self.width() - margin, x))
+
+    def set_tail_x(self, x: float) -> None:
+        """Fait viser la pointe vers x (dans la bulle) : utile quand la bulle est décalée pour rester sur l'écran."""
+        if self._tail_x is None or abs(self._tail_x - x) >= 0.5:
+            self._tail_x = x
+            self.update()
+
     def show_html(self, html: str, border: str = BUBBLE_BORDER) -> None:
         self._html = html
         self._border = QColor(border)
@@ -88,7 +102,7 @@ class Bubble(QWidget):
         body = QPainterPath()
         body.addRoundedRect(QRectF(b / 2, b / 2, w - b, h - b), self.RADIUS, self.RADIUS)
         tail = QPainterPath()                                          # petite pointe vers le chat
-        cx = w / 2
+        cx = self.tail_x
         tail.moveTo(cx - self.TAIL, h - b / 2 - 1)
         tail.lineTo(cx, h + self.TAIL - b / 2)
         tail.lineTo(cx + self.TAIL, h - b / 2 - 1)
