@@ -1,0 +1,53 @@
+name: Suggestion / amélioration
+description: Proposer un comportement du chat, un chapeau, un réglage, un changement du jeu ou de la documentation
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Jette un œil à la [feuille de route](https://github.com/Alithiel31/cali-desktop-cat/blob/main/docs/ROADMAP.md) :
+        ton idée y figure peut-être déjà. Le guide de contribution demande d'ouvrir une issue avant d'envoyer
+        une pull request pour tout changement non trivial — c'est cette issue-là.
+
+  - type: textarea
+    attributes:
+      label: Quel problème ça résout, ou quelle envie
+      description: La situation rencontrée, pas encore la solution.
+      placeholder: |
+        Les croquettes s'accumulent sans servir à rien.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Ce que tu proposes
+      description: Le changement envisagé, aussi concrètement que possible.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Alternatives envisagées
+      description: Autres façons de faire, et pourquoi elles ont été écartées.
+
+  - type: dropdown
+    attributes:
+      label: Ce que ça touche
+      multiple: true
+      options:
+        - Comportement du chat (déplacement, états)
+        - Règles du jeu (cadeaux, chapeaux, concentration)
+        - Panneau / réglages
+        - Multi-écrans
+        - Sauvegarde / vie privée
+        - Documentation
+        - CI/CD / distribution
+        - Pas sûr
+    validations:
+      required: true
+
+  - type: checkboxes
+    attributes:
+      label: Contribution
+      options:
+        - label: Je suis prêt à ouvrir la pull request moi-même

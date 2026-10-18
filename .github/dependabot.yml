@@ -1,0 +1,20 @@
+version: 2
+
+updates:
+  # PySide6 est la dépendance critique : une montée majeure de Qt peut casser le rendu
+  # (ex. Python 3.10 + PySide6 6.12). Le pin `<7` de requirements.txt protège de la 7.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: chore
+
+  # Les workflows construisent l'exécutable distribué : leurs actions doivent suivre.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci

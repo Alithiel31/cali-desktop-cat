@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Notes de dépannage
+    url: https://github.com/Alithiel31/cali-desktop-cat/blob/main/docs/TROUBLESHOOTING.md
+    about: Où sont les fichiers, lire le journal, problèmes déjà rencontrés (chat invisible, pas de cadeau, sauvegarde...).
+  - name: Guide de contribution
+    url: https://github.com/Alithiel31/cali-desktop-cat/blob/main/CONTRIBUTING.md
+    about: Environnement de développement, tests, format des pull requests.
+  - name: Feuille de route
+    url: https://github.com/Alithiel31/cali-desktop-cat/blob/main/docs/ROADMAP.md
+    about: Ce qui est fait et ce qui reste — ton idée y figure peut-être déjà.

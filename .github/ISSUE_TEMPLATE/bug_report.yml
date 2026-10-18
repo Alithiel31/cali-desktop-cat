@@ -1,0 +1,82 @@
+name: Rapport de bug
+description: Quelque chose ne fonctionne pas — le chat disparaît, tombe, ne se perche pas, la sauvegarde pose problème...
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de prendre le temps de signaler ce problème.
+
+        Plusieurs cas déjà rencontrés sont documentés dans
+        [`docs/TROUBLESHOOTING.md`](https://github.com/Alithiel31/cali-desktop-cat/blob/main/docs/TROUBLESHOOTING.md) —
+        ça vaut le coup d'y jeter un œil avant de continuer.
+
+        ⚠️ **Le journal peut contenir des noms d'applications et de chemins.** Relis-le avant de le coller
+        et retire ce que tu ne veux pas rendre public.
+
+  - type: checkboxes
+    attributes:
+      label: Avant de signaler
+      options:
+        - label: J'ai vérifié TROUBLESHOOTING.md et mon problème n'y est pas déjà documenté
+          required: true
+        - label: J'ai cherché dans les issues existantes
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Ce qui se passe
+      description: Ce que tu observes, et ce que tu attendais à la place.
+      placeholder: |
+        Le chat reste coincé en bas de l'écran de gauche et ne monte plus sur les fenêtres.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Étapes pour reproduire
+      description: Ce que tu as fait, dans l'ordre, à partir d'un état connu.
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Version de Desktop Cat
+      description: Dans `desktopcat/__init__.py` (`__version__`), ou dans le nom de la Release.
+      placeholder: "0.3.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: Comment l'as-tu lancé ?
+      options:
+        - DesktopCat.exe (Release)
+        - python main.py
+        - tools/run_test_instance.bat
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Version de Windows
+      placeholder: "Windows 11 23H2"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Configuration d'écrans
+      description: Nombre d'écrans, résolutions, échelle d'affichage de chacun (utile si le bug concerne le déplacement du chat).
+      placeholder: "2 écrans : 1920×1080 à 100 % + 2560×1440 à 150 %, côte à côte"
+
+  - type: textarea
+    attributes:
+      label: Journal
+      description: Dernières lignes de `%APPDATA%\DesktopCat\desktopcat.log` (menu de l'icône, **Ouvrir le journal**), et `desktopcat.log.crash` s'il n'est pas vide.
+      render: text
+
+  - type: textarea
+    attributes:
+      label: Autre contexte
+      description: Capture d'écran, comportement intermittent, ce que tu faisais juste avant...
