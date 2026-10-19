@@ -44,7 +44,7 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
 
 ## Exécutable
     pip install pyinstaller
-    pyinstaller --noconsole --onefile --name DesktopCat main.py
+    pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico main.py
 
 ## Structure du projet
     main.py          point d'entrée

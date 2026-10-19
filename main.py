@@ -20,6 +20,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Desktop Cat")
     app.setQuitOnLastWindowClosed(False)
+    app.setWindowIcon(QIcon(render_pixmap(4, pose="sit", t=0)))     # panneau et boîtes de dialogue
 
     lock = QLockFile(os.path.join(tempfile.gettempdir(), "desktopcat.lock"))
     lock.setStaleLockTime(30_000)   # un verrou laissé par un plantage (processus disparu) est repris après 30 s

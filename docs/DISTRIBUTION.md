@@ -9,7 +9,7 @@ GitHub Actions (`.github/workflows/release.yml`).
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconsole --onefile --name DesktopCat main.py
+pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico main.py
 ```
 
 Résultat : `dist/DesktopCat.exe`. `build/`, `dist/` et `*.spec` sont ignorés par Git.
@@ -32,7 +32,7 @@ Le workflow `release.yml` :
 |---|---|
 | Vérifier tag/version | Échoue si le tag (`v0.4.0`) ne correspond pas à `desktopcat.__version__` (`0.4.0`). |
 | Tests | Rejoue toute la suite avant de packager. |
-| Build | `pyinstaller --noconsole --onefile --name DesktopCat main.py` sur `windows-latest`. |
+| Build | `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico main.py` sur `windows-latest`. |
 | Empreinte | Écrit `DesktopCat.exe.sha256`. |
 | Publication | Job séparé, seul à avoir `contents: write` : `gh release create` avec l'exe, l'empreinte et des notes générées. |
 
@@ -59,7 +59,8 @@ Comparer avec le contenu de `DesktopCat.exe.sha256` publié dans la même Releas
 ## Ébauche — à compléter
 
 - [ ] Première Release `v0.4.0` publiée et testée sur une machine propre (sans Python).
-- [ ] Icône de l'exécutable et numéro de version affiché dans le panneau (niveau 3 de la [feuille de route](./ROADMAP.md)).
+- [x] Icône de l'exécutable (`assets/desktopcat.ico`, voir `tools/make_icon.py`).
+- [ ] Numéro de version affiché dans le panneau (niveau 3 de la [feuille de route](./ROADMAP.md)).
 - [ ] Fichier `.spec` versionné au lieu de la ligne de commande.
 - [ ] Démarrage automatique vérifié avec l'exécutable empaqueté (chemin dans le registre).
 - [ ] Signature de code, ou à défaut une note dans le README sur SmartScreen.
