@@ -1,4 +1,4 @@
-"""Calculs de mouvement (sauts et chutes) sans dépendance à Qt ni à Windows."""
+"""Calculs de mouvement (marche, sauts et chutes) sans dépendance à Qt ni à Windows."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -59,3 +59,20 @@ def advance_fall(x: float, previous_y: float, velocity: float, dt: float,
         x = max(floor.x0, min(floor.x1, x))
         landing = Surface(None, floor.y, floor.x0, floor.x1, floor.x0, "sol", floor=floor.idx)
     return x, y, velocity, landing
+
+
+def advance_walk(x: float, target: float, left: float, right: float, sprite_width: float,
+                 speed: float, dt: float, frame_elapsed: float, frame: int):
+    """Avance une marche sur une surface et renvoie position, animation, direction et arrivée."""
+    margin = sprite_width * 0.25
+    low, high = left + margin, right - margin
+    target = max(low, min(high, target)) if high >= low else x
+    distance = target - x
+    step = speed * dt
+    frame_elapsed += dt
+    if frame_elapsed > 0.17:
+        frame_elapsed = 0.0
+        frame ^= 1
+    if abs(distance) <= step:
+        return x + distance, frame_elapsed, frame, 0, True
+    return x + (step if distance > 0 else -step), frame_elapsed, frame, (1 if distance > 0 else -1), False

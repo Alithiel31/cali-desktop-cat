@@ -24,7 +24,7 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 | `store.py` | Sauvegarde JSON (`%APPDATA%/DesktopCat/save.json`), valeurs par défaut, nettoyage d'un fichier abîmé, statistiques par jour. Écriture atomique (`.tmp` puis `os.replace`). Copies de sécurité, copie quotidienne avec restauration automatique, migrations de format. | non | non |
 | `game.py` | Règles du jeu : minuterie d'une seconde, cadeaux, chapeaux, concentration, temps d'écran, réglages validés (`SETTING_RULES`). Émet des signaux ; aucune interface. | oui (`QObject`, signaux) | via `winapi` |
 | `pet.py` | Le chat : fenêtre transparente, états (idle, walk, nap, sleep, work, wait, drag, fall, jump), souris, bulle, cadeau et orchestration des mouvements. | oui | via `winapi` |
-| `motion.py` | Calculs physiques des sauts et chutes, indépendants de Qt et de Windows. | non | non |
+| `motion.py` | Calculs physiques de la marche, des sauts et des chutes, indépendants de Qt et de Windows. | non | non |
 | `screens.py` | Géométrie multi-écrans (conversion pixels physiques ↔ logiques, sols, chaînes d'écrans collés). Fonctions pures. | non | non |
 | `surfaces.py` | Calcule les bords hauts de fenêtres sur lesquels le chat peut marcher, en retirant les parties masquées par les fenêtres au-dessus. Fonctions pures. | non | non |
 | `winapi.py` | `ctypes` vers `user32`/`dwmapi`/`kernel32` : liste des fenêtres, fenêtre active, inactivité, plein écran. Sur un autre système, renvoie des valeurs neutres. | non | oui (isolé ici) |

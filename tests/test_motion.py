@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from desktopcat.motion import advance_fall, advance_jump, make_jump
+from desktopcat.motion import advance_fall, advance_jump, advance_walk, make_jump
 from desktopcat.screens import Floor
 from desktopcat.surfaces import Surface
 
@@ -57,6 +57,26 @@ class FallMotionTest(unittest.TestCase):
         self.assertIsNotNone(landing)
         self.assertEqual(landing.floor, 0)
         self.assertEqual(y, 1030)
+
+
+class WalkMotionTest(unittest.TestCase):
+    def test_walk_clamps_target_and_advances_at_the_scaled_speed(self):
+        x, elapsed, frame, direction, arrived = advance_walk(150, 900, 0, 500, 80, 100, 0.1, 0.1, 0)
+
+        self.assertAlmostEqual(x, 160)  # cible plafonnée au bord droit moins la marge du sprite
+        self.assertEqual(elapsed, 0.0)
+        self.assertEqual(frame, 1)
+        self.assertEqual(direction, 1)
+        self.assertFalse(arrived)
+
+    def test_walk_snaps_to_target_when_it_is_reachable_in_one_step(self):
+        x, elapsed, frame, direction, arrived = advance_walk(150, 160, 0, 500, 80, 100, 0.2, 0, 1)
+
+        self.assertEqual(x, 160)
+        self.assertEqual(elapsed, 0.0)
+        self.assertEqual(frame, 0)
+        self.assertEqual(direction, 0)
+        self.assertTrue(arrived)
 
 
 if __name__ == "__main__":

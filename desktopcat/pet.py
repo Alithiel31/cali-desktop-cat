@@ -21,7 +21,7 @@ from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QApplication, QMenu, QWidget
 
 from . import winapi
-from .motion import Jump, advance_fall, advance_jump, make_jump
+from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
 from .phrases import meow_delay, pick_meow
 from .screens import (ScreenInfo, bounds, build_floors, clamp_point, native_rects, nearest_floor,
                       nearest_rect_index, to_logical)
@@ -370,25 +370,18 @@ class Pet(QWidget):
 
     def _step_walk(self, dt: float, x0: float, x1: float) -> None:
         x0, x1 = self._clip(x0, x1)
-        m = self.CW * 0.25
-        lo, hi = x0 + m, x1 - m
-        target = _clamp(self.target, lo, hi) if hi >= lo else self.cx
-        d = target - self.cx
-        step = self.speed * dt
-        self._frame_t += dt
-        if self._frame_t > 0.17:
-            self._frame_t = 0.0
-            self.frame ^= 1
-        if abs(d) <= step:
-            self.fx += d
+        old_cx = self.cx
+        new_cx, self._frame_t, self.frame, direction, arrived = advance_walk(
+            old_cx, self.target, x0, x1, self.CW, self.speed, dt, self._frame_t, self.frame)
+        self.fx += new_cx - old_cx
+        if arrived:
             then, self.then = self.then, None
             if then == "work" and self.game.focus:
                 self.state = "work"
             else:
                 self._idle()
         else:
-            self.fx += math.copysign(step, d)
-            self.dir = 1 if d > 0 else -1
+            self.dir = direction
 
     def _decide(self) -> None:
         r = self.rng.random()
