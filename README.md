@@ -11,7 +11,25 @@ tombe quand elles disparaissent, saute d'une fenêtre à l'autre, dort quand tu 
 miaule de temps en temps dans une bulle, te rapporte des cadeaux (chapeaux de 6 raretés) et travaille avec toi
 pendant tes sessions de concentration. Il se promène sur tous tes écrans.
 
-## Lancer
+## Installer
+Télécharger `DesktopCat.exe` dans les [Releases](https://github.com/Alithiel31/cali-desktop-cat/releases) et le lancer :
+aucune installation, aucun droit administrateur. L'empreinte SHA256 est publiée à côté de l'exe.
+
+> L'exe n'est **pas encore signé** : SmartScreen affiche un avertissement (« Informations complémentaires » >
+> « Exécuter quand même »), et **Smart App Control** (Windows 11), s'il est actif, le bloque sans recours.
+> Une demande de signature gratuite est en cours (voir [Code signing policy](#code-signing-policy)).
+> En attendant, on peut lancer l'appli depuis les sources (ci-dessous).
+
+## Désinstaller
+1. Panneau > Réglages : décocher **Lancer avec Windows** (retire l'entrée du registre de démarrage).
+2. Quitter le chat (clic droit sur l'icône > Quitter).
+3. Supprimer `DesktopCat.exe`, puis le dossier `%APPDATA%\DesktopCat` (sauvegarde, copies, journal).
+
+Aucun autre fichier ni aucune autre clé de registre n'est créé. Si l'exe a déjà été supprimé sans décocher la case,
+retirer l'entrée **DesktopCat** dans Gestionnaire des tâches > Applications de démarrage (ou la valeur `DesktopCat`
+de `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`).
+
+## Lancer depuis les sources
     pip install -r requirements.txt
     python main.py
 
@@ -37,14 +55,15 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
 (si elle est finie entre-temps, elle est abandonnée sans récompense).
 
 ## Limites connues
-- Écrit sans accès à Windows : la logique (dont le multi-écrans, avec de faux écrans) est testée hors écran,
-  mais l'API Windows réelle et les échelles d'affichage mixtes restent à valider chez toi.
+- Les échelles d'affichage mixtes (100 % / 125 % sur deux écrans) sont testées avec de faux écrans, peu sur du vrai
+  matériel.
 - Une fenêtre à cheval sur deux écrans d'échelles différentes est convertie avec l'échelle d'un seul des deux.
 - Sauvegarde : `%APPDATA%/DesktopCat/save.json`.
 
 ## Exécutable
     pip install pyinstaller
-    pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico main.py
+    python tools/make_version_file.py
+    pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
 
 ## Structure du projet
     main.py          point d'entrée
@@ -54,11 +73,25 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
     tools/           outils de développement (captures du panneau, lanceur de test, anciens prototypes)
 
 ## Vie privée
-Tout reste sur ton ordinateur : l'appli n'envoie rien nulle part et n'a aucun accès réseau. Pour les statistiques,
+Tout reste sur ton ordinateur : l'appli n'envoie rien nulle part et ne fait aucun accès réseau. Pour les statistiques,
 elle note chaque seconde le **nom de l'exécutable** de la fenêtre active (40 applis par jour, 60 jours) dans
 `%APPDATA%/DesktopCat/save.json`. Ce suivi se coupe dans **Réglages** (« Noter les applications utilisées »), et le
 bouton **Effacer mes statistiques** (onglet Statistiques) efface tout l'historique, copies de sécurité comprises.
 Détail : [SECURITY.md](SECURITY.md).
+
+## Code signing policy
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
+[SignPath Foundation](https://signpath.org/) *(application in progress: current releases are not signed yet)*.
+
+- **Product:** Desktop Cat — repository [Alithiel31/cali-desktop-cat](https://github.com/Alithiel31/cali-desktop-cat), MIT License.
+- **What is signed:** only `DesktopCat.exe` attached to the GitHub Releases of this repository, built from this
+  source code by GitHub Actions (`.github/workflows/release.yml`). Nothing else is signed.
+- **Committers and reviewers:** [Jacques Duchamplecheval (alithiel31)](https://github.com/Alithiel31)
+- **Approvers:** [Jacques Duchamplecheval (alithiel31)](https://github.com/Alithiel31) — every release is approved
+  manually before signing.
+- **Privacy policy:** this program will not transfer any information to other networked systems unless specifically
+  requested by the user or the person installing or operating it. See [Vie privée](#vie-privée) for what it stores
+  locally.
 
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md) : modules, boucles, coordonnées, points d'extension.

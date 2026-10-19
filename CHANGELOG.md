@@ -5,6 +5,20 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ## [Non publié]
 
+## [0.4.1] - 2026-10-19
+
+Préparation de la signature de code (SignPath Foundation).
+
+### Added
+
+- **Icône** de l'exécutable (`assets/desktopcat.ico`, générée par `tools/make_icon.py` à partir du sprite : chat entier en
+  grand, tête seule à 48 px et moins) et du panneau.
+- **Métadonnées de l'exe** (Propriétés > Détails : Desktop Cat, version, auteur), générées par
+  `tools/make_version_file.py` à partir de `desktopcat.__version__`.
+- Numéro de version dans le titre du panneau, en bas des Réglages et dans l'infobulle de l'icône.
+- README : sections **Installer**, **Désinstaller** et **Code signing policy** ; avertissement Smart App Control.
+- `release.yml` : bloc de signature SignPath prêt, commenté jusqu'à l'acceptation du projet.
+
 ## [0.4.0] - 2026-10-19
 
 Première Release publiée (la 0.3.0 n'a jamais été taguée : son contenu est inclus ici).
@@ -17,8 +31,6 @@ Première Release publiée (la 0.3.0 n'a jamais été taguée : son contenu est 
 - **Chasse à la souris** : il guette la souris qui vient de s'arrêter près de lui, puis bondit dessus (désactivable).
 - **Pause Pomodoro** après chaque session réussie (5 min réglables), minuteur ☕ dans la bulle, bouton « Passer la pause ».
 - **Raccourci Ctrl+Alt+C** pour afficher ou cacher le chat (désactivable).
-- **Icône** de l'exécutable (`assets/desktopcat.ico`, générée par `tools/make_icon.py` à partir du sprite : chat entier en
-  grand, tête seule à 48 px et moins) et du panneau.
 
 - Réglage « Noter les applications utilisées » pour couper le suivi des exécutables actifs.
 - Bouton « Effacer mes statistiques » (avec confirmation) : vide l'historique, copies de sécurité lisibles comprises.
