@@ -22,6 +22,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QWidget
 
 from . import winapi
 from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
+from .pet_layout import compute_placement
 from .phrases import meow_delay, pick_meow
 from .screens import (ScreenInfo, bounds, build_floors, clamp_point, clip_to_bounds, floor_here, native_rects,
                       nearest_rect_index, snap_to_floor)
@@ -714,19 +715,15 @@ class Pet(QWidget):
         p.end()
 
     def _place(self, force: bool = False) -> None:
-        x, y = round(self.fx), round(self.fy - self.FOOT)
+        gift_size = (self.gift.width(), self.gift.height()) if self.gift_visible else None
+        bubble_size = (self.bubble.width(), self.bubble.height()) if self.bubble.isVisible() else None
+        placement = compute_placement(self.fx, self.fy, self.FOOT, self.CW, self.dir, self.work,
+                                      gift_size, bubble_size, self.S, GRID_W)
+        x, y = placement.pet
         if force or (x, y) != (self.x(), self.y()):
             self.move(x, y)
-
-        w0, w1 = self.work[0], self.work[2]
-        if self.gift_visible:
-            gw = self.gift.width()
-            gx = self.fx + 24 * self.S if self.dir > 0 else self.fx + (GRID_W - 24) * self.S - gw
-            self.gift.move(round(_clamp(gx, w0, w1 - gw)), round(self.fy - self.gift.height() + self.S))
-        if self.bubble.isVisible():
-            bw, bh = self.bubble.width(), self.bubble.height()
-            bx = _clamp(self.fx + self.CW / 2 - bw / 2, w0, max(w0, w1 - bw))
-            by = max(self.work[1], self.fy - self.FOOT - bh - 4)
-            head_x = self.fx + self.CW * (0.62 if self.dir > 0 else 0.38)
-            self.bubble.set_tail_x(head_x - bx)          # la pointe vise la tête, même si la bulle est décalée
-            self.bubble.move(round(bx), round(by))
+        if placement.gift is not None:
+            self.gift.move(*placement.gift)
+        if placement.bubble is not None:
+            self.bubble.set_tail_x(placement.bubble_tail_x)  # la pointe vise la tête, même si la bulle est décalée
+            self.bubble.move(*placement.bubble)
