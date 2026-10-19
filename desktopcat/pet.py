@@ -11,12 +11,11 @@ que le chat traverse en marchant ; sinon il saute ou tombe de l'un à l'autre.
 """
 from __future__ import annotations
 
-import math
 import random
 import time
 
 from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QCursor, QGuiApplication, QPainter
+from PySide6.QtGui import QCursor, QGuiApplication, QPainter
 from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QWidget
 
@@ -24,6 +23,7 @@ from . import winapi
 from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
 from .pet_layout import compute_placement
 from .pet_input import PetInput
+from .pet_companion import PetCompanion
 from .phrases import meow_delay, pick_meow
 from .screens import (ScreenInfo, bounds, build_floors, clip_to_bounds, floor_here, native_rects,
                       nearest_rect_index, snap_to_floor)
@@ -32,7 +32,6 @@ from .surfaces import Surface
 from .world import build_surfaces, floor_surfaces, window_geometry
 
 BASE_SPEED = 95.0         # px/s pour une échelle de 4
-STANDING = ("idle", "walk", "nap", "wait", "work", "sleep")
 LOOP_MS = 16              # boucle normale : ~60 images/s
 LOOP_SLOW_MS = 100        # chat caché, ou endormi parce que l'utilisateur est absent : 10 passages/s suffisent
 
@@ -120,6 +119,7 @@ class Pet(QWidget):
         self._pet_timer = QTimer(self)       # un clic simple attend de savoir si c'est un double-clic
         self._pet_timer.setSingleShot(True)
         self._pet_timer.timeout.connect(self._pet)
+        self.companion = PetCompanion(self)
         self._place(force=True)
         self.show()
 
@@ -501,16 +501,7 @@ class Pet(QWidget):
         self._bubble_tick()
 
     def _try_meow(self) -> None:
-        """Un miaulement spontané dans une bulle, seulement s'il ne dérange rien."""
-        free = (self.state in ("idle", "walk", "work") and not self._temp and not self.gift_visible
-                and not self.sys_sleep and self._press is None)
-        if not free:
-            self.next_meow = self.t + 4000          # on réessaie bientôt
-            return
-        self.say(pick_meow(self.rng, "work" if self.state == "work" else "idle"), 2200)
-        if self.rng.random() < 0.3:
-            self.fx_particle("heart")
-        self.next_meow = self.t + meow_delay(self.rng)
+        self.companion.try_meow()
 
     def _follow_active(self) -> None:
         if not self.settings["follow_active"]:
@@ -525,66 +516,23 @@ class Pet(QWidget):
             self._jump_somewhere(prefer_hwnd=hwnd, reach_up=600)
 
     def _show_gift(self) -> None:
-        self.state = "wait"
-        self.gift_visible = True
-        self.gift.show()
-        self.say("Miaou ! J'ai un cadeau pour toi 🎁", 6000)
+        self.companion.show_gift()
 
     def say(self, html: str, ms: float = 3500, border: str = "#2a1d18") -> None:
-        self._temp = True
-        self._temp_until = self.t + ms
-        self._focus_text = ""
-        self.bubble.show_html(html, border)
+        self.companion.say(html, ms, border)
 
     def _bubble_tick(self) -> None:
-        if self._temp and self.t > self._temp_until:
-            self._temp = False
-            self.bubble.hide()
-        if self._temp:
-            return
-        f = self.game.focus
-        if f:
-            left = max(0, math.ceil(f["ends_at"] - self.game.clock()))
-            text = f"⏱ {left // 60:02d}:{left % 60:02d}"
-            if text != self._focus_text:
-                self._focus_text = text
-                self.bubble.show_html(text)
-        elif self.bubble.isVisible():
-            self.bubble.hide()
-            self._focus_text = ""
+        self.companion.bubble_tick()
 
     def fx_particle(self, kind: str) -> None:
-        head_x = self.fx + self.CW * (0.62 if self.dir > 0 else 0.38)
-        self.fxl.spawn(kind, head_x + self.rng.uniform(-12, 12), self.fy - self.FOOT * 0.85)
+        self.companion.spawn_particle(kind)
 
     # ───────────────────────── réactions aux événements du jeu
     def _on_gift_clicked(self) -> None:
-        res = self.game.claim_gift()
-        self.gift_visible = False
-        self.gift.hide()
-        if self.state == "wait":
-            self._idle(3.0)
-        if not res:
-            return
-        hat, rar = res["hat"], res["rarity"]
-        self.happy_until = self.t + 3500
-        head = ("Nouveau chapeau : " + hat.name) if res["is_new"] else f"{hat.name} (doublon ×{res['count']})"
-        label_color = QColor(rar["color"]).darker(150).name()        # le gris/jaune clair d'une rareté se lit mal sur le crème
-        self.say(f"{head} — <b style='color:{label_color}'>{rar['label']}</b>", 6500, rar["color"])
-        for i in range(5):
-            QTimer.singleShot(i * 150, lambda: self.fx_particle("star"))
+        self.companion.gift_clicked()
 
     def _on_sleeping(self, asleep: bool) -> None:
-        self.sys_sleep = asleep
-        if asleep:
-            if self.state in STANDING:
-                self.state = "sleep"
-        elif self.state == "sleep":
-            self._idle(1.0)
-            self.happy_until = self.t + 2000
-            self.say("Te revoilà !", 2500)
-            self.fx_particle("heart")
-        self._adapt_loop()
+        self.companion.sleeping_changed(asleep)
 
     def _on_fullscreen(self, full: bool) -> None:
         self._fullscreen = full
@@ -618,18 +566,10 @@ class Pet(QWidget):
         self._adapt_loop()
 
     def _on_focus(self, f) -> None:
-        if f:
-            self.say("Au travail ! Je reste avec toi 🐾", 3500)
-            if self.state in ("idle", "walk", "nap", "wait"):
-                self._go_work()
-        elif self.state == "work":
-            self._idle(1.0)
+        self.companion.focus_changed(f)
 
     def _on_focus_finished(self, total: int) -> None:
-        self.happy_until = self.t + 4000
-        self.say("Bravo, session terminée !", 4000)
-        for i in range(4):
-            QTimer.singleShot(i * 200, lambda: self.fx_particle("heart"))
+        self.companion.focus_finished(total)
 
     def _on_changed(self) -> None:
         self._apply_scale()
