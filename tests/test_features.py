@@ -50,7 +50,7 @@ class StoreRobustnessTest(unittest.TestCase):
 
     def test_hostile_save_file_loads_with_sane_values(self):
         hostile = {
-            "name": 123, "fur": ["x"], "fish": "beaucoup", "gift_progress": -5, "gift_pending": "oui",
+            "name": 123, "fur": ["x"], "fish": "beaucoup", "gift_progress": -5, "gifts_pending": "oui",
             "equipped": "chapeau_fantome", "hats": {"crown": 2, "halo": "x", "bow": 0, "cap": 1.9},
             "days": {"2026-01-01": "oups", "2026-01-02": {"active": "x", "apps": {"a.exe": -1, "b.exe": 5}}},
             "focus": {"ends_at": "demain", "total_min": 25},
@@ -60,7 +60,7 @@ class StoreRobustnessTest(unittest.TestCase):
         d = st.data
         self.assertEqual(d["name"], "Miso")
         self.assertEqual(d["fur"], "ecaille")
-        self.assertEqual((d["fish"], d["gift_progress"], d["gift_pending"]), (0, 0, False))
+        self.assertEqual((d["fish"], d["gift_progress"], d["gifts_pending"]), (0, 0, False))
         self.assertIsNone(d["equipped"])                            # on ne porte pas un chapeau qu'on n'a pas
         self.assertEqual(d["hats"], {"crown": 2, "cap": 1})
         self.assertEqual(d["days"]["2026-01-01"], {"active": 0, "focus": 0, "gifts": 0, "apps": {}})
@@ -109,7 +109,7 @@ class RewardsAndFocusTest(GameTestCase):
             self.game.tick()
         self.assertEqual(done, [1, MIN_REWARD_MIN - 1])
         self.assertEqual(self.game.data["fish"], 0)
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(len(notes), 2)
 
     def test_gift_farming_with_one_minute_sessions_is_closed(self):
@@ -117,13 +117,13 @@ class RewardsAndFocusTest(GameTestCase):
             self.game.start_focus(1)
             self.now += 61
             self.game.tick()
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 0)
 
     def test_minimum_session_is_rewarded(self):
         self.game.start_focus(MIN_REWARD_MIN)
         self.work(MIN_REWARD_MIN)
-        self.assertTrue(self.game.data["gift_pending"])
+        self.assertTrue(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 10 + MIN_REWARD_MIN)
 
     def test_session_spent_away_from_the_computer_gives_no_reward(self):
@@ -135,7 +135,7 @@ class RewardsAndFocusTest(GameTestCase):
         self.work(25)
         self.assertIsNone(self.game.focus)
         self.assertEqual(done, [])                               # ni « bravo » ni cadeau
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 0)
         self.assertEqual(len(notes), 1)
 
@@ -144,8 +144,18 @@ class RewardsAndFocusTest(GameTestCase):
         self.now += 25 * 60 + 1                                  # le PC dort 25 min : l'horloge avance, pas le jeu
         self.game.tick()
         self.assertIsNone(self.game.focus)
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 0)
+
+    def test_focus_reward_adds_to_a_gift_already_waiting(self):
+        self.game.data["gifts_pending"] = 1                      # un cadeau ordinaire pas encore ouvert
+        self.game.start_focus(MIN_REWARD_MIN)
+        self.work(MIN_REWARD_MIN)
+        self.assertEqual(self.game.data["gifts_pending"], 2)     # avant : le cadeau de la session était perdu
+        self.assertIsNotNone(self.game.claim_gift())
+        self.assertEqual(self.game.data["gifts_pending"], 1)
+        self.assertIsNotNone(self.game.claim_gift())
+        self.assertIsNone(self.game.claim_gift())
 
     def test_half_presence_is_enough(self):
         self.game.start_focus(20)
@@ -153,7 +163,7 @@ class RewardsAndFocusTest(GameTestCase):
         self.work(10)                                            # absent la première moitié
         self.idle = 0
         self.work(10)
-        self.assertTrue(self.game.data["gift_pending"])
+        self.assertTrue(self.game.data["gifts_pending"])
 
     def test_presence_is_kept_across_an_app_restart(self):
         self.game.start_focus(20)
@@ -194,7 +204,7 @@ class RewardsAndFocusTest(GameTestCase):
         self.assertIsNone(again.focus)
         self.assertIsNone(again.data["focus"])
         self.assertEqual(again.data["fish"], 0)
-        self.assertFalse(again.data["gift_pending"])
+        self.assertFalse(again.data["gifts_pending"])
 
     def test_stopping_a_session_forgets_it(self):
         self.game.start_focus(25)
@@ -633,7 +643,7 @@ class MeowTest(PetCase):
         self.assertEqual(self.bubble.text(), "Message important")
 
     def test_no_meow_while_a_gift_waits(self):
-        self.game.data["gift_pending"] = True
+        self.game.data["gifts_pending"] = 1
         self.run_steps(5)
         self.assertTrue(self.pet.gift_visible)
         before = self.bubble.text()

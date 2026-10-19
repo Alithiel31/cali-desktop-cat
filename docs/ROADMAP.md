@@ -27,14 +27,22 @@ vrai Windows (`winapi.py` couvert à 27 %).
   sécurité lisibles comprises).
 - [x] **Batterie** : plus de `timeBeginPeriod(1)` ; boucle à 10 passages/s quand le chat est caché ou endormi
   (utilisateur absent).
+- [x] **Cadeaux cumulables** : la récompense de concentration ne se perd plus si un cadeau attendait (sauvegarde v2).
+- [x] **Sauvegarde** : copie quotidienne aussi quand l'appli tourne plusieurs jours ; `fsync` et nouvelles tentatives.
+- [x] **Fenêtres invisibles** : overlays, fenêtres non activables ou d'opacité nulle exclues du perchage ; titres lus
+  sans message (pas de gel sur une fenêtre bloquée). *À vérifier sur un vrai Windows avec Steam/Discord ouverts.*
 - [ ] **Mesure CPU** sur la vraie machine (au repos, endormi, en marche) pour décider de la suite : cache `exe` par pid,
   scan des fenêtres moins fréquent.
 
 ## Niveau 2 — Important : v0.3.1
-- [ ] **Lancement avec Windows** : réécrire la clé de registre à chaque démarrage (exe déplacé ou mis à jour) et tenir
-  compte de l'échec de `autostart.set_enabled` (aujourd'hui la case reste cochée même si l'écriture échoue).
+- [ ] **Lancement avec Windows** : réécrire la clé de registre à chaque démarrage (exe déplacé ou mis à jour). Le
+  registre doit faire foi, pas `save.json` : une désactivation depuis le Gestionnaire des tâches écrit dans
+  `Explorer\StartupApproved\Run` sans supprimer la valeur `Run`, et la case du panneau mentirait.
+- [ ] **Faux plein écran** : vérifier qu'une fenêtre maximisée avec barre des tâches masquée ne cache pas le chat
+  (`IsZoomed` / `WS_CAPTION` dans `is_fullscreen`).
 - [ ] **Plein écran et vidéo** : seule la fenêtre active est examinée (une vidéo plein écran sur l'autre écran ne cache
-  pas le chat s'il y va). Et un film regardé sans toucher la souris endort le chat.
+  pas le chat s'il y va). Et un film regardé sans toucher la souris endort le chat : piste,
+  `CallNtPowerInformation(SystemExecutionState)` et le drapeau `ES_DISPLAY_REQUIRED` posé par les lecteurs vidéo.
 - [ ] **Builds reproductibles** : versions figées (PySide6, PyInstaller), `.spec` versionné, icône, numéro de version
   dans le panneau ; envisager `--onedir` (démarrage plus rapide, moins de faux positifs antivirus).
 

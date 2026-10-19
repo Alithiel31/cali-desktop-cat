@@ -25,7 +25,7 @@ def main() -> None:
     app = QApplication([])
     game = Game(Store(os.path.join(tempfile.mkdtemp(), "save.json")))
     for _ in range(6):                      # quelques chapeaux pour remplir la garde-robe
-        game.data["gift_pending"] = True
+        game.data["gifts_pending"] = 1
         game.claim_gift()
     panel = Panel(game)
     panel.resize(560, 640)

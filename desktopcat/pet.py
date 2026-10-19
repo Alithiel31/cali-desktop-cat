@@ -491,7 +491,8 @@ class Pet(QWidget):
             self._follow_active()
 
         data = self.game.data
-        if data["gift_pending"] and not self.gift_visible and not self.sys_sleep \
+        # `_temp` : on laisse finir la bulle en cours (celle du chapeau qu'on vient d'ouvrir, quand un 2e cadeau attend)
+        if data["gifts_pending"] and not self.gift_visible and not self.sys_sleep and not self._temp \
                 and self.state in ("idle", "walk", "nap"):
             self._show_gift()
 
