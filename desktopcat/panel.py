@@ -8,7 +8,7 @@ from PySide6.QtCore import QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPainter
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMessageBox, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
-                               QWidget)
+                               QWidget, QGroupBox)
 
 from .hats import HATS, RARITIES, RARITY_ORDER
 from .sprite import FURS, render_pixmap
@@ -379,50 +379,89 @@ class Panel(QWidget):
     # ───────────────────────── réglages
     def _build_settings(self) -> QWidget:
         page = QWidget()
-        form = QFormLayout(page)
-        form.setVerticalSpacing(12)
+        root = QVBoxLayout(page)
+        root.setContentsMargins(16, 16, 16, 16)
+        root.setSpacing(14)
         g = self.game
 
+        identity = QGroupBox("Ton chat")
+        identity_form = QFormLayout(identity)
+        identity_form.setVerticalSpacing(10)
         self.name_edit = QLineEdit()
         self.name_edit.setMaxLength(20)
+        self.name_edit.setPlaceholderText("Miso")
         self.name_edit.editingFinished.connect(lambda: g.set_name(self.name_edit.text()))
-        form.addRow("Nom du chat", self.name_edit)
+        identity_form.addRow("Nom", self.name_edit)
 
         self.fur_box = QComboBox()
         for key, f in FURS.items():
             self.fur_box.addItem(f["label"], key)
         self.fur_box.activated.connect(lambda i: g.set_fur(self.fur_box.itemData(i)))
-        form.addRow("Pelage", self.fur_box)
+        identity_form.addRow("Pelage", self.fur_box)
+        root.addWidget(identity)
 
+        rhythm = QGroupBox("Rythme et apparence")
+        rhythm_form = QFormLayout(rhythm)
+        rhythm_form.setVerticalSpacing(10)
         self.spins = {}
         for key, label, lo, hi, suffix in (
-                ("scale", "Taille du chat (3 à 6)", 3, 6, ""),
-                ("gift_every_min", "Un cadeau toutes les", 5, 120, " min d'activité"),
-                ("sleep_after_min", "Il s'endort après", 1, 60, " min d'inactivité")):
+                ("scale", "Taille du chat", 3, 6, ""),
+                ("gift_every_min", "Cadeau toutes les", 5, 120, " min d'activité"),
+                ("sleep_after_min", "Sommeil après", 1, 60, " min d'inactivité")):
             sp = QSpinBox()
             sp.setRange(lo, hi)
             sp.setSuffix(suffix)
             sp.editingFinished.connect(lambda k=key, s=sp: g.set_setting(k, s.value()))
-            form.addRow(label, sp)
+            rhythm_form.addRow(label, sp)
             self.spins[key] = sp
+        root.addWidget(rhythm)
 
         self.checks = {}
-        for key, label in (
-                ("perch_windows", "Il marche sur le bord haut des fenêtres"),
-                ("jump_between_windows", "Il saute d'une fenêtre à l'autre"),
-                ("follow_active", "Il rejoint la fenêtre qu'on vient d'activer"),
-                ("meows", "Il miaule de temps en temps (bulles)"),
-                ("notifications", "Notifications de fin de session"),
-                ("track_apps", "Noter les applications utilisées (statistiques)"),
-                ("launch_at_startup", "Lancer avec Windows")):
-            cb = QCheckBox(label)
-            cb.toggled.connect(lambda v, k=key, box=cb: self._set_checkbox_setting(k, v, box))
-            form.addRow(cb)
-            self.checks[key] = cb
+        descriptions = {
+            "meows": "Affiche parfois une bulle au-dessus du chat.",
+            "notifications": "Prévient quand une session de concentration se termine.",
+            "track_apps": "Garde localement le nom des applications utilisées pour les statistiques.",
+            "launch_at_startup": "Ouvre le chat automatiquement à l'ouverture de ta session Windows.",
+        }
+        groups = (
+            ("Comportement du chat", (
+                ("perch_windows", "Marcher sur le bord des fenêtres"),
+                ("jump_between_windows", "Sauter d'une fenêtre à l'autre"),
+                ("follow_active", "Rejoindre la fenêtre active"),
+                ("meows", "Miauler de temps en temps"),
+            )),
+            ("Notifications et confidentialité", (
+                ("notifications", "Notifications de concentration"),
+                ("track_apps", "Suivi des applications"),
+            )),
+            ("Démarrage", (("launch_at_startup", "Lancer avec Windows"),)),
+        )
+        for title, items in groups:
+            section = QGroupBox(title)
+            section_layout = QVBoxLayout(section)
+            section_layout.setSpacing(7)
+            for key, label in items:
+                row = QWidget()
+                row_layout = QVBoxLayout(row)
+                row_layout.setContentsMargins(0, 2, 0, 2)
+                row_layout.setSpacing(2)
+                cb = QCheckBox(label)
+                cb.toggled.connect(lambda v, k=key, box=cb: self._set_checkbox_setting(k, v, box))
+                row_layout.addWidget(cb)
+                if key in descriptions:
+                    hint = QLabel(descriptions[key])
+                    hint.setObjectName("muted")
+                    hint.setWordWrap(True)
+                    row_layout.addWidget(hint)
+                section_layout.addWidget(row)
+                self.checks[key] = cb
+            root.addWidget(section)
 
         test = QPushButton("Recevoir un cadeau maintenant (test)")
         test.clicked.connect(g.force_gift)
-        form.addRow(test)
+        test.setToolTip("Outil de test : ajoute un cadeau à la progression actuelle.")
+        root.addWidget(test)
+        root.addStretch(1)
         return page
 
     def _set_checkbox_setting(self, key: str, value: bool, checkbox: QCheckBox) -> None:

@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QCloseEvent, QColor, QMouseEvent, QPalette
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QGroupBox
 
 from desktopcat import pet as pet_module, phrases, winapi
 from desktopcat.game import MAX_TICK_S, MIN_REWARD_MIN, Game
@@ -725,6 +725,16 @@ class ClickTest(PetCase):
 
 
 class PanelTest(GameTestCase):
+    def test_settings_are_grouped_and_keep_all_existing_controls(self):
+        panel = Panel(self.game)
+        self.addCleanup(panel.deleteLater)
+        titles = {group.title() for group in panel.tabs.widget(3).findChildren(QGroupBox)}
+        self.assertTrue({"Ton chat", "Rythme et apparence", "Comportement du chat",
+                         "Notifications et confidentialité", "Démarrage"} <= titles)
+        self.assertEqual(set(panel.checks), {
+            "perch_windows", "jump_between_windows", "follow_active", "meows", "notifications",
+            "track_apps", "launch_at_startup"})
+
     def test_closing_hides_the_panel_but_not_when_the_session_ends(self):
         panel = Panel(self.game)
         self.addCleanup(panel.deleteLater)
