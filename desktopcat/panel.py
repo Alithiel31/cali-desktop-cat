@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QFrame, QGridL
                                QLineEdit, QMessageBox, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
                                QWidget, QGroupBox)
 
+from . import __version__
 from .game import FEED_COST, MOOD_FULL, MOOD_HAPPY
 from .hats import HATS, RARITIES, RARITY_ORDER, season_label
 from .sprite import FURS, render_pixmap
@@ -126,7 +127,7 @@ class Panel(QWidget):
         app = QGuiApplication.instance()
         if app is not None:
             app.aboutToQuit.connect(lambda: setattr(self, "_quitting", True))
-        self.setWindowTitle("Desktop Cat")
+        self.setWindowTitle(f"Desktop Cat {__version__}")
         self.resize(540, 720)
         self.setStyleSheet(STYLE)
         self._animated: list[tuple[QLabel, str]] = []
@@ -490,6 +491,13 @@ class Panel(QWidget):
         test.clicked.connect(g.force_gift)
         test.setToolTip("Outil de test : ajoute un cadeau à la progression actuelle.")
         root.addWidget(test)
+        about = QLabel(f"Desktop Cat {__version__} · licence MIT · "
+                       "<a href='https://github.com/Alithiel31/cali-desktop-cat' style='color:#9aa4b8'>code source</a>")
+        about.setObjectName("muted")
+        about.setOpenExternalLinks(True)
+        about.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.about = about
+        root.addWidget(about)
         root.addStretch(1)
         return page
 

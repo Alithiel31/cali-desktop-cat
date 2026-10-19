@@ -17,12 +17,14 @@ vrai Windows (`winapi.py` couvert à 27 %).
 - [x] CI GitHub Actions (Windows + Ubuntu, Python 3.12 et 3.13) ; CD : build de l'exe et Release sur tag `v*`.
 - [x] `CHANGELOG.md`, `CONTRIBUTING.md` et documentation de projet.
 
-## Niveau 1 — Urgent : avant de taguer v0.3.0
-- [ ] **Valider sur un vrai Windows.** Test rapide limité à Windows en CI : `list_windows`, `foreground`,
-  `idle_seconds`, `window_rect` tournent sans erreur ctypes et renvoient les bons types. Plus une vérification à la main :
-  perchage, saut, chute, double écran, échelles d'affichage mixtes. Ensuite, retirer « Écrit sans accès à Windows » du README.
-- [ ] **Tester l'exe avant le tag** : artefact d'un build de PR, essayé sur une machine sans Python (démarrage, journal,
-  sauvegarde, lancement avec Windows).
+## Niveau 1 — Urgent : signature, puis v0.4.x
+- [ ] **Signature de code (SignPath Foundation)** : Smart App Control bloque l'exe non signé sans recours, y compris sur
+  la machine de dev. Préparation faite en v0.4.1 (Code signing policy, métadonnées, bloc commenté dans `release.yml`) ;
+  reste : 2FA, candidature, activation. Détail : [DISTRIBUTION.md](DISTRIBUTION.md#signature-signpath-foundation).
+- [x] **Valider sur un vrai Windows** : tests Windows en CI et sur la machine de dev (236 tests), checklist manuelle
+  ([TEST-MANUEL.md](TEST-MANUEL.md)) passée avec Python le 19/10/2026.
+- [ ] **Tester l'exe** sur une machine sans Smart App Control (ou une fois signé) : démarrage, journal, sauvegarde,
+  lancement avec Windows, Gestionnaire des tâches.
 - [x] **Vie privée** : réglage « Noter les applications utilisées » + bouton « Effacer mes statistiques » (copies de
   sécurité lisibles comprises).
 - [x] **Batterie** : plus de `timeBeginPeriod(1)` ; boucle à 10 passages/s quand le chat est caché ou endormi
@@ -42,8 +44,9 @@ vrai Windows (`winapi.py` couvert à 27 %).
 - [ ] **Plein écran et vidéo** : seule la fenêtre active est examinée (une vidéo plein écran sur l'autre écran ne cache
   pas le chat s'il y va). Et un film regardé sans toucher la souris endort le chat : piste,
   `CallNtPowerInformation(SystemExecutionState)` et le drapeau `ES_DISPLAY_REQUIRED` posé par les lecteurs vidéo.
-- [ ] **Builds reproductibles** : versions figées (PySide6, PyInstaller), `.spec` versionné, icône, numéro de version
-  dans le panneau ; envisager `--onedir` (démarrage plus rapide, moins de faux positifs antivirus).
+- [ ] **Builds reproductibles** : versions figées (PySide6, PyInstaller), `.spec` versionné ; envisager `--onedir`
+  (démarrage plus rapide, moins de faux positifs antivirus, et peut-être nécessaire pour Smart App Control).
+  Icône et numéro de version : faits (v0.4.1).
 
 ## Niveau 3 — Moyen
 - [ ] **Deuxième lancement visible** : le message « déjà lancé » part dans `print()`, invisible sans console. Ouvrir
