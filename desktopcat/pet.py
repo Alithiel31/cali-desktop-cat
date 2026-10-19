@@ -21,15 +21,13 @@ from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QApplication, QMenu, QWidget
 
 from . import winapi
-from .motion import Jump, advance_jump, make_jump
+from .motion import Jump, advance_fall, advance_jump, make_jump
 from .phrases import meow_delay, pick_meow
 from .screens import (ScreenInfo, bounds, build_floors, clamp_point, native_rects, nearest_floor,
                       nearest_rect_index, to_logical)
 from .sprite import FOOT_ROW, GRID_H, GRID_W, draw_cat
 from .surfaces import LWin, Surface, compute_surfaces
 
-GRAVITY = 2200.0          # px/s²
-MAX_FALL = 2400.0         # px/s
 BASE_SPEED = 95.0         # px/s pour une échelle de 4
 STANDING = ("idle", "walk", "nap", "wait", "work", "sleep")
 LOOP_MS = 16              # boucle normale : ~60 images/s
@@ -471,21 +469,12 @@ class Pet(QWidget):
         self._scan_acc = 0.0
 
     def _step_fall(self, dt: float) -> None:
-        prev = self.fy
-        self.vy = min(self.vy + GRAVITY * dt, MAX_FALL)
-        self.fy += self.vy * dt
-        best = None
-        for s in self.surfaces:
-            if s.x0 <= self.cx <= s.x1 and prev - 0.5 <= s.y <= self.fy + 0.5:
-                if best is None or s.y < best.y:
-                    best = s
-        if best is None and self.fy >= max(f.y for f in self.floors):
-            # il passe sous tous les sols sans en avoir croisé un (entre deux écrans, hors bureau) : on le repose
-            f = self.floors[nearest_floor(self.floors, self.cx, self.fy)]
-            self.fx = _clamp(self.cx, f.x0, f.x1) - self.CW / 2
-            best = Surface(None, f.y, f.x0, f.x1, f.x0, "sol", floor=f.idx)
-        if best is not None:
-            self._land(best)
+        center_x = self.cx
+        center_x, self.fy, self.vy, landing = advance_fall(
+            center_x, self.fy, self.vy, dt, self.surfaces, self.floors)
+        self.fx += center_x - self.cx
+        if landing is not None:
+            self._land(landing)
 
     def _land(self, s: Surface, soft: bool = False) -> None:
         if s.hwnd is not None:

@@ -1,9 +1,13 @@
-"""Calculs de trajectoire sans dépendance à Qt ni à Windows."""
+"""Calculs de mouvement (sauts et chutes) sans dépendance à Qt ni à Windows."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .screens import nearest_floor
 from .surfaces import Surface
+
+GRAVITY = 2200.0          # px/s²
+MAX_FALL = 2400.0         # px/s
 
 
 @dataclass
@@ -38,3 +42,20 @@ def advance_jump(jump: Jump, dt: float) -> tuple[float, float, bool]:
     x = jump.x0 + (jump.x1 - jump.x0) * progress
     y = jump.y0 + (jump.y1 - jump.y0) * progress - 4 * jump.height * progress * (1 - progress)
     return x, y, progress >= 1.0
+
+
+def advance_fall(x: float, previous_y: float, velocity: float, dt: float,
+                 surfaces: list[Surface], floors) -> tuple[float, float, float, Surface | None]:
+    """Avance une chute et renvoie la première surface touchée (ou le sol de secours)."""
+    velocity = min(velocity + GRAVITY * dt, MAX_FALL)
+    y = previous_y + velocity * dt
+    landing = None
+    for surface in surfaces:
+        if surface.x0 <= x <= surface.x1 and previous_y - 0.5 <= surface.y <= y + 0.5:
+            if landing is None or surface.y < landing.y:
+                landing = surface
+    if landing is None and y >= max(floor.y for floor in floors):
+        floor = floors[nearest_floor(floors, x, y)]
+        x = max(floor.x0, min(floor.x1, x))
+        landing = Surface(None, floor.y, floor.x0, floor.x1, floor.x0, "sol", floor=floor.idx)
+    return x, y, velocity, landing
