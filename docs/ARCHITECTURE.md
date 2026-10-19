@@ -27,6 +27,7 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 | `motion.py` | Calculs physiques de la marche, des sauts et des chutes, indépendants de Qt et de Windows. | non | non |
 | `world.py` | Convertit les fenêtres Windows en surfaces praticables en coordonnées Qt. | non | via `winapi` |
 | `pet_layout.py` | Calcule la position du chat, du cadeau et de la bulle dans la zone visible, sans Qt. | non | non |
+| `pet_input.py` | Traduit les événements souris et le menu contextuel en actions sur le chat. | oui | non |
 | `screens.py` | Géométrie multi-écrans (conversion pixels physiques ↔ logiques, sols, chaînes d'écrans collés). Fonctions pures. | non | non |
 | `surfaces.py` | Calcule les bords hauts de fenêtres sur lesquels le chat peut marcher, en retirant les parties masquées par les fenêtres au-dessus. Fonctions pures. | non | non |
 | `winapi.py` | `ctypes` vers `user32`/`dwmapi`/`kernel32` : liste des fenêtres, fenêtre active, inactivité, plein écran. Sur un autre système, renvoie des valeurs neutres. | non | oui (isolé ici) |

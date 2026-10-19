@@ -18,13 +18,14 @@ import time
 from PySide6.QtCore import QTimer, Qt, Signal
 from PySide6.QtGui import QColor, QCursor, QGuiApplication, QPainter
 from PySide6.QtCore import QRect
-from PySide6.QtWidgets import QApplication, QMenu, QWidget
+from PySide6.QtWidgets import QWidget
 
 from . import winapi
 from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
 from .pet_layout import compute_placement
+from .pet_input import PetInput
 from .phrases import meow_delay, pick_meow
-from .screens import (ScreenInfo, bounds, build_floors, clamp_point, clip_to_bounds, floor_here, native_rects,
+from .screens import (ScreenInfo, bounds, build_floors, clip_to_bounds, floor_here, native_rects,
                       nearest_rect_index, snap_to_floor)
 from .sprite import FOOT_ROW, GRID_H, GRID_W, draw_cat
 from .surfaces import Surface
@@ -115,6 +116,7 @@ class Pet(QWidget):
         self._focus_text = ""
 
         self._press = None
+        self.input = PetInput(self)
         self._pet_timer = QTimer(self)       # un clic simple attend de savoir si c'est un double-clic
         self._pet_timer.setSingleShot(True)
         self._pet_timer.timeout.connect(self._pet)
@@ -638,46 +640,16 @@ class Pet(QWidget):
 
     # ───────────────────────── souris : caresser, porter, menu
     def mousePressEvent(self, e) -> None:
-        g = e.globalPosition().toPoint()
-        if e.button() == Qt.MouseButton.LeftButton:
-            self._press = {"g": g, "moved": False, "off": (e.position().x(), e.position().y())}
-        elif e.button() == Qt.MouseButton.RightButton:
-            self._menu(g)
+        self.input.press(e)
 
     def mouseMoveEvent(self, e) -> None:
-        p = self._press
-        if not p:
-            return
-        g = e.globalPosition().toPoint()
-        if not p["moved"] and math.hypot(g.x() - p["g"].x(), g.y() - p["g"].y()) > 5:
-            p["moved"] = True
-            self.state = "drag"
-            self.stand, self.jump, self.vy = None, None, 0.0
-            self.setCursor(Qt.CursorShape.ClosedHandCursor)
-        if p["moved"]:
-            nx = g.x() - p["off"][0]
-            ny = g.y() - p["off"][1]
-            if abs(nx - self.fx) > 1:
-                self.dir = 1 if nx > self.fx else -1
-            # on le garde sur un écran : le point (centre, pieds) est ramené dans la zone utile la plus proche
-            zones = [(w[0], w[1] + self.FOOT, w[2], w[3]) for w in self.works]
-            cx, fy = clamp_point(zones, nx + self.CW / 2, ny + self.FOOT)
-            self.fx, self.fy = cx - self.CW / 2, fy
+        self.input.move(e)
 
     def mouseReleaseEvent(self, e) -> None:
-        p, self._press = self._press, None
-        if not p or e.button() != Qt.MouseButton.LeftButton:
-            return
-        if p["moved"]:
-            self.unsetCursor()
-            self.state = "fall"
-            self.vy = 0.0
-        else:
-            self._pet_timer.start(min(400, QApplication.doubleClickInterval()))
+        self.input.release(e)
 
     def mouseDoubleClickEvent(self, e) -> None:
-        self._pet_timer.stop()                       # c'était un double-clic : pas de caresse
-        self.open_panel.emit()
+        self.input.double_click()
 
     def _pet(self) -> None:
         if self.sys_sleep:
@@ -689,17 +661,6 @@ class Pet(QWidget):
             QTimer.singleShot(i * 220, lambda: self.fx_particle("heart"))
         if self.state == "nap":
             self._idle(2.0)
-
-    def _menu(self, pos) -> None:
-        menu = QMenu()
-        menu.addAction("Ouvrir le panneau", self.open_panel.emit)
-        if self.game.focus:
-            menu.addAction("Arrêter la concentration", self.stop_focus.emit)
-        else:
-            menu.addAction("Concentration 25 min", lambda: self.start_focus.emit(25))
-        menu.addSeparator()
-        menu.addAction("Quitter", self.quit_app.emit)
-        menu.exec(pos)
 
     # ───────────────────────── rendu et placement
     def paintEvent(self, event) -> None:

@@ -723,6 +723,21 @@ class ClickTest(PetCase):
             self.assertTrue(0 <= pet.cx <= 1000 and pet.FOOT <= pet.fy <= 800, (x, y, pet.cx, pet.fy))
         pet.mouseReleaseEvent(mouse(QEvent.Type.MouseButtonRelease))
 
+    def test_context_menu_reflects_focus_state(self):
+        with mock.patch("desktopcat.pet_input.QMenu") as menu_factory:
+            self.pet.input.show_menu(QPoint(10, 10))
+        actions = [call.args[0] for call in menu_factory.return_value.addAction.call_args_list]
+        self.assertIn("Concentration 25 min", actions)
+        self.assertIn("Ouvrir le panneau", actions)
+        self.assertIn("Quitter", actions)
+
+        self.game.start_focus(25)
+        with mock.patch("desktopcat.pet_input.QMenu") as menu_factory:
+            self.pet.input.show_menu(QPoint(10, 10))
+        actions = [call.args[0] for call in menu_factory.return_value.addAction.call_args_list]
+        self.assertIn("Arrêter la concentration", actions)
+        self.assertNotIn("Concentration 25 min", actions)
+
 
 class PanelTest(GameTestCase):
     def test_settings_are_grouped_and_keep_all_existing_controls(self):
