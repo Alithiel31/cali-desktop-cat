@@ -137,6 +137,28 @@ class RealScreensTest(unittest.TestCase):
             self.assertTrue(s.geom[0] <= s.work[0] and s.work[2] <= s.geom[2] + 1)     # zone utile dans l'écran
 
 
+@unittest.skipUnless(sys.platform == "win32", "l'API Win32 n'existe que sous Windows")
+class WinApiSmokeTest(unittest.TestCase):
+    """Vérifie les appels ctypes réels sans supposer de fenêtre ou d'écran particulier."""
+
+    def test_windows_api_calls_return_expected_types(self):
+        windows = winapi.list_windows()
+        self.assertIsInstance(windows, list)
+        self.assertTrue(all(isinstance(window, winapi.WinInfo) for window in windows))
+
+        foreground = winapi.foreground()
+        self.assertTrue(foreground is None or isinstance(foreground, winapi.Foreground))
+
+        idle = winapi.idle_seconds()
+        self.assertIsInstance(idle, float)
+        self.assertGreaterEqual(idle, 0)
+
+        if foreground is not None:
+            rect = winapi.window_rect(foreground.hwnd)
+            self.assertTrue(rect is None or (isinstance(rect, tuple) and len(rect) == 4
+                                             and all(isinstance(coord, int) for coord in rect)))
+
+
 class FixedCursor:
     """Fausse souris à une abscisse donnée : sans elle, les tests dépendent de l'endroit où se trouve ta vraie souris."""
 
