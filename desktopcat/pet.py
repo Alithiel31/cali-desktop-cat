@@ -24,9 +24,10 @@ from . import winapi
 from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
 from .phrases import meow_delay, pick_meow
 from .screens import (ScreenInfo, bounds, build_floors, clamp_point, native_rects, nearest_floor,
-                      nearest_rect_index, to_logical)
+                      nearest_rect_index)
 from .sprite import FOOT_ROW, GRID_H, GRID_W, draw_cat
-from .surfaces import LWin, Surface, compute_surfaces
+from .surfaces import Surface
+from .world import build_surfaces, floor_surfaces, window_geometry
 
 BASE_SPEED = 95.0         # px/s pour une échelle de 4
 STANDING = ("idle", "walk", "nap", "wait", "work", "sleep")
@@ -202,7 +203,7 @@ class Pet(QWidget):
         return nearest_rect_index(self.works, self.cx, self.fy - self.FOOT / 2)
 
     def _floor_surfaces(self) -> list:
-        return [Surface(None, f.y, f.x0, f.x1, f.x0, "sol", floor=f.idx) for f in self.floors]
+        return floor_surfaces(self.floors)
 
     def _floor_here(self):
         """Le sol sous ses pieds : celui de l'écran courant, ou son voisin de la même chaîne s'il l'a traversé."""
@@ -279,24 +280,12 @@ class Pet(QWidget):
 
     # ───────────────────────── surfaces
     def _refresh_surfaces(self) -> None:
-        surfaces = []
-        if self.settings["perch_windows"]:
-            wins = [LWin(w.hwnd, w.title, *to_logical(w.rect, self.screens), w.zoomed)
-                    for w in winapi.list_windows(exclude=self._own_hwnds())]
-            for work in self.works:                  # chaque écran voit les bords de fenêtres qui le traversent
-                surfaces += compute_surfaces(wins, work, self.FOOT, self.CW * 0.9)
-        surfaces += self._floor_surfaces()
-        self.surfaces = surfaces
+        self.surfaces = build_surfaces(self.screens, self.works, self.floors, self.settings["perch_windows"],
+                                       self._own_hwnds(), self.FOOT, self.CW)
 
     def _window_geometry(self, hwnd):
         """(y du bord haut, gauche, droite) de la fenêtre telle qu'elle est MAINTENANT, ou None si elle a disparu."""
-        if not self.settings["perch_windows"]:
-            return None
-        r = winapi.window_rect(hwnd)
-        if r is None:
-            return None
-        l, t, rr, _b = to_logical(r, self.screens)
-        return (t, l, rr)
+        return window_geometry(hwnd, self.screens, self.settings["perch_windows"])
 
     def _current_surface(self):
         """(y, x0, x1) de la surface sous ses pieds, ou None si elle a disparu."""
