@@ -21,6 +21,7 @@ from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QApplication, QMenu, QWidget
 
 from . import winapi
+from .motion import Jump, advance_jump, make_jump
 from .phrases import meow_delay, pick_meow
 from .screens import (ScreenInfo, bounds, build_floors, clamp_point, native_rects, nearest_floor,
                       nearest_rect_index, to_logical)
@@ -93,7 +94,7 @@ class Pet(QWidget):
         self.then = None
         self.frame = 0
         self._frame_t = 0.0
-        self.jump: dict | None = None
+        self.jump: Jump | None = None
         self.sys_sleep = False
         self.hidden = False
         self.user_hidden = False
@@ -445,28 +446,17 @@ class Pet(QWidget):
         return True
 
     def _begin_jump(self, dest: Surface, land_cx: float) -> None:
-        dist = abs(land_cx - self.cx)
-        dy = self.fy - dest.y                     # > 0 : la destination est plus haut
-        up = max(0.0, dy)
-        self.jump = {
-            "x0": self.fx, "y0": self.fy, "x1": land_cx - self.CW / 2, "y1": dest.y, "k": 0.0, "dest": dest,
-            "dur": 0.45 + dist / 1400 + up / 1500,
-            "h": (max(60.0, up + 45.0)) * self.S / 4,
-        }
+        self.jump = make_jump(self.fx, self.fy, land_cx, dest.y, self.CW, self.S, dest)
         self.dir = 1 if land_cx >= self.cx else -1
         self.stand = None
         self.state = "jump"
         self.then = None
 
     def _step_jump(self, dt: float) -> None:
-        j = self.jump
-        j["k"] = min(1.0, j["k"] + dt / j["dur"])
-        k = j["k"]
-        self.fx = j["x0"] + (j["x1"] - j["x0"]) * k
-        self.fy = j["y0"] + (j["y1"] - j["y0"]) * k - 4 * j["h"] * k * (1 - k)
-        if k >= 1.0:
-            self.fx, self.fy = j["x1"], j["y1"]
-            dest, self.jump = j["dest"], None
+        jump = self.jump
+        self.fx, self.fy, arrived = advance_jump(jump, dt)
+        if arrived:
+            dest, self.jump = jump.dest, None
             self._land(dest, soft=True)
 
     # ───────────────────────── chute et atterrissage
