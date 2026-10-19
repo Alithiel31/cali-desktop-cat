@@ -75,6 +75,7 @@ class Game(QObject):
         self._timer.timeout.connect(self._on_timer)
 
     def start(self) -> None:
+        self.sync_autostart(refresh_path=True)
         self._restore_focus()
         self._last_mono = None
         self._timer.start(1000)
@@ -327,6 +328,19 @@ class Game(QObject):
         self.store.save()
         self.changed.emit()
         return True
+
+    def sync_autostart(self, refresh_path: bool = False) -> None:
+        """Aligne la case « Lancer avec Windows » sur le registre, qui fait foi (une désactivation dans le Gestionnaire
+        des tâches ne passe pas par l'appli). Au démarrage, réécrit aussi le chemin de l'exe s'il a changé."""
+        actual = autostart.is_enabled()
+        if actual is None:                              # hors Windows, ou registre illisible : on ne touche à rien
+            return
+        if actual and refresh_path:
+            autostart.refresh_path()
+        if actual != self.settings["launch_at_startup"]:
+            self.settings["launch_at_startup"] = actual
+            self.store.save()
+            self.changed.emit()
 
     def clear_stats(self) -> None:
         """Efface les statistiques (et leurs traces dans les copies de sécurité). Chapeaux et croquettes restent."""

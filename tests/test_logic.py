@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from PySide6.QtCore import QPoint, QRect
 from PySide6.QtWidgets import QApplication
 
-from desktopcat import hats, winapi
+from desktopcat import autostart, hats, winapi
 from desktopcat import pet as pet_module
 from desktopcat.game import Game
 from desktopcat.pet import Pet
@@ -212,6 +212,7 @@ class GameTestCase(unittest.TestCase):
             mock.patch.object(winapi, "idle_seconds", lambda: self.idle),
             mock.patch.object(winapi, "foreground", lambda: self.fg),
             mock.patch.object(pet_module, "qt_screens", _no_real_screens),      # garde : jamais les vrais écrans en test
+            mock.patch.object(autostart, "_reg", lambda: None),                  # garde : jamais le vrai registre
         ]
         for p in patches:
             p.start()

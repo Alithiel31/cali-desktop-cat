@@ -46,6 +46,7 @@ def main() -> int:
 
     def open_panel(tab=None):
         nonlocal panel
+        game.sync_autostart()           # la case du panneau montre l'état réel du registre
         if panel is None:
             panel = Panel(game)
         panel.show()
