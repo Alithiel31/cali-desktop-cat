@@ -8,6 +8,7 @@ on:
       - "main.py"
       - "requirements.txt"
       - "desktopcat/**"
+      - "assets/**"
       - ".github/workflows/release.yml"
 
 permissions:
@@ -48,7 +49,7 @@ jobs:
         run: python -m unittest discover -s tests
 
       - name: Construire l'exécutable
-        run: pyinstaller --noconsole --onefile --name DesktopCat main.py
+        run: pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico main.py
 
       - name: Empreinte SHA256
         shell: pwsh

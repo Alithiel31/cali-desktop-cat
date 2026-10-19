@@ -17,6 +17,8 @@ Première Release publiée (la 0.3.0 n'a jamais été taguée : son contenu est 
 - **Chasse à la souris** : il guette la souris qui vient de s'arrêter près de lui, puis bondit dessus (désactivable).
 - **Pause Pomodoro** après chaque session réussie (5 min réglables), minuteur ☕ dans la bulle, bouton « Passer la pause ».
 - **Raccourci Ctrl+Alt+C** pour afficher ou cacher le chat (désactivable).
+- **Icône** de l'exécutable (`assets/desktopcat.ico`, générée par `tools/make_icon.py` à partir du sprite : chat entier en
+  grand, tête seule à 48 px et moins) et du panneau.
 
 - Réglage « Noter les applications utilisées » pour couper le suivi des exécutables actifs.
 - Bouton « Effacer mes statistiques » (avec confirmation) : vide l'historique, copies de sécurité lisibles comprises.
