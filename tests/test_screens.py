@@ -7,8 +7,9 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from desktopcat import phrases
-from desktopcat.screens import (ScreenInfo, bounds, build_floors, clamp_point, native_rects, nearest_floor,
-                                nearest_rect_index, screen_at_native, to_logical)
+from desktopcat.screens import (ScreenInfo, bounds, build_floors, clamp_point, clip_to_bounds, floor_here,
+                                native_rects, nearest_floor, nearest_rect_index, screen_at_native, snap_to_floor,
+                                to_logical)
 
 # Deux écrans côte à côte : A (1920x1080, 100 %) puis B (4K à 200 % = 1920x1080 logiques).
 A = ScreenInfo((0, 0, 1920, 1080), (0, 0, 1920, 1040), 1.0)
@@ -67,6 +68,19 @@ class FloorsTest(unittest.TestCase):
         self.assertEqual(nearest_floor(f, 500, 790), 0)
         self.assertEqual(nearest_floor(f, 1500, 390), 1)
         self.assertEqual(nearest_floor(f, 1050, 600), 0)                  # dans le trou : le plus proche
+
+    def test_floor_here_tracks_only_a_neighbor_in_the_same_chain(self):
+        f = build_floors([(0, 0, 1000, 800), (1000, 0, 2000, 800), (2200, 0, 3000, 800)])
+        self.assertEqual(floor_here(f, 1500, 0), 1)
+        self.assertEqual(floor_here(f, 2500, 0), 0)  # écran séparé : on reste dans la chaîne courante
+        self.assertEqual(floor_here(f, 500, 0), 0)
+
+    def test_snap_to_floor_clamps_center_before_returning_sprite_position(self):
+        f = build_floors([(0, 0, 1000, 800), (1100, 0, 2000, 400)])
+        self.assertEqual(snap_to_floor(f, 1050, 600, 80), (0, 960, 800))
+
+    def test_clip_to_bounds_limits_a_segment_to_the_desktop(self):
+        self.assertEqual(clip_to_bounds(-100, 1300, (-20, 0, 1000, 800)), (-20, 1000))
 
 
 class PointsTest(unittest.TestCase):

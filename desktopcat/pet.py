@@ -23,8 +23,8 @@ from PySide6.QtWidgets import QApplication, QMenu, QWidget
 from . import winapi
 from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
 from .phrases import meow_delay, pick_meow
-from .screens import (ScreenInfo, bounds, build_floors, clamp_point, native_rects, nearest_floor,
-                      nearest_rect_index)
+from .screens import (ScreenInfo, bounds, build_floors, clamp_point, clip_to_bounds, floor_here, native_rects,
+                      nearest_rect_index, snap_to_floor)
 from .sprite import FOOT_ROW, GRID_H, GRID_W, draw_cat
 from .surfaces import Surface
 from .world import build_surfaces, floor_surfaces, window_geometry
@@ -184,11 +184,7 @@ class Pet(QWidget):
 
     def _snap_to_floor(self) -> None:
         """Ramène le chat sur le sol le plus proche (un écran vient de disparaître sous ses pieds)."""
-        i = nearest_floor(self.floors, self.cx, self.fy)
-        f = self.floors[i]
-        self.floor_idx = i
-        self.fx = _clamp(self.cx, f.x0, f.x1) - self.CW / 2
-        self.fy = f.y
+        self.floor_idx, self.fx, self.fy = snap_to_floor(self.floors, self.cx, self.fy, self.CW)
 
     @property
     def work(self) -> tuple:
@@ -207,18 +203,12 @@ class Pet(QWidget):
 
     def _floor_here(self):
         """Le sol sous ses pieds : celui de l'écran courant, ou son voisin de la même chaîne s'il l'a traversé."""
-        cur = self.floors[self.floor_idx]
-        if cur.x0 <= self.cx <= cur.x1:
-            return cur
-        for f in self.floors:
-            if f.chain == cur.chain and f.x0 <= self.cx <= f.x1:
-                self.floor_idx = f.idx
-                return f
-        return cur
+        self.floor_idx = floor_here(self.floors, self.cx, self.floor_idx)
+        return self.floors[self.floor_idx]
 
     def _clip(self, x0: float, x1: float) -> tuple:
         """Partie d'un segment qui reste sur un écran (une fenêtre peut dépasser du bureau)."""
-        return max(x0, self.bounds[0]), min(x1, self.bounds[2])
+        return clip_to_bounds(x0, x1, self.bounds)
 
     @property
     def speed(self) -> float:
