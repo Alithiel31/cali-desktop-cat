@@ -22,10 +22,10 @@ Taking it over is therefore much simpler than for a hosted service.
 5. [docs/en/DISTRIBUTION.md](./DISTRIBUTION.md) — build and publish the executable
 6. [docs/en/ROADMAP.md](./ROADMAP.md) — what is done, what remains, in the recommended order
 7. [docs/en/MANUAL-TESTING.md](./MANUAL-TESTING.md) — the checklist to run on a real Windows machine before a Release
-8. [docs/en/TROUBLESHOOTING.md](./TROUBLESHOOTING.md), [SECURITY.en.md](../../SECURITY.en.md),
-   [CONTRIBUTING.en.md](../../CONTRIBUTING.en.md)
+8. [docs/en/TROUBLESHOOTING.md](./TROUBLESHOOTING.md), [SECURITY.md](./SECURITY.md),
+   [CONTRIBUTING.md](./CONTRIBUTING.md)
 9. [docs/en/DEPENDENCY-WATCH.md](./DEPENDENCY-WATCH.md), [docs/en/ACCESSIBILITY.md](./ACCESSIBILITY.md)
-10. [CHANGELOG.en.md](../../CHANGELOG.en.md) — history of decisions
+10. [CHANGELOG.md](./CHANGELOG.md) — history of decisions
 
 The documentation also exists in French (`docs/`, `*.md`): both versions go together.
 

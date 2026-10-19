@@ -23,7 +23,7 @@ peut pas être remplacé (« Accès refusé »).
 ## Publier une version
 
 1. Mettre à jour `__version__` dans `desktopcat/__init__.py` (ex. `"0.4.2"`).
-2. Déplacer le contenu de `[Non publié]` du [CHANGELOG](../CHANGELOG.md) (et de [CHANGELOG.en.md](../CHANGELOG.en.md)) sous un nouvel en-tête `[0.4.2] - AAAA-MM-JJ`.
+2. Déplacer le contenu de `[Non publié]` du [CHANGELOG](../CHANGELOG.md) (et de [docs/en/CHANGELOG.md](en/CHANGELOG.md)) sous un nouvel en-tête `[0.4.2] - AAAA-MM-JJ`.
 3. Committer sur `main`, la CI doit être verte.
 4. Poser et pousser le tag :
 

@@ -1,6 +1,6 @@
 # Obtenir de l'aide
 
-Français · [English](SUPPORT.en.md)
+Français · [English](docs/en/SUPPORT.md)
 
 Desktop Cat est un projet personnel, maintenu par une seule personne sur son temps libre : il n'y a pas de support commercial ni de garantie de délai de réponse.
 

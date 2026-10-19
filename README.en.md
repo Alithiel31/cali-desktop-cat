@@ -77,6 +77,7 @@ meantime, it is dropped without reward).
     desktopcat/      the app's code (see docs/en/ARCHITECTURE.md)
     tests/           unit tests (Qt offscreen)
     docs/            documentation in French; docs/en/: the English version
+    archive/         historical prototypes (kept for the record)
     assets/          executable icon
     tools/           development tools (icon, exe metadata, panel screenshots, test launcher)
     .github/         CI/CD, issue and PR templates, Dependabot
@@ -87,7 +88,7 @@ records every second the **executable name** of the active window (40 apps per d
 `%APPDATA%/DesktopCat/save.json`. This tracking can be turned off in **Réglages** ("Noter les applications utilisées",
 "Record the apps used"), and the **Effacer mes statistiques** ("Erase my statistics") button on the Statistics tab
 erases the whole history, backups included.
-Details: [SECURITY.en.md](SECURITY.en.md).
+Details: [docs/en/SECURITY.md](docs/en/SECURITY.md).
 
 ## Code signing policy
 Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
@@ -104,7 +105,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
   locally.
 
 ## Documentation
-Every document exists in French and English; the English versions live in [docs/en/](docs/en/) and in `*.en.md` files.
+Every document exists in French and English; the English versions live in [docs/en/](docs/en/) (plus this README).
 - [Architecture](docs/en/ARCHITECTURE.md): modules, loops, coordinates, extension points.
 - [Game rules](docs/en/GAMEPLAY.md): gifts, rarities, focus, statistics.
 - [Development](docs/en/DEVELOPMENT.md): install, test, conventions.
@@ -116,18 +117,18 @@ Every document exists in French and English; the English versions live in [docs/
 - [Dependency watch](docs/en/DEPENDENCY-WATCH.md): PySide6, PyInstaller, Windows API.
 - [Handover guide](docs/en/HANDOVER-GUIDE.md): taking over the project without the maintainer.
 - [Tools](tools/README.en.md): isolated test launcher, panel screenshots.
-- [Changelog](CHANGELOG.en.md).
+- [Changelog](docs/en/CHANGELOG.md).
 
 ## Development
 - Test without touching your real save: `tools\run_test_instance.bat`.
 - Panel screenshots: `python tools/preview_panel.py` (written to `tools/out/`).
 
 ## Contributing
-Environment, tests, commit convention: [CONTRIBUTING.en.md](CONTRIBUTING.en.md). Help: [SUPPORT.en.md](SUPPORT.en.md).
-Code of conduct: [CODE_OF_CONDUCT.en.md](CODE_OF_CONDUCT.en.md).
+Environment, tests, commit convention: [docs/en/CONTRIBUTING.md](docs/en/CONTRIBUTING.md). Help: [docs/en/SUPPORT.md](docs/en/SUPPORT.md).
+Code of conduct: [docs/en/CODE_OF_CONDUCT.md](docs/en/CODE_OF_CONDUCT.md).
 
 ## Security
-To report a vulnerability, see [SECURITY.en.md](SECURITY.en.md) — no public issue.
+To report a vulnerability, see [docs/en/SECURITY.md](docs/en/SECURITY.md) — no public issue.
 
 ## License
 MIT, see [LICENSE](LICENSE).

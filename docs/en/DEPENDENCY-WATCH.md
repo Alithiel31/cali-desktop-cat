@@ -4,7 +4,7 @@
 
 [Back to the README](../../README.en.md)
 
-Desktop Cat calls **no external API** (see [SECURITY.en.md](../../SECURITY.en.md)). What needs watching are its technical
+Desktop Cat calls **no external API** (see [SECURITY.md](./SECURITY.md)). What needs watching are its technical
 dependencies, which can break rendering or packaging without notice.
 
 ## What to watch

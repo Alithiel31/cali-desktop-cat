@@ -74,6 +74,7 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
     desktopcat/      le code de l'appli (voir docs/ARCHITECTURE.md)
     tests/           tests unitaires (Qt hors écran)
     docs/            documentation en français ; docs/en/ : la version anglaise
+    archive/         prototypes historiques (gardés pour mémoire)
     assets/          icône de l'exécutable
     tools/           outils de développement (icône, métadonnées de l'exe, captures du panneau, lanceur de test)
     .github/         CI/CD, modèles d'issues et de PR, Dependabot
@@ -113,8 +114,8 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
 - [Outils](tools/README.md) : lanceur de test isolé, captures du panneau.
 - [Changelog](CHANGELOG.md).
 
-Toute la documentation existe aussi **en anglais** : [README.en.md](README.en.md), [docs/en/](docs/en/) et les fichiers
-`*.en.md` à la racine. Les deux versions se mettent à jour ensemble.
+Toute la documentation existe aussi **en anglais** : [README.en.md](README.en.md) et [docs/en/](docs/en/).
+Les deux versions se mettent à jour ensemble.
 
 ## Développement
 - Tester sans toucher à ta vraie sauvegarde : `tools\run_test_instance.bat`.

@@ -64,7 +64,7 @@ L'appli n'a **aucune variable de configuration** propre. Celles qui comptent son
 ## Conventions
 
 - Messages de commit : `type: description` (`fix:`, `feat:`, `docs:`, `ci:`, `test:`, `chore:`), en français.
-- Documentation : chaque fichier a sa version anglaise (`docs/en/`, `*.en.md`) ; modifier l'un, c'est mettre l'autre à jour.
+- Documentation : chaque fichier a sa version anglaise (`docs/en/`, `README.en.md`) ; modifier l'un, c'est mettre l'autre à jour.
 - Fins de ligne : LF pour `.py` et `.md`, CRLF pour `.bat` (voir `.gitattributes`).
 - Le hasard et l'heure sont passés en paramètre dès que possible (cf. `phrases.py`) pour rester testables.
 - Toute nouvelle logique pure va dans un module sans Qt ni Windows (comme `screens.py`, `surfaces.py`, `hats.py`) :

@@ -63,12 +63,10 @@ measurement, 85 %, dates from the 19/10/2026 review).
   out), make `winapi` injectable into `Game`, gradual typing and ruff.
 
 ## Level 4 — Anecdotal
-- [ ] `.gitignore`: remove the global `*.png` rule (it will block README screenshots and the icon; `tools/out/` stays
-  excluded).
-- [ ] Delete the empty `framerate test/` folder (already invisible to Git); the README's "Executable" section points to
-  the Releases.
+- [x] `.gitignore`: global `*.png` rule removed (`tools/out/` stays excluded).
+- [x] Empty `framerate test/` folder deleted. [ ] The README's "Executable" section should point to the Releases.
 - [ ] Screenshots or GIFs in the README.
-- [x] Documentation translated into English (`README.en.md`, `docs/en/`, `*.en.md` files).
+- [x] Documentation translated into English (`README.en.md`, `docs/en/`).
 - [ ] Quiet hours; text size independent of the cat's size.
 - [ ] Optional sounds, new phrases, cat name editable from the cat; several cats, new coats.
 - [ ] Fallback emoji font if Segoe UI Emoji is missing.

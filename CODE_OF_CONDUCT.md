@@ -1,6 +1,6 @@
 # Code de conduite
 
-Français · [English](CODE_OF_CONDUCT.en.md)
+Français · [English](docs/en/CODE_OF_CONDUCT.md)
 
 ## Engagement
 

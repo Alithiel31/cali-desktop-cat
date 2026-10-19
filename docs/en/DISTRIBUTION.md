@@ -23,7 +23,7 @@ author) shown in Properties > Details. Quit the cat before rebuilding: a running
 ## Publishing a version
 
 1. Update `__version__` in `desktopcat/__init__.py` (e.g. `"0.4.2"`).
-2. Move the content of `[Non publié]` in the [CHANGELOG](../../CHANGELOG.en.md) (and in
+2. Move the content of `[Non publié]` in the [CHANGELOG](./CHANGELOG.md) (and in
    [CHANGELOG.md](../../CHANGELOG.md)) under a new `[0.4.2] - YYYY-MM-DD` heading.
 3. Commit to `main`; CI must be green.
 4. Create and push the tag:
@@ -97,4 +97,4 @@ Steps:
 - [ ] Code signing: SignPath application (see above). SmartScreen / Smart App Control note in the README: done.
 - [ ] Pinned dependencies (`pyproject.toml` + lock file) for reproducible builds.
 - [ ] Updates: decide whether the app notifies about a new Release (today, no network access — not to be broken
-  lightly, cf. [SECURITY.en.md](../../SECURITY.en.md)).
+  lightly, cf. [SECURITY.md](./SECURITY.md)).

@@ -65,10 +65,10 @@ mesure, 85 %, date de la revue du 19/10/2026).
   typage progressif et ruff.
 
 ## Niveau 4 — Anecdotique
-- [ ] `.gitignore` : retirer la règle globale `*.png` (elle bloquera captures du README et icône ; `tools/out/` reste exclu).
-- [ ] Supprimer le dossier vide `framerate test/` (déjà invisible pour Git) ; la section « Exécutable » du README renvoie aux Releases.
+- [x] `.gitignore` : règle globale `*.png` retirée (`tools/out/` reste exclu).
+- [x] Dossier vide `framerate test/` supprimé. [ ] La section « Exécutable » du README devrait renvoyer aux Releases.
 - [ ] Captures ou GIF dans le README.
-- [x] Documentation traduite en anglais (`README.en.md`, `docs/en/`, fichiers `*.en.md`).
+- [x] Documentation traduite en anglais (`README.en.md`, `docs/en/`).
 - [ ] Heures de silence ; taille du texte indépendante de la taille du chat.
 - [ ] Sons optionnels, nouvelles phrases, nom du chat modifiable depuis le chat ; plusieurs chats, nouveaux pelages.
 - [ ] Police emoji de secours si Segoe UI Emoji manque.

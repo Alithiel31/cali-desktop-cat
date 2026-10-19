@@ -1,6 +1,6 @@
 # CHANGELOG
 
-[Français](CHANGELOG.md) · English
+[Français](../../CHANGELOG.md) · English
 
 Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 Categories: `Added`, `Changed`, `Fixed`, `Security`.
@@ -9,12 +9,14 @@ Categories: `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
-- **English documentation**: `README.en.md`, `CONTRIBUTING.en.md`, `SECURITY.en.md`, `SUPPORT.en.md`,
-  `CODE_OF_CONDUCT.en.md`, `CHANGELOG.en.md`, `tools/README.en.md` and `docs/en/` (one version of every document in
-  `docs/`). Every French document links to its English version, and vice versa.
+- **English documentation**: `README.en.md`, `tools/README.en.md` and `docs/en/` (one version of every document in
+  `docs/`, plus `CONTRIBUTING`, `SECURITY`, `SUPPORT`, `CODE_OF_CONDUCT` and `CHANGELOG`). Every French document links
+  to its English version, and vice versa.
 
 ### Changed
 
+- Repository tidy-up: historical prototypes moved from `tools/spikes/` to `archive/spikes/`; global `*.png` rule removed
+  from `.gitignore` (only `tools/out/` stays ignored), so screenshots and images can be versioned.
 - Documentation brought up to date for 0.4.1: architecture (slowed loop, modules, test table), roadmap (figures, levels,
   `pet.py`), distribution (examples, signing), troubleshooting (overlays, Ctrl+Alt+C, `StartupApproved`), handover
   guide, contributing, security (global hotkey, registry).

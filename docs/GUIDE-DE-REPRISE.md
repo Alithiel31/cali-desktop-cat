@@ -26,7 +26,7 @@ obligatoire. La reprise est donc bien plus simple que celle d'un service héberg
 9. [docs/VEILLE-DEPENDANCES.md](./VEILLE-DEPENDANCES.md), [docs/ACCESSIBILITE.md](./ACCESSIBILITE.md)
 10. [CHANGELOG.md](../CHANGELOG.md) — historique des décisions
 
-La documentation existe aussi en anglais (`docs/en/`, fichiers `*.en.md`) : les deux versions vont ensemble.
+La documentation existe aussi en anglais (`docs/en/`, `README.en.md`) : les deux versions vont ensemble.
 
 ---
 

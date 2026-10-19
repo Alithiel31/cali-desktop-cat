@@ -64,7 +64,7 @@ The app has **no configuration variable** of its own. The ones that matter are s
 ## Conventions
 
 - Commit messages: `type: description` (`fix:`, `feat:`, `docs:`, `ci:`, `test:`, `chore:`), in French.
-- Documentation: every file has an English version (`docs/en/`, `*.en.md`); changing one means updating the other.
+- Documentation: every file has an English version (`docs/en/`, `README.en.md`); changing one means updating the other.
 - Line endings: LF for `.py` and `.md`, CRLF for `.bat` (see `.gitattributes`).
 - Randomness and time are passed as parameters whenever possible (cf. `phrases.py`) so they stay testable.
 - Any new pure logic goes in a module with no Qt and no Windows (like `screens.py`, `surfaces.py`, `hats.py`): that is

@@ -9,6 +9,6 @@
 | `make_version_file.py` | Writes the Windows metadata of the exe (`build/version_info.txt`) from `desktopcat.__version__`. Used by the build, see [docs/en/DISTRIBUTION.md](../docs/en/DISTRIBUTION.md). |
 | `preview_panel.py` | Generates screenshots of the panel in `tools/out/` (headless, Qt `offscreen` mode). |
 | `demo_backups.py` | Replays the "damaged save" scenario in a temporary folder: set aside, daily copy, restore. |
-| `spikes/` | Historical prototypes used to choose the technology (smoothness, transparency, perching). Kept for the record, **not maintained**. |
 
-`spike_pywebview.py` is the first lead (Python + pywebview); `spike_qt.py` is the one that was kept (PySide6).
+The historical prototypes (`spike_pywebview.py`, the first lead with Python + pywebview; `spike_qt.py`, the one that
+was kept, PySide6) live in [`archive/spikes/`](../archive/spikes/), unmaintained, kept for the record.

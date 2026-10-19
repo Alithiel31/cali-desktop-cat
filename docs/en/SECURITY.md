@@ -1,6 +1,6 @@
 # Security
 
-[Français](SECURITY.md) · English
+[Français](../../SECURITY.md) · English
 
 ## Reporting a vulnerability
 
@@ -19,7 +19,7 @@ Two ways to report, in order of preference:
 - Acknowledgement within **72 hours**.
 - The project is maintained by one person in their spare time: no formal SLA beyond the acknowledgement, but a
   confirmed flaw with real impact goes ahead of everything else.
-- Credit in [`CHANGELOG.en.md`](./CHANGELOG.en.md) once the fix is published, unless you prefer otherwise.
+- Credit in [`CHANGELOG.md`](./CHANGELOG.md) once the fix is published, unless you prefer otherwise.
 - No bug bounty program — this is a personal project.
 
 ## What is exposed (threat model)
@@ -54,7 +54,7 @@ the user's machine, social engineering.
 
 ## Draft — to be completed
 
-- [ ] Enable Dependabot and the repository's security alerts (see [`.github/dependabot.yml`](./.github/dependabot.yml)).
+- [ ] Enable Dependabot and the repository's security alerts (see [`.github/dependabot.yml`](../../.github/dependabot.yml)).
 - [ ] Add secret scanning (gitleaks) and CodeQL (Python) to CI, as on QcWeather.
 - [ ] Sign the executable (code-signing certificate) — currently unsigned.
 - [ ] Pin GitHub Actions by SHA once the release pipeline is stable.

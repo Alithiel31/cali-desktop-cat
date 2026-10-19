@@ -1,6 +1,6 @@
 # Sécurité
 
-Français · [English](SECURITY.en.md)
+Français · [English](docs/en/SECURITY.md)
 
 ## Signaler une vulnérabilité
 

@@ -1,6 +1,6 @@
 # Code of Conduct
 
-[Français](CODE_OF_CONDUCT.md) · English
+[Français](../../CODE_OF_CONDUCT.md) · English
 
 ## Our pledge
 

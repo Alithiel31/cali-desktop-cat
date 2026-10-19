@@ -1,13 +1,13 @@
 # Getting help
 
-[Français](SUPPORT.md) · English
+[Français](../../SUPPORT.md) · English
 
 Desktop Cat is a personal project, maintained by one person in their spare time: there is no commercial support and no
 guaranteed response time.
 
 ## Before asking for help
 
-1. Check [docs/en/TROUBLESHOOTING.md](./docs/en/TROUBLESHOOTING.md) — where the files are, how to read the log, and the
+1. Check [docs/en/TROUBLESHOOTING.md](./TROUBLESHOOTING.md) — where the files are, how to read the log, and the
    problems already encountered (invisible cat, no gift, unreadable save file...).
 2. Open the log: right-click the tray icon, then **Ouvrir le journal** ("Open the log")
    (`%APPDATA%\DesktopCat\desktopcat.log`).
@@ -21,11 +21,11 @@ write in English.
 
 ## Contributing
 
-Development environment, tests, commit convention: see [CONTRIBUTING.en.md](./CONTRIBUTING.en.md).
+Development environment, tests, commit convention: see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Reporting a security vulnerability
 
-**Do not** use this channel for a security flaw — see [SECURITY.en.md](./SECURITY.en.md).
+**Do not** use this channel for a security flaw — see [SECURITY.md](./SECURITY.md).
 
 ## Any other question
 

@@ -1,6 +1,6 @@
 # Contribuer
 
-Français · [English](CONTRIBUTING.en.md)
+Français · [English](docs/en/CONTRIBUTING.md)
 
 Merci de ton intérêt pour ce projet. Desktop Cat est un compagnon de bureau Windows (PySide6 / Qt 6) ; toute contribution qui corrige un bug, améliore la fiabilité, le comportement du chat ou la documentation est bienvenue.
 
@@ -50,7 +50,7 @@ Le build de l'exécutable se déclenche sur une PR qui touche `main.py`, `requir
 2. Committer avec un message clair, au format `type: description` (`fix:`, `feat:`, `docs:`, `ci:`, `test:`, `chore:`).
 3. Ajouter ou adapter un test pour tout changement de comportement (un bug corrigé = un test qui l'aurait attrapé).
 4. Mettre à jour [`CHANGELOG.md`](./CHANGELOG.md) dans `[Non publié]` (`Added`, `Changed`, `Fixed`, `Security`) si le changement se voit côté utilisateur.
-5. Si une règle du jeu change, mettre à jour [docs/GAMEPLAY.md](./docs/GAMEPLAY.md) ; si la structure change, [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). Chaque document a une version anglaise (`docs/en/`, `*.en.md`) : la mettre à jour aussi (une traduction approximative vaut mieux qu'une version périmée).
+5. Si une règle du jeu change, mettre à jour [docs/GAMEPLAY.md](./docs/GAMEPLAY.md) ; si la structure change, [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). Chaque document a une version anglaise (`docs/en/`, `README.en.md`) : la mettre à jour aussi (une traduction approximative vaut mieux qu'une version périmée).
 6. Vérifier que le job `tests` passe, puis ouvrir la PR contre `main`.
 
 ## Recettes courantes
@@ -67,4 +67,4 @@ Ouvrir une issue depuis l'onglet Issues. Joindre les dernières lignes de `deskt
 
 ## Secrets et données personnelles
 
-Ne jamais committer une sauvegarde réelle (`save.json`), un journal complet ou une capture montrant des fenêtres privées. Les `*.png` sont ignorés par `.gitignore` ; `tools/out/` aussi.
+Ne jamais committer une sauvegarde réelle (`save.json`), un journal complet ou une capture montrant des fenêtres privées. Les captures générées dans `tools/out/` sont ignorées par `.gitignore` ; en ajouter d'autres (README) est possible, mais sans fenêtre privée à l'écran.
