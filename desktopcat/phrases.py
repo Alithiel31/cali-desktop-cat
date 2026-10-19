@@ -6,6 +6,8 @@ MEOWS = {
              "Mrrr…", "Mip !", "Mraou ?"],
     "work": ["Mrp.", "Prrr… (je bosse)", "Miaou ?", "Tap tap tap…", "Mrrr."],
     "petted": ["Prrrrr~", "Mrrr ♥", "Miaou ♥", "Prrr prrr…", "Mrrp !"],
+    "hungry": ["J'ai faim…", "Miaou… 🐟 ?", "Mrrr… (croquettes ?)", "Miaaaou ! (gamelle vide)"],
+    "caught": ["Attrapée !", "Mrrp ! Je l'ai !", "Hop !", "Ma souris !"],
 }
 
 MEOW_MIN_MS = 45_000.0

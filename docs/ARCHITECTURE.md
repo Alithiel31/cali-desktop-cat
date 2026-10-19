@@ -34,6 +34,8 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 | `winapi.py` | `ctypes` vers `user32`/`dwmapi`/`kernel32` : liste des fenêtres, fenêtre active, inactivité, plein écran. Sur un autre système, renvoie des valeurs neutres. | non | oui (isolé ici) |
 | `sprite.py` | Dessin du chat et du cadeau, case par case, sur une grille. Pelages, poses, yeux, chapeaux. | oui | non |
 | `hats.py` | Catalogue des chapeaux, raretés, tirage pondéré. | non | non |
+| `hunt.py` | Règles de la chasse à la souris (souris au repos, à portée). Fonctions pures. | non | non |
+| `hotkey.py` | Raccourci global Ctrl+Alt+C (`RegisterHotKey` + filtre d'événements natifs de Qt). | oui | oui |
 | `phrases.py` | Textes des miaous et délai aléatoire (le hasard est passé en paramètre). | non | non |
 | `widgets.py` | `Bubble` (bulle), `GiftBox` (cadeau), `FxLayer` (cœurs, étoiles, « z »). | oui | non |
 | `panel.py` | Fenêtre de contrôle : garde-robe, concentration, statistiques, réglages. | oui | non |
@@ -86,6 +88,7 @@ Si la surface disparaît (fenêtre fermée, réduite, déplacée), il tombe jusq
 | `test_screens.py` | Géométrie multi-écrans. |
 | `test_features.py` | Comportement du chat et du panneau (états, sauts, plein écran, miaous, bulle...). |
 | `test_log.py` | Journal d'erreurs : exceptions, slots Qt, fils, messages Qt, échecs de sauvegarde. |
+| `test_gameplay.py` | Chapeaux saisonniers, humeur et croquettes, pauses, chasse à la souris, raccourci. |
 
 Les tests sont **indépendants de la machine** : faux écrans (`ScreenInfo`), fausse souris (`FixedCursor`), faux bureau.
 Une garde dans `GameTestCase` fait échouer tout test qui lirait les vrais écrans.

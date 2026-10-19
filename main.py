@@ -7,8 +7,8 @@ from PySide6.QtCore import QLockFile, QUrl
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from desktopcat import log
-from desktopcat.game import Game
+from desktopcat import hotkey as hotkey_module, log
+from desktopcat.game import FEED_COST, Game
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet
 from desktopcat.sprite import render_pixmap
@@ -37,6 +37,13 @@ def main() -> int:
 
     panel = None
 
+    # ───────── raccourci global : afficher / cacher le chat
+    hotkey = hotkey_module.GlobalHotkey()
+    hotkey.activated.connect(lambda: pet.set_user_hidden(not pet.user_hidden))
+    hotkey.set_enabled(store.data["settings"]["hotkey"])
+    game.changed.connect(lambda: hotkey.set_enabled(game.settings["hotkey"]))
+    app.aboutToQuit.connect(hotkey.unregister)
+
     def open_panel(tab=None):
         nonlocal panel
         if panel is None:
@@ -59,8 +66,14 @@ def main() -> int:
             menu.addAction("Arrêter la concentration", lambda: game.stop_focus(False))
         else:
             menu.addAction("Concentration 25 min", lambda: game.start_focus(25))
-        menu.addAction("Afficher le chat" if pet.user_hidden else "Cacher le chat",
-                       lambda: pet.set_user_hidden(not pet.user_hidden))
+        if game.brk:
+            menu.addAction("Passer la pause", game.skip_break)
+        feed = menu.addAction(f"Donner des croquettes ({FEED_COST} 🐟)", game.feed)
+        feed.setEnabled(game.can_feed())
+        label = "Afficher le chat" if pet.user_hidden else "Cacher le chat"
+        if hotkey.registered:
+            label += f"\t{hotkey_module.LABEL}"
+        menu.addAction(label, lambda: pet.set_user_hidden(not pet.user_hidden))
         menu.addSeparator()
         if log_file:
             menu.addAction("Ouvrir le journal", lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(log_file)))

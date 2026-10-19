@@ -8,7 +8,7 @@ from PySide6.QtGui import QColor
 
 from .phrases import meow_delay, pick_meow
 
-STANDING = ("idle", "walk", "nap", "wait", "work", "sleep")
+STANDING = ("idle", "walk", "nap", "wait", "work", "sleep", "stalk")
 
 
 class PetCompanion:
@@ -24,7 +24,8 @@ class PetCompanion:
         if not free:
             pet.next_meow = pet.t + 4000
             return
-        pet.say(pick_meow(pet.rng, "work" if pet.state == "work" else "idle"), 2200)
+        mood = "work" if pet.state == "work" else "hungry" if pet.game.mood_level() == "affamé" else "idle"
+        pet.say(pick_meow(pet.rng, mood), 2200)
         if pet.rng.random() < 0.3:
             pet.fx_particle("heart")
         pet.next_meow = pet.t + meow_delay(pet.rng)
@@ -50,10 +51,11 @@ class PetCompanion:
             pet.bubble.hide()
         if pet._temp:
             return
-        focus = pet.game.focus
+        focus = pet.game.focus or pet.game.brk
         if focus:
             left = max(0, math.ceil(focus["ends_at"] - pet.game.clock()))
-            text = f"⏱ {left // 60:02d}:{left % 60:02d}"
+            icon = "⏱" if pet.game.focus else "☕"
+            text = f"{icon} {left // 60:02d}:{left % 60:02d}"
             if text != pet._focus_text:
                 pet._focus_text = text
                 pet.bubble.show_html(text)
@@ -101,7 +103,7 @@ class PetCompanion:
         pet = self.pet
         if focus:
             pet.say("Au travail ! Je reste avec toi 🐾", 3500)
-            if pet.state in ("idle", "walk", "nap", "wait"):
+            if pet.state in ("idle", "walk", "nap", "wait", "stalk"):
                 pet._go_work()
         elif pet.state == "work":
             pet._idle(1.0)
@@ -109,6 +111,32 @@ class PetCompanion:
     def focus_finished(self, total: int) -> None:
         pet = self.pet
         pet.happy_until = pet.t + 4000
-        pet.say("Bravo, session terminée !", 4000)
+        brk = pet.game.brk
+        if brk:
+            pet.say(f"Bravo ! Pause de {brk['total_min']} min ☕ Lève-toi, bois un peu d'eau.", 6000)
+        else:
+            pet.say("Bravo, session terminée !", 4000)
         for i in range(4):
             QTimer.singleShot(i * 200, lambda: pet.fx_particle("heart"))
+
+    def break_finished(self) -> None:
+        pet = self.pet
+        pet.happy_until = pet.t + 2000
+        pet.say("Pause finie ! On s'y remet ? 🐾", 5000)
+
+    def fed(self) -> None:
+        pet = self.pet
+        pet.happy_until = pet.t + 3000
+        pet.say("Miam ! Merci 🐟", 2500)
+        if pet.state == "nap":
+            pet._idle(2.0)
+        for i in range(3):
+            QTimer.singleShot(i * 200, lambda: pet.fx_particle("heart"))
+
+    def caught(self) -> None:
+        """Le bond sur la souris vient de se terminer."""
+        pet = self.pet
+        pet.happy_until = pet.t + 2000
+        pet.fx_particle("star")
+        if pet.settings["meows"] and not pet._temp:
+            pet.say(pick_meow(pet.rng, "caught"), 1800)

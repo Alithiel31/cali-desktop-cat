@@ -6,6 +6,7 @@ import math
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMenu
 
+from .game import FEED_COST
 from .screens import clamp_point
 
 
@@ -34,6 +35,7 @@ class PetInput:
                                              global_pos.y() - press["g"].y()) > 5:
             press["moved"] = True
             pet.state = "drag"
+            pet._pounce = False
             pet.stand, pet.jump, pet.vy = None, None, 0.0
             pet.setCursor(Qt.CursorShape.ClosedHandCursor)
         if press["moved"]:
@@ -69,6 +71,8 @@ class PetInput:
             menu.addAction("Arrêter la concentration", pet.stop_focus.emit)
         else:
             menu.addAction("Concentration 25 min", lambda: pet.start_focus.emit(25))
+        feed = menu.addAction(f"Donner des croquettes ({FEED_COST} 🐟)", pet.game.feed)
+        feed.setEnabled(pet.game.can_feed())
         menu.addSeparator()
         menu.addAction("Quitter", pet.quit_app.emit)
         menu.exec(position)
