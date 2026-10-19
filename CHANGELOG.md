@@ -5,6 +5,10 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ## [Non publié]
 
+## [0.4.0] - 2026-10-19
+
+Première Release publiée (la 0.3.0 n'a jamais été taguée : son contenu est inclus ici).
+
 ### Added
 
 - **Nourrir le chat** : humeur de 0 à 100, repas à 5 croquettes (panneau, clic droit, icône). Repu, il rapporte les
@@ -40,11 +44,14 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
   fenêtres impossibles à activer, fenêtres superposées d'opacité nulle.
 - Lecture des titres de fenêtres sans leur envoyer de message (`InternalGetWindowText`) : une fenêtre qui « ne répond
   pas » ne peut plus geler le chat.
+- Lancement avec Windows : le registre fait foi. La case suit une désactivation faite dans le Gestionnaire des tâches
+  (`StartupApproved`), la recocher réactive vraiment le démarrage, et le chemin de l'exe est réécrit au lancement s'il
+  a changé (exe déplacé ou mis à jour).
+- `tools/run_test_instance.bat` utilise le Python du `.venv` du projet en priorité.
 
 ## [0.3.0] - 2026-10-18
 
-Première version complète. Pas encore taguée : le tag `v0.3.0` déclenchera la première Release (voir
-[docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)).
+Première version complète, jamais taguée ni publiée : tout son contenu fait partie de la 0.4.0.
 
 ### Added
 

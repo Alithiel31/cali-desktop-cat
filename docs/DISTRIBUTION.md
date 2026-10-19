@@ -58,7 +58,7 @@ Comparer avec le contenu de `DesktopCat.exe.sha256` publié dans la même Releas
 
 ## Ébauche — à compléter
 
-- [ ] Première Release `v0.3.0` publiée et testée sur une machine propre (sans Python).
+- [ ] Première Release `v0.4.0` publiée et testée sur une machine propre (sans Python).
 - [ ] Icône de l'exécutable et numéro de version affiché dans le panneau (niveau 3 de la [feuille de route](./ROADMAP.md)).
 - [ ] Fichier `.spec` versionné au lieu de la ligne de commande.
 - [ ] Démarrage automatique vérifié avec l'exécutable empaqueté (chemin dans le registre).

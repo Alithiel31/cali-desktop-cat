@@ -35,9 +35,8 @@ vrai Windows (`winapi.py` couvert à 27 %).
   scan des fenêtres moins fréquent.
 
 ## Niveau 2 — Important : v0.3.1
-- [ ] **Lancement avec Windows** : réécrire la clé de registre à chaque démarrage (exe déplacé ou mis à jour). Le
-  registre doit faire foi, pas `save.json` : une désactivation depuis le Gestionnaire des tâches écrit dans
-  `Explorer\StartupApproved\Run` sans supprimer la valeur `Run`, et la case du panneau mentirait.
+- [x] **Lancement avec Windows** : le registre fait foi (y compris `StartupApproved`, écrit par le Gestionnaire des
+  tâches) ; chemin réécrit au démarrage ; recocher la case réactive le démarrage.
 - [ ] **Faux plein écran** : vérifier qu'une fenêtre maximisée avec barre des tâches masquée ne cache pas le chat
   (`IsZoomed` / `WS_CAPTION` dans `is_fullscreen`).
 - [ ] **Plein écran et vidéo** : seule la fenêtre active est examinée (une vidéo plein écran sur l'autre écran ne cache
