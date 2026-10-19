@@ -1,8 +1,11 @@
 # Feuille de route
 
+Français · [English](en/ROADMAP.md)
+
 Classée du plus urgent au plus anecdotique. `[x]` = fait. L'ordre à l'intérieur d'un niveau est l'ordre conseillé.
-Revue complète du 19/10/2026 : 159 tests, 85 % de couverture ; le point faible est ce qui n'a jamais tourné sur un
-vrai Windows (`winapi.py` couvert à 27 %).
+Dernière mise à jour : 20/10/2026, version 0.4.1 (environ 240 tests). Le point faible reste ce qui n'a jamais tourné
+sur un vrai Windows (`winapi.py`, raccourci global, exécutable). La couverture de tests est à remesurer (la dernière
+mesure, 85 %, date de la revue du 19/10/2026).
 
 ## Déjà fait — fiabilité de base
 - [x] Verrou d'instance repris après un plantage (vérifié : il n'est pas repris tant que la 1re instance tourne).
@@ -36,7 +39,7 @@ vrai Windows (`winapi.py` couvert à 27 %).
 - [ ] **Mesure CPU** sur la vraie machine (au repos, endormi, en marche) pour décider de la suite : cache `exe` par pid,
   scan des fenêtres moins fréquent.
 
-## Niveau 2 — Important : v0.3.1
+## Niveau 2 — Important : suite de la 0.4.x
 - [x] **Lancement avec Windows** : le registre fait foi (y compris `StartupApproved`, écrit par le Gestionnaire des
   tâches) ; chemin réécrit au démarrage ; recocher la case réactive le démarrage.
 - [ ] **Faux plein écran** : vérifier qu'une fenêtre maximisée avec barre des tâches masquée ne cache pas le chat
@@ -58,13 +61,14 @@ vrai Windows (`winapi.py` couvert à 27 %).
   *À vérifier sur un vrai Windows : le raccourci (`RegisterHotKey` + filtre natif) et la chasse multi-écrans.*
 - [ ] Rythme des cadeaux : 20 min passif contre 10 min en concentration, à revoir avec le bonus « repu » (+25 %).
 - [ ] Objectif de long terme : collection complète, succès, autres saisons (Noël…), boutique.
-- [ ] Qualité du code : découper `pet.py` (~780 lignes, couvert à 94 %), rendre `winapi` injectable dans `Game`,
+- [ ] Qualité du code : continuer à découper `pet.py` (~700 lignes ; la physique, le placement, les entrées et les réactions en sont déjà sortis), rendre `winapi` injectable dans `Game`,
   typage progressif et ruff.
 
 ## Niveau 4 — Anecdotique
-- [ ] `.gitignore` : retirer la règle globale `*.png` (elle bloquera captures du README et icône ; `tools/out/` reste exclu).
-- [ ] Supprimer le dossier vide `framerate test/` ; la section « Exécutable » du README renvoie aux Releases.
+- [x] `.gitignore` : règle globale `*.png` retirée (`tools/out/` reste exclu).
+- [x] Dossier vide `framerate test/` supprimé. [ ] La section « Exécutable » du README devrait renvoyer aux Releases.
 - [ ] Captures ou GIF dans le README.
+- [x] Documentation traduite en anglais (`README.en.md`, `docs/en/`).
 - [ ] Heures de silence ; taille du texte indépendante de la taille du chat.
 - [ ] Sons optionnels, nouvelles phrases, nom du chat modifiable depuis le chat ; plusieurs chats, nouveaux pelages.
 - [ ] Police emoji de secours si Segoe UI Emoji manque.

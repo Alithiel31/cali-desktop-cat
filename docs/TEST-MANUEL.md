@@ -1,5 +1,7 @@
 # Test manuel avant une Release
 
+Français · [English](en/MANUAL-TESTING.md)
+
 Ce que la CI ne peut pas vérifier : le vrai Windows (fenêtres, overlays, raccourci, plusieurs écrans) et l'exécutable.
 Compter 20 à 30 min. Noter chaque point ✅ / ❌ ; pour un ❌, joindre `desktopcat.log` (menu de l'icône > Ouvrir le journal).
 

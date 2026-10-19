@@ -1,5 +1,7 @@
 # Architecture
 
+Français · [English](en/ARCHITECTURE.md)
+
 Desktop Cat est une appli PySide6 (Qt 6) pour Windows. Une seule règle guide le découpage :
 **la logique pure (maths, règles du jeu) est séparée de ce qui touche à Qt et à Windows**, ce qui permet de
 tester l'essentiel sur n'importe quel système.
@@ -9,11 +11,14 @@ tester l'essentiel sur n'importe quel système.
 ```
 main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄── Bubble / GiftBox / FxLayer
                                           │        │
+                                          │        ├── motion.py, pet_layout.py, pet_input.py, pet_companion.py
+                                          │        ├── hunt.py      (chasse à la souris)
                                           │        ├── screens.py   (géométrie multi-écrans)
                                           │        ├── surfaces.py  (bords de fenêtres praticables)
                                           │        └── sprite.py    (dessin pixel art) ◄── hats.py
                                           ├── winapi.py             (tout ce qui parle à Windows)
-                                          └── autostart.py          (lancement avec Windows)
+                                          ├── autostart.py          (lancement avec Windows)
+                                          └── hotkey.py             (raccourci global Ctrl+Alt+C)
                                    Panel (fenêtre de contrôle) ◄── Game
 ```
 
@@ -49,8 +54,10 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
   cadeaux. Compte l'activité, fait avancer la progression du prochain cadeau, le temps
   d'écran par application, la session de concentration, détecte l'absence (endormissement) et le plein écran.
   Sauvegarde toutes les 30 s.
-- **`Pet.step(dt)`** : environ 60 fois par seconde (minuterie de 16 ms). `dt` est plafonné à 50 ms. C'est cette méthode
-  que les tests appellent directement.
+- **`Pet.step(dt)`** : environ 60 fois par seconde (minuterie de 16 ms, `LOOP_MS`). Quand le chat est caché ou endormi
+  parce que l'utilisateur est absent, la minuterie passe à 100 ms (`LOOP_SLOW_MS`, 10 passages par seconde) pour ménager
+  la batterie ; la sieste (« nap ») garde le rythme normal. `dt` est plafonné (2,5 fois l'intervalle de la minuterie).
+  C'est cette méthode que les tests appellent directement.
 - **Scan des fenêtres** : toutes les 0,2 s dans `step` (`_refresh_surfaces`), qui reconstruit la liste des surfaces.
 - **Animation** : repeinture toutes les 80 ms.
 
@@ -89,12 +96,19 @@ Si la surface disparaît (fenêtre fermée, réduite, déplacée), il tombe jusq
 | `test_features.py` | Comportement du chat et du panneau (états, sauts, plein écran, miaous, bulle...). |
 | `test_log.py` | Journal d'erreurs : exceptions, slots Qt, fils, messages Qt, échecs de sauvegarde. |
 | `test_gameplay.py` | Chapeaux saisonniers, humeur et croquettes, pauses, chasse à la souris, raccourci. |
+| `test_store_backups.py` | Sauvegarde : copies horodatées, copie quotidienne, restauration, migrations de format. |
+| `test_autostart.py` | Lancement avec Windows, sur un faux registre (le vrai n'est jamais touché). |
+| `test_motion.py` | Trajectoires des sauts et des chutes, marche (sans Qt). |
+| `test_pet_layout.py` | Placement visuel du chat, du cadeau et de la bulle (sans Qt). |
+| `test_world.py` | Pont entre les fenêtres natives et les surfaces praticables. |
+| `test_tools.py` | Outils de build : métadonnées Windows de l'exécutable. |
 
 Les tests sont **indépendants de la machine** : faux écrans (`ScreenInfo`), fausse souris (`FixedCursor`), faux bureau.
 Une garde dans `GameTestCase` fait échouer tout test qui lirait les vrais écrans.
 
-Non couvert : l'API Windows réelle (`winapi.py`) et les échelles d'affichage mixtes. Ils se valident à la main, voir
-`tools/run_test_instance.bat`.
+Les appels réels à l'API Windows (`winapi.py`) ne sont testés que sous Windows (jobs Windows de la CI) ; les échelles
+d'affichage mixtes, le raccourci global et le perchage avec Steam/Discord se valident à la main :
+[TEST-MANUEL.md](TEST-MANUEL.md) et `tools/run_test_instance.bat`.
 
 ## Points d'extension
 
