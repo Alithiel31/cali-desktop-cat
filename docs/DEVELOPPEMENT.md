@@ -1,5 +1,7 @@
 # Développement local
 
+Français · [English](en/DEVELOPMENT.md)
+
 [Retour au README](../README.md)
 
 ## Prérequis
@@ -47,7 +49,7 @@ Détail des autres outils : [tools/README.md](../tools/README.md).
 | Verrou d'instance | `%TEMP%\desktopcat.lock` |
 | Démarrage avec Windows | `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, valeur `DesktopCat` |
 
-Voir [TROUBLESHOOTING.md](./TROUBLESHOOTING.md#où-sont-les-fichiers) pour le détail des fichiers.
+Voir [TROUBLESHOOTING.md](./TROUBLESHOOTING.md#où-sont-les-fichiers-) pour le détail des fichiers.
 
 ## Variables d'environnement
 
@@ -62,6 +64,7 @@ L'appli n'a **aucune variable de configuration** propre. Celles qui comptent son
 ## Conventions
 
 - Messages de commit : `type: description` (`fix:`, `feat:`, `docs:`, `ci:`, `test:`, `chore:`), en français.
+- Documentation : chaque fichier a sa version anglaise (`docs/en/`, `*.en.md`) ; modifier l'un, c'est mettre l'autre à jour.
 - Fins de ligne : LF pour `.py` et `.md`, CRLF pour `.bat` (voir `.gitattributes`).
 - Le hasard et l'heure sont passés en paramètre dès que possible (cf. `phrases.py`) pour rester testables.
 - Toute nouvelle logique pure va dans un module sans Qt ni Windows (comme `screens.py`, `surfaces.py`, `hats.py`) :
@@ -69,7 +72,7 @@ L'appli n'a **aucune variable de configuration** propre. Celles qui comptent son
 
 ## Ébauche — à compléter
 
-- [ ] Linter / formateur (ruff) et typage progressif — prévu en niveau 5 de la [feuille de route](./ROADMAP.md).
+- [ ] Linter / formateur (ruff) et typage progressif — prévu au niveau 3 de la [feuille de route](./ROADMAP.md).
 - [ ] Hook de pré-commit ou pré-push qui rejoue les tests (équivalent du hook Husky de QcWeather).
 - [ ] Mesure de couverture de tests.
 - [ ] Procédure pour valider l'API Windows réelle et les échelles d'affichage mixtes (aujourd'hui : à la main, sur un vrai double écran).

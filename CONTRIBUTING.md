@@ -1,11 +1,13 @@
 # Contribuer
 
+Français · [English](CONTRIBUTING.en.md)
+
 Merci de ton intérêt pour ce projet. Desktop Cat est un compagnon de bureau Windows (PySide6 / Qt 6) ; toute contribution qui corrige un bug, améliore la fiabilité, le comportement du chat ou la documentation est bienvenue.
 
 ## Avant de commencer
 
 - Ouvrir une issue pour discuter du changement envisagé, sauf correction triviale (typo, lien cassé).
-- Consulter la [feuille de route](./docs/ROADMAP.md) : le sujet y est peut-être déjà classé, avec une décision à prendre (c'est le cas des croquettes, par exemple).
+- Consulter la [feuille de route](./docs/ROADMAP.md) : le sujet y est peut-être déjà classé, avec une décision à prendre (la boutique de chapeaux, par exemple).
 - Vérifier que le changement n'est pas déjà en cours dans la section `[Non publié]` de [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Environnement de développement
@@ -38,7 +40,7 @@ Tester à la main **sans toucher à ta vraie sauvegarde** : `tools\run_test_inst
 | Job | Commande |
 |---|---|
 | `tests` (`ci.yml`) | `set QT_QPA_PLATFORM=offscreen` puis `python -m unittest discover -s tests -v` |
-| `build-windows` (`release.yml`) | `pip install pyinstaller` puis `pyinstaller --noconsole --onefile --name DesktopCat main.py` |
+| `build-windows` (`release.yml`) | `pip install pyinstaller`, `python tools/make_version_file.py`, puis `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py` |
 
 Le build de l'exécutable se déclenche sur une PR qui touche `main.py`, `requirements.txt`, `desktopcat/**` ou le workflow lui-même.
 
@@ -48,7 +50,7 @@ Le build de l'exécutable se déclenche sur une PR qui touche `main.py`, `requir
 2. Committer avec un message clair, au format `type: description` (`fix:`, `feat:`, `docs:`, `ci:`, `test:`, `chore:`).
 3. Ajouter ou adapter un test pour tout changement de comportement (un bug corrigé = un test qui l'aurait attrapé).
 4. Mettre à jour [`CHANGELOG.md`](./CHANGELOG.md) dans `[Non publié]` (`Added`, `Changed`, `Fixed`, `Security`) si le changement se voit côté utilisateur.
-5. Si une règle du jeu change, mettre à jour [docs/GAMEPLAY.md](./docs/GAMEPLAY.md) ; si la structure change, [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+5. Si une règle du jeu change, mettre à jour [docs/GAMEPLAY.md](./docs/GAMEPLAY.md) ; si la structure change, [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). Chaque document a une version anglaise (`docs/en/`, `*.en.md`) : la mettre à jour aussi (une traduction approximative vaut mieux qu'une version périmée).
 6. Vérifier que le job `tests` passe, puis ouvrir la PR contre `main`.
 
 ## Recettes courantes

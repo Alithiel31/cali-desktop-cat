@@ -1,5 +1,7 @@
 # Desktop Cat 🐱
 
+Français · [English](README.en.md)
+
 [![CI](https://github.com/Alithiel31/cali-desktop-cat/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Alithiel31/cali-desktop-cat/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12%20|%203.13-blue?logo=python)](https://www.python.org/)
@@ -8,8 +10,9 @@
 
 Un chat écaille qui vit sur ton bureau Windows : il se promène, se perche sur le bord des fenêtres,
 tombe quand elles disparaissent, saute d'une fenêtre à l'autre, dort quand tu es absent,
-miaule de temps en temps dans une bulle, te rapporte des cadeaux (chapeaux de 6 raretés) et travaille avec toi
-pendant tes sessions de concentration. Il se promène sur tous tes écrans.
+miaule de temps en temps dans une bulle, guette ta souris, a faim (tu le nourris avec des croquettes), te rapporte
+des cadeaux (chapeaux de 6 raretés, dont un de saison à Halloween) et travaille avec toi pendant tes sessions de
+concentration, suivies d'une pause Pomodoro. Il se promène sur tous tes écrans, et **Ctrl+Alt+C** l'affiche ou le cache.
 
 ## Installer
 Télécharger `DesktopCat.exe` dans les [Releases](https://github.com/Alithiel31/cali-desktop-cat/releases) et le lancer :
@@ -37,12 +40,13 @@ de `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`).
     python -m unittest discover -s tests -v
 Tournent aussi hors Windows (Qt en mode `offscreen`, faux bureau et faux écrans).
 
-Icône dans la zone de notification : panneau, concentration 25 min, cacher le chat, quitter.
-Double-clic sur le chat = panneau ; clic droit = menu ; on peut l'attraper et le lâcher.
+Icône dans la zone de notification : panneau, concentration 25 min (ou arrêt), passer la pause, donner des croquettes,
+cacher le chat (Ctrl+Alt+C), ouvrir le journal, quitter.
+Double-clic sur le chat = panneau ; clic droit = menu (dont « Donner des croquettes ») ; on peut l'attraper et le lâcher.
 
 ## Panneau
-Garde-robe (porter, vendre les doublons), Concentration, Statistiques (7 jours + applis du jour), Réglages
-(dont « Il miaule de temps en temps »).
+En-tête : croquettes, humeur du chat et bouton **Nourrir**. Onglets : Garde-robe (porter, vendre les doublons),
+Concentration (et pause), Statistiques (7 jours + applis du jour), Réglages (dont « Il miaule de temps en temps »).
 
 ## Plusieurs écrans
 Un sol par écran (le bas de sa zone utile, barre des tâches exclue). Des écrans collés dont les bas sont à moins
@@ -69,8 +73,10 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
     main.py          point d'entrée
     desktopcat/      le code de l'appli (voir docs/ARCHITECTURE.md)
     tests/           tests unitaires (Qt hors écran)
-    docs/            architecture et règles du jeu
-    tools/           outils de développement (captures du panneau, lanceur de test, anciens prototypes)
+    docs/            documentation en français ; docs/en/ : la version anglaise
+    assets/          icône de l'exécutable
+    tools/           outils de développement (icône, métadonnées de l'exe, captures du panneau, lanceur de test)
+    .github/         CI/CD, modèles d'issues et de PR, Dependabot
 
 ## Vie privée
 Tout reste sur ton ordinateur : l'appli n'envoie rien nulle part et ne fait aucun accès réseau. Pour les statistiques,
@@ -97,6 +103,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
 - [Architecture](docs/ARCHITECTURE.md) : modules, boucles, coordonnées, points d'extension.
 - [Règles du jeu](docs/GAMEPLAY.md) : cadeaux, raretés, concentration, statistiques.
 - [Développement](docs/DEVELOPPEMENT.md) : installer, tester, conventions.
+- [Test manuel](docs/TEST-MANUEL.md) : la checklist à passer sur un vrai Windows avant une Release.
 - [Distribution](docs/DISTRIBUTION.md) : fabriquer l'exécutable, publier une Release, SmartScreen.
 - [Dépannage](docs/TROUBLESHOOTING.md) : où sont les fichiers, lire le journal, problèmes courants.
 - [Feuille de route](docs/ROADMAP.md) : ce qui est fait et ce qui reste, du plus critique au plus anecdotique.
@@ -105,6 +112,9 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
 - [Guide de reprise](docs/GUIDE-DE-REPRISE.md) : reprendre le projet sans le mainteneur.
 - [Outils](tools/README.md) : lanceur de test isolé, captures du panneau.
 - [Changelog](CHANGELOG.md).
+
+Toute la documentation existe aussi **en anglais** : [README.en.md](README.en.md), [docs/en/](docs/en/) et les fichiers
+`*.en.md` à la racine. Les deux versions se mettent à jour ensemble.
 
 ## Développement
 - Tester sans toucher à ta vraie sauvegarde : `tools\run_test_instance.bat`.

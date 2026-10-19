@@ -1,5 +1,7 @@
 # Règles du jeu
 
+Français · [English](en/GAMEPLAY.md)
+
 Valeurs par défaut ; la plupart sont réglables dans le panneau (onglet Réglages).
 
 ## Activité et sommeil

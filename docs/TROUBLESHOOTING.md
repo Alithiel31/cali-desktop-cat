@@ -1,5 +1,7 @@
 # Dépannage
 
+Français · [English](en/TROUBLESHOOTING.md)
+
 Ce document grandit avec le projet : chaque problème rencontré et résolu y a sa place.
 
 ## Où sont les fichiers ?
@@ -65,6 +67,9 @@ sont toutes dans `desktopcat.log`. Pour voir les erreurs de démarrage en direct
 - Sont ignorées : les fenêtres **maximisées**, **réduites**, **sans titre**, plus petites que 250 × 120 px, les fenêtres
   d'outils, et celles d'un autre bureau virtuel.
 - Il faut de la place au-dessus de la fenêtre pour que le chat tienne debout.
+- Sont aussi ignorés les faux-semblants de fenêtres : overlays transparents aux clics (Steam, NVIDIA, Discord),
+  fenêtres impossibles à activer, fenêtres superposées d'opacité nulle. Si le chat marche « dans le vide » au-dessus
+  d'une de ces fenêtres, c'est un bug : joindre le journal et le nom de l'application.
 
 ## Pas de cadeau après une concentration
 
@@ -80,6 +85,12 @@ Quand la session se termine appli ouverte, une notification explique pourquoi (s
 Il s'endort après 5 minutes sans clavier ni souris (réglage « Il s'endort après », de 1 à 60 min). Regarder une vidéo
 sans toucher à rien compte comme une absence. Limite connue, voir la [feuille de route](ROADMAP.md).
 
+## Ctrl+Alt+C ne fait rien
+
+- Réglages : « Raccourci clavier » doit être coché ; le menu de l'icône affiche alors « Cacher le chat   Ctrl+Alt+C ».
+- Si une autre application utilise déjà ce raccourci, il reste inactif ; le journal le dit (« Raccourci Ctrl+Alt+C … »).
+- Sur un clavier où AltGr+C tape un caractère, ce caractère est capturé : décocher le réglage.
+
 ## Pas de notifications
 
 Panneau, onglet Réglages : « Notifications de fin de session » doit être coché.
@@ -89,6 +100,10 @@ Panneau, onglet Réglages : « Notifications de fin de session » doit être coc
 La commande est enregistrée dans `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (valeur `DesktopCat`) et
 actualisée à chaque lancement. Si Windows refuse la modification, vérifie que ton compte peut modifier cette clé, puis
 réessaie d'activer « Lancer avec Windows » dans le panneau.
+
+Le registre fait foi : si tu désactives Desktop Cat dans le Gestionnaire des tâches (onglet Démarrage), la case du
+panneau se décoche d'elle-même ; la recocher le réactive. Si tu déplaces ou remplaces l'exe, le chemin est réécrit
+au lancement suivant.
 
 ## Ma sauvegarde est perdue ou illisible
 
@@ -107,7 +122,7 @@ sur un autre système (tests, Linux), c'est normal.
 
 ## Les tests échouent
 
-- Les tests ont été validés avec **Python 3.12** et PySide6 6.x : utilise cette version.
+- Les tests sont validés en CI avec **Python 3.12 et 3.13** et PySide6 6.x : utilise l'une de ces versions (3.10 plante).
 - Lance-les depuis la racine du projet : `python -m unittest discover -s tests`.
 - Sous Linux, il faut les bibliothèques système de Qt (par exemple `libegl1`).
 - Les tests ne dépendent ni de tes écrans ni de ta souris (faux écrans, fausse souris). Si un test échoue chez toi
