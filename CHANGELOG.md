@@ -7,6 +7,13 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- **Nourrir le chat** : humeur de 0 à 100, repas à 5 croquettes (panneau, clic droit, icône). Repu, il rapporte les
+  cadeaux 25 % plus vite ; affamé, il réclame. Les caresses aident un peu.
+- **Chapeau saisonnier** « Citrouille », du 25 octobre au 2 novembre.
+- **Chasse à la souris** : il guette la souris qui vient de s'arrêter près de lui, puis bondit dessus (désactivable).
+- **Pause Pomodoro** après chaque session réussie (5 min réglables), minuteur ☕ dans la bulle, bouton « Passer la pause ».
+- **Raccourci Ctrl+Alt+C** pour afficher ou cacher le chat (désactivable).
+
 - Réglage « Noter les applications utilisées » pour couper le suivi des exécutables actifs.
 - Bouton « Effacer mes statistiques » (avec confirmation) : vide l'historique, copies de sécurité lisibles comprises.
 

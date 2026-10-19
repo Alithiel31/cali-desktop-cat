@@ -51,9 +51,11 @@ vrai Windows (`winapi.py` couvert à 27 %).
   plutôt le panneau de l'instance en cours (`QLocalServer`).
 - [ ] **Statistiques de concentration cohérentes** : le temps de concentration compte aussi l'absence, alors que la
   récompense exige la présence.
-- [ ] **Croquettes.** Elles s'accumulent sans servir : boutique de chapeaux, nourrir le chat, ou les deux. *À décider.*
-- [ ] Rythme des cadeaux : 20 min passif contre 10 min en concentration, à rééquilibrer une fois les croquettes utiles.
-- [ ] Objectif de long terme : collection complète, succès, saisons. Plus d'interactions (curseur, humeur).
+- [x] **Croquettes** : nourrir le chat (humeur, bonus de cadeaux quand il est repu). Boutique de chapeaux : plus tard.
+- [x] Chapeau saisonnier (Halloween), chasse à la souris, pause Pomodoro, raccourci Ctrl+Alt+C.
+  *À vérifier sur un vrai Windows : le raccourci (`RegisterHotKey` + filtre natif) et la chasse multi-écrans.*
+- [ ] Rythme des cadeaux : 20 min passif contre 10 min en concentration, à revoir avec le bonus « repu » (+25 %).
+- [ ] Objectif de long terme : collection complète, succès, autres saisons (Noël…), boutique.
 - [ ] Qualité du code : découper `pet.py` (~780 lignes, couvert à 94 %), rendre `winapi` injectable dans `Game`,
   typage progressif et ruff.
 

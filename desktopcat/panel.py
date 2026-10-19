@@ -10,7 +10,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QFrame, QGridL
                                QLineEdit, QMessageBox, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
                                QWidget, QGroupBox)
 
-from .hats import HATS, RARITIES, RARITY_ORDER
+from .game import FEED_COST, MOOD_FULL, MOOD_HAPPY
+from .hats import HATS, RARITIES, RARITY_ORDER, season_label
 from .sprite import FURS, render_pixmap
 
 ACCENT, GREEN, MUTED, LINE, CARD, BG = "#ffb454", "#6fd3a0", "#9aa4b8", "#3a4258", "#2a3040", "#1f2430"
@@ -137,8 +138,16 @@ class Panel(QWidget):
         self.fish = QLabel()
         self.fish.setToolTip("Croquettes gagnées en vendant des doublons et en finissant des sessions")
         self.fish.setStyleSheet(f"background:{CARD};border:1px solid {LINE};border-radius:12px;padding:3px 12px;font-weight:700;")
+        self.mood = QLabel()
+        self.mood.setToolTip(f"Humeur du chat. Elle baisse avec le temps passé devant l'écran. "
+                             f"À partir de {MOOD_HAPPY}, il est repu et les cadeaux arrivent 25 % plus vite.")
+        self.mood.setStyleSheet(self.fish.styleSheet())
+        self.feed_btn = QPushButton(f"Nourrir ({FEED_COST} 🐟)")
+        self.feed_btn.clicked.connect(game.feed)
         head.addWidget(self.title)
         head.addStretch(1)
+        head.addWidget(self.mood)
+        head.addWidget(self.feed_btn)
         head.addWidget(self.fish)
         root.addLayout(head)
 
@@ -212,7 +221,8 @@ class Panel(QWidget):
         name = QLabel(f"<b>{hat.name}</b>" + (f" ×{count}" if count > 1 else "") if count else "<b>???</b>")
         name.setAlignment(Qt.AlignmentFlag.AlignCenter)
         name.setWordWrap(True)
-        kind = QLabel(f"<b style='color:{rar['color']}'>{rar['label']}</b>")
+        season = f" · {season_label(hat)}" if hat.season else ""
+        kind = QLabel(f"<b style='color:{rar['color']}'>{rar['label']}</b>{season}")
         kind.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(name)
         lay.addWidget(kind)
@@ -273,9 +283,12 @@ class Panel(QWidget):
         self.start_btn.clicked.connect(lambda: self.game.start_focus(self.custom_min.value()))
         self.stop_btn = QPushButton("Arrêter")
         self.stop_btn.clicked.connect(lambda: self.game.stop_focus(False))
+        self.skip_btn = QPushButton("Passer la pause")
+        self.skip_btn.clicked.connect(self.game.skip_break)
         custom.addWidget(self.custom_min)
         custom.addWidget(self.start_btn)
         custom.addWidget(self.stop_btn)
+        custom.addWidget(self.skip_btn)
         custom.addStretch(1)
         cl.addLayout(custom)
         lay.addWidget(card)
@@ -287,7 +300,14 @@ class Panel(QWidget):
         for w in (*self.preset_buttons, self.custom_min, self.start_btn):
             w.setVisible(not f)
         self.stop_btn.setVisible(bool(f))
-        if f:
+        b = self.game.brk
+        self.skip_btn.setVisible(bool(b) and not f)
+        if b and not f:
+            left = max(0, int(b["ends_at"] - self.game.clock() + 0.999))
+            self.clock.setText(f"☕ {left // 60:02d}:{left % 60:02d}")
+            self.focus_msg.setText("Pause : lève-toi, étire-toi, bois un verre d'eau. "
+                                   "Tu peux aussi relancer une session tout de suite.")
+        elif f:
             left = max(0, int(f["ends_at"] - self.game.clock() + 0.999))
             self.clock.setText(f"{left // 60:02d}:{left % 60:02d}")
             self.focus_msg.setText(f"{self.game.data['name']} reste à côté de toi. Session de {f['total_min']} min en cours.")
@@ -407,7 +427,8 @@ class Panel(QWidget):
         for key, label, lo, hi, suffix in (
                 ("scale", "Taille du chat", 3, 6, ""),
                 ("gift_every_min", "Cadeau toutes les", 5, 120, " min d'activité"),
-                ("sleep_after_min", "Sommeil après", 1, 60, " min d'inactivité")):
+                ("sleep_after_min", "Sommeil après", 1, 60, " min d'inactivité"),
+                ("break_min", "Pause après une session", 1, 30, " min")):
             sp = QSpinBox()
             sp.setRange(lo, hi)
             sp.setSuffix(suffix)
@@ -422,6 +443,9 @@ class Panel(QWidget):
             "notifications": "Prévient quand une session de concentration se termine.",
             "track_apps": "Garde localement le nom des applications utilisées pour les statistiques.",
             "launch_at_startup": "Ouvre le chat automatiquement à l'ouverture de ta session Windows.",
+            "hunt_cursor": "Quand la souris s'arrête près de lui, il la guette puis bondit dessus.",
+            "focus_breaks": "Après une session réussie, le chat te propose une pause (méthode Pomodoro).",
+            "hotkey": "Affiche ou cache le chat depuis n'importe quelle application.",
         }
         groups = (
             ("Comportement du chat", (
@@ -429,12 +453,17 @@ class Panel(QWidget):
                 ("jump_between_windows", "Sauter d'une fenêtre à l'autre"),
                 ("follow_active", "Rejoindre la fenêtre active"),
                 ("meows", "Miauler de temps en temps"),
+                ("hunt_cursor", "Chasser la souris"),
             )),
+            ("Concentration", (("focus_breaks", "Pause après chaque session"),)),
             ("Notifications et confidentialité", (
                 ("notifications", "Notifications de concentration"),
                 ("track_apps", "Suivi des applications"),
             )),
-            ("Démarrage", (("launch_at_startup", "Lancer avec Windows"),)),
+            ("Démarrage et clavier", (
+                ("launch_at_startup", "Lancer avec Windows"),
+                ("hotkey", "Raccourci Ctrl+Alt+C"),
+            )),
         )
         for title, items in groups:
             section = QGroupBox(title)
@@ -494,6 +523,13 @@ class Panel(QWidget):
         d = self.game.data
         self.title.setText(f"Desktop Cat — {d['name']}")
         self.fish.setText(f"🐟 {d['fish']}")
+        level = self.game.mood_level()
+        face = {"repu": "😺", "content": "🐱", "affamé": "😿"}[level]
+        self.mood.setText(f"{face} {self.game.mood}")
+        self.feed_btn.setEnabled(self.game.can_feed())
+        self.feed_btn.setToolTip(f"{d['name']} est {level}." + ("" if self.game.can_feed() else
+                                 " Il n'a plus faim." if self.game.mood >= MOOD_FULL else
+                                 f" Il faut {FEED_COST} croquettes."))
         self._refresh_wardrobe()
         self._refresh_focus()
         self._refresh_stats()

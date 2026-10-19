@@ -44,7 +44,8 @@ DEFAULTS = {
     "fur": "ecaille",
     "hats": {},                 # {id_chapeau: quantité}
     "equipped": None,
-    "fish": 0,                  # croquettes gagnées en vendant des doublons
+    "fish": 0,                  # croquettes gagnées en vendant des doublons et en finissant des sessions
+    "mood": 50,                 # humeur du chat, de 0 (affamé) à 100 (repu) : voir game.py
     "gift_progress": 0,         # secondes d'activité depuis le dernier cadeau
     "gifts_pending": 0,         # cadeaux gagnés pas encore ouverts
     "settings": {
@@ -58,6 +59,10 @@ DEFAULTS = {
         "follow_active": False,         # rejoint la fenêtre qu'on vient d'activer
         "meows": True,                  # bulles « miaou » spontanées
         "track_apps": True,             # note le nom de l'exécutable actif pour les statistiques
+        "hunt_cursor": True,            # guette la souris immobile et bondit dessus
+        "focus_breaks": True,           # pause après chaque session de concentration réussie
+        "break_min": 5,                 # durée de cette pause
+        "hotkey": True,                 # Ctrl+Alt+C affiche ou cache le chat
     },
     "focus": None,              # session de concentration en cours : {"ends_at": epoch, "total_min": n}
     "days": {},                 # {"2026-10-18": {"active": s, "focus": s, "gifts": n, "apps": {exe: s}}}
@@ -97,6 +102,7 @@ def _sanitize(d: dict) -> dict:
     if d.get("equipped") not in d["hats"]:
         d["equipped"] = None                      # un chapeau qu'on ne possède pas (ou plus) ne se porte pas
     d["fish"] = _nat(d.get("fish"))
+    d["mood"] = min(100, _nat(d.get("mood"), DEFAULTS["mood"]))
     d["gift_progress"] = _nat(d.get("gift_progress"))
     d["gifts_pending"] = min(MAX_PENDING_GIFTS, _nat(d.get("gifts_pending")))
     days = d.get("days")

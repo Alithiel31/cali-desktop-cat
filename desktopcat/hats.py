@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
+from datetime import date
 
 RARITIES = {
     "common":    {"label": "Commun",     "weight": 60.0, "color": "#9aa4b2", "sell": 5},
@@ -28,6 +29,14 @@ class Hat:
     px: tuple
     animated: bool = False
     floating: bool = False
+    season: str | None = None       # clé de SEASONS : chapeau qu'on ne trouve qu'à cette période de l'année
+
+
+# Saisons : (libellé, (mois, jour) de début, (mois, jour) de fin), bornes comprises.
+SEASONS = {
+    "halloween": ("Halloween", (10, 25), (11, 2)),
+}
+SEASON_CHANCE = 0.2     # en saison, part des cadeaux qui donnent directement un chapeau de la saison
 
 
 def _h(id, name, rarity, pal, px, **kw):
@@ -82,14 +91,34 @@ HATS = [
        ["..RRRRRR..", ".RRRRRRRR.", "RRRRRRRRRR", "aaaaaaaaaa"], animated=True),
     _h("galaxy", "Chapeau galaxie", "exotic", {"a": "#1b1464", "b": "#5b3fd6", "c": "#2a1b8f"},
        ["..aaSaaa..", ".aabaSaaa.", "aaSaabaaaa", "cccccccccc"], animated=True),
+    # --- Saisonniers
+    _h("pumpkin", "Citrouille", "epic", {"a": "#f28c28", "b": "#4e8a3a", "c": "#3a1f0b", "d": "#c96a12"},
+       [".....b....", "....bb....", ".adaaaada.", "aacaaaacaa", "adaaaaaada", "aaccccccaa", ".adaaaada."],
+       season="halloween"),
 ]
 
 BY_ID = {h.id: h for h in HATS}
 
 
-def roll_hat(rng=None) -> Hat:
-    """Tirage pondéré : d'abord la rareté, puis un chapeau au hasard dans cette rareté."""
+def in_season(season: str, today: date) -> bool:
+    _label, (m0, d0), (m1, d1) = SEASONS[season]
+    start, end, here = (m0, d0), (m1, d1), (today.month, today.day)
+    return start <= here <= end if start <= end else here >= start or here <= end   # une saison peut chevaucher le 1er janvier
+
+
+def season_label(hat: Hat) -> str:
+    return SEASONS[hat.season][0] if hat.season else ""
+
+
+def roll_hat(rng=None, today: date | None = None) -> Hat:
+    """Tirage pondéré : d'abord la rareté, puis un chapeau au hasard dans cette rareté.
+
+    Les chapeaux saisonniers ne sortent qu'en saison (`today`), et alors directement, une fois sur cinq.
+    Sans `today`, aucun chapeau saisonnier (tirage indépendant de la date, pratique pour les tests)."""
     rng = rng or random
+    seasonal = [h for h in HATS if h.season and today is not None and in_season(h.season, today)]
+    if seasonal and rng.random() < SEASON_CHANCE:
+        return seasonal[int(rng.random() * len(seasonal)) % len(seasonal)]
     total = sum(r["weight"] for r in RARITIES.values())
     x = rng.random() * total
     rarity = "common"
@@ -98,5 +127,5 @@ def roll_hat(rng=None) -> Hat:
             rarity = key
             break
         x -= r["weight"]
-    pool = [h for h in HATS if h.rarity == rarity]
+    pool = [h for h in HATS if h.rarity == rarity and not h.season]
     return pool[int(rng.random() * len(pool)) % len(pool)]
