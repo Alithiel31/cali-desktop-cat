@@ -17,6 +17,22 @@ IS_WIN = sys.platform == "win32"
 SHELL_CLASSES = {"Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd"}
 IGNORED_CLASSES = SHELL_CLASSES | {"Windows.UI.Core.CoreWindow"}
 
+# Styles étendus (GetWindowLongW(hwnd, GWL_EXSTYLE))
+WS_EX_TRANSPARENT = 0x00000020      # les clics passent au travers : overlay (Steam, NVIDIA, Discord...)
+WS_EX_TOOLWINDOW = 0x00000080
+WS_EX_LAYERED = 0x00080000
+WS_EX_NOACTIVATE = 0x08000000       # ne peut pas devenir la fenêtre active : overlay, notification, clavier visuel
+LWA_ALPHA = 0x2
+
+
+def is_ghost_window(exstyle: int, layered_alpha: int | None = None) -> bool:
+    """Vrai pour une fenêtre sur laquelle le chat ne doit pas se percher : invisible à l'œil ou sans « vrai » bord
+    (overlay transparent aux clics, fenêtre outil, fenêtre impossible à activer, fenêtre superposée d'opacité nulle).
+    `layered_alpha` : opacité réglée par SetLayeredWindowAttributes, ou None si elle est inconnue."""
+    if exstyle & (WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE):
+        return True
+    return bool(exstyle & WS_EX_LAYERED) and layered_alpha == 0
+
 
 @dataclass(frozen=True)
 class WinInfo:
@@ -57,8 +73,10 @@ if IS_WIN:
     user32.IsWindow.argtypes = [_H]
     user32.GetWindowLongW.argtypes = [_H, ctypes.c_int]
     user32.GetWindowRect.argtypes = [_H, ctypes.POINTER(RECT)]
-    user32.GetWindowTextLengthW.argtypes = [_H]
     user32.GetWindowTextW.argtypes = [_H, wintypes.LPWSTR, ctypes.c_int]
+    user32.InternalGetWindowText.argtypes = [_H, wintypes.LPWSTR, ctypes.c_int]
+    user32.GetLayeredWindowAttributes.argtypes = [_H, ctypes.POINTER(wintypes.DWORD), ctypes.POINTER(ctypes.c_ubyte),
+                                                  ctypes.POINTER(wintypes.DWORD)]
     user32.GetClassNameW.argtypes = [_H, wintypes.LPWSTR, ctypes.c_int]
     user32.GetWindowThreadProcessId.argtypes = [_H, ctypes.POINTER(wintypes.DWORD)]
     user32.GetForegroundWindow.restype = _H
@@ -82,7 +100,16 @@ if IS_WIN:
         return _text(user32.GetClassNameW, hwnd, 256)
 
     def _title(hwnd) -> str:
-        return _text(user32.GetWindowTextW, hwnd, user32.GetWindowTextLengthW(hwnd) + 1)
+        # InternalGetWindowText lit le titre sans envoyer de message à la fenêtre : GetWindowTextLength, lui, en
+        # envoie un, et une fenêtre qui « ne répond pas » pourrait geler la boucle du chat.
+        return _text(user32.InternalGetWindowText, hwnd, 512)
+
+    def _layered_alpha(hwnd):
+        """Opacité d'une fenêtre superposée (0 à 255), ou None si elle n'est pas réglée de cette façon."""
+        key, alpha, flags = wintypes.DWORD(0), ctypes.c_ubyte(255), wintypes.DWORD(0)
+        if not user32.GetLayeredWindowAttributes(hwnd, ctypes.byref(key), ctypes.byref(alpha), ctypes.byref(flags)):
+            return None
+        return alpha.value if flags.value & LWA_ALPHA else None
 
     def _frame(hwnd):
         """Rectangle visible de la fenêtre (sans l'ombre invisible de Windows 10/11)."""
@@ -127,7 +154,9 @@ if IS_WIN:
         def cb(hwnd, _):
             if hwnd in exclude or not user32.IsWindowVisible(hwnd) or user32.IsIconic(hwnd):
                 return True
-            if user32.GetWindowLongW(hwnd, -20) & 0x80:                 # WS_EX_TOOLWINDOW
+            exstyle = user32.GetWindowLongW(hwnd, -20) & 0xFFFFFFFF      # GWL_EXSTYLE
+            alpha = _layered_alpha(hwnd) if exstyle & WS_EX_LAYERED else None
+            if is_ghost_window(exstyle, alpha):
                 return True
             if _cloaked(hwnd) or _class(hwnd) in IGNORED_CLASSES:
                 return True

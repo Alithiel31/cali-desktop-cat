@@ -18,6 +18,21 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 - Batterie : plus de `timeBeginPeriod(1)` (minuterie système forcée à 1 ms en permanence) ; la boucle du chat passe
   de ~60 à 10 passages par seconde quand il est caché ou endormi parce que l'utilisateur est absent.
+- Sauvegarde au format v2 : `gift_pending` (oui/non) devient `gifts_pending` (nombre de cadeaux en attente).
+  Les sauvegardes v1 sont migrées automatiquement (copie `save.json.v1.bak` gardée).
+- Un cadeau en attente laisse finir la bulle en cours (« Te revoilà ! », chapeau qu'on vient d'ouvrir) avant
+  d'apparaître.
+
+### Fixed
+
+- Le cadeau d'une session de concentration n'est plus perdu quand un cadeau ordinaire attendait déjà : ils s'additionnent.
+- Copie quotidienne de la sauvegarde aussi quand l'appli tourne plusieurs jours sans redémarrer (PC mis en veille).
+- Sauvegarde forcée sur le disque (`fsync`) avant le remplacement : une coupure de courant ne laisse plus de fichier vide.
+  Le remplacement est retenté si un antivirus verrouille le fichier un instant.
+- Le chat ne se perche plus sur les fenêtres invisibles : overlays transparents aux clics (Steam, NVIDIA, Discord),
+  fenêtres impossibles à activer, fenêtres superposées d'opacité nulle.
+- Lecture des titres de fenêtres sans leur envoyer de message (`InternalGetWindowText`) : une fenêtre qui « ne répond
+  pas » ne peut plus geler le chat.
 
 ## [0.3.0] - 2026-10-18
 

@@ -168,7 +168,7 @@ class MigrationTest(BackupTestCase):
             self.addCleanup(p.stop)
 
     def test_current_version_needs_no_migration_and_no_extra_copy(self):
-        self.write({"version": 1, "fish": 3})
+        self.write({"version": store_module.SCHEMA_VERSION, "fish": 3})
         Store(self.path)
         self.assertEqual(glob.glob(self.path + ".v*.bak"), [])
 
@@ -249,6 +249,80 @@ class MigrationTest(BackupTestCase):
         st = Store(self.path)
         self.assertTrue(st.save())
         self.assertEqual(self.read()["version"], store_module.SCHEMA_VERSION)
+
+
+class RealMigrationTest(BackupTestCase):
+    def test_v1_pending_gift_becomes_a_count(self):
+        for old, new in ((True, 1), (False, 0), ("oui", 0)):
+            self.write({"version": 1, "gift_pending": old})
+            st = Store(self.path)
+            self.assertEqual(st.data["gifts_pending"], new, old)
+            self.assertNotIn("gift_pending", st.data)
+
+    def test_v1_file_without_the_field_has_no_pending_gift(self):
+        self.write({"version": 1, "fish": 3})
+        self.assertEqual(Store(self.path).data["gifts_pending"], 0)
+
+    def test_absurd_count_is_capped(self):
+        self.write({"version": store_module.SCHEMA_VERSION, "gifts_pending": 10 ** 9})
+        self.assertEqual(Store(self.path).data["gifts_pending"], store_module.MAX_PENDING_GIFTS)
+
+
+class DailyBackupWhileRunningTest(BackupTestCase):
+    def test_a_new_day_while_running_makes_a_copy_of_the_previous_day(self):
+        self.write({"version": store_module.SCHEMA_VERSION, "fish": 1})
+        st = Store(self.path)                                    # copie du 01
+        st.data["fish"] = 2
+        st.save()                                                # toujours le 01 : pas de nouvelle copie
+        self.assertEqual(self.daily(), ["save-2026-10-01.json"])
+        self.day[0] = "2026-10-02"                               # minuit passe, l'appli tourne toujours
+        st.data["fish"] = 3
+        st.save()
+        self.assertEqual(self.daily(), ["save-2026-10-01.json", "save-2026-10-02.json"])
+        copy = self.read(os.path.join(self.tmp.name, "backups", "save-2026-10-02.json"))
+        self.assertEqual(copy["fish"], 2)                        # l'état de la fin de la veille
+        self.assertEqual(self.read()["fish"], 3)
+        st.save()
+        self.assertEqual(len(self.daily()), 2)                   # une seule copie par jour
+
+    def test_first_save_ever_does_not_try_to_copy_a_missing_file(self):
+        st = Store(self.path)
+        with self.assertNoLogs("desktopcat.store", level="WARNING"):
+            self.assertTrue(st.save())
+        self.assertEqual(self.daily(), [])
+
+
+class AtomicWriteTest(BackupTestCase):
+    def test_locked_file_is_retried(self):
+        real = os.replace
+        calls = []
+
+        def flaky(src, dst):
+            calls.append(dst)
+            if len(calls) < 3:
+                raise PermissionError("verrouillé par l'antivirus")
+            real(src, dst)
+
+        st = Store(self.path)
+        st.data["fish"] = 5
+        with mock.patch.object(store_module.os, "replace", flaky), mock.patch.object(store_module.time, "sleep"):
+            self.assertTrue(st.save())
+        self.assertEqual(len(calls), 3)
+        self.assertEqual(self.read()["fish"], 5)
+
+    def test_file_locked_for_good_fails_without_crashing(self):
+        st = Store(self.path)
+        with mock.patch.object(store_module.os, "replace", side_effect=PermissionError("verrouillé")), \
+                mock.patch.object(store_module.time, "sleep"), self.assertLogs("desktopcat.store", "ERROR"):
+            self.assertFalse(st.save())
+
+    def test_data_is_forced_to_disk_before_the_rename(self):
+        order = []
+        real_fsync, real_replace = os.fsync, os.replace
+        with mock.patch.object(store_module.os, "fsync", lambda fd: (order.append("fsync"), real_fsync(fd))), \
+                mock.patch.object(store_module.os, "replace", lambda a, b: (order.append("replace"), real_replace(a, b))):
+            self.assertTrue(Store(self.path).save())
+        self.assertEqual(order, ["fsync", "replace"])
 
 
 if __name__ == "__main__":

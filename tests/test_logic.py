@@ -138,6 +138,26 @@ class RealScreensTest(unittest.TestCase):
 
 
 @unittest.skipUnless(sys.platform == "win32", "l'API Win32 n'existe que sous Windows")
+class GhostWindowTest(unittest.TestCase):
+    """Fenêtres invisibles ou overlays : le chat ne doit pas marcher dessus."""
+
+    def test_normal_window_is_kept(self):
+        self.assertFalse(winapi.is_ghost_window(0))
+        self.assertFalse(winapi.is_ghost_window(0x100 | 0x200))           # bordures ordinaires
+
+    def test_click_through_tool_and_non_activable_windows_are_ghosts(self):
+        for style in (winapi.WS_EX_TRANSPARENT, winapi.WS_EX_TOOLWINDOW, winapi.WS_EX_NOACTIVATE,
+                      winapi.WS_EX_LAYERED | winapi.WS_EX_TRANSPARENT):
+            self.assertTrue(winapi.is_ghost_window(style), hex(style))
+
+    def test_layered_window_depends_on_its_opacity(self):
+        layered = winapi.WS_EX_LAYERED
+        self.assertTrue(winapi.is_ghost_window(layered, 0))                # entièrement transparente
+        self.assertFalse(winapi.is_ghost_window(layered, 255))
+        self.assertFalse(winapi.is_ghost_window(layered, 40))             # à peine visible, mais là
+        self.assertFalse(winapi.is_ghost_window(layered, None))           # opacité inconnue : dans le doute, gardée
+
+
 class WinApiSmokeTest(unittest.TestCase):
     """Vérifie les appels ctypes réels sans supposer de fenêtre ou d'écran particulier."""
 
@@ -220,11 +240,11 @@ class GameTest(GameTestCase):
 
     def test_gift_claim_and_sell(self):
         self.assertIsNone(self.game.claim_gift())
-        self.game.data["gift_pending"] = True
+        self.game.data["gifts_pending"] = 1
         res = self.game.claim_gift()
         self.assertTrue(res["is_new"])
         self.assertEqual(self.game.data["equipped"], res["hat"].id)
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         hat_id = res["hat"].id
         self.assertFalse(self.game.sell(hat_id))                 # pas de doublon : rien à vendre
         self.game.data["hats"][hat_id] = 2
@@ -241,7 +261,7 @@ class GameTest(GameTestCase):
         for _ in range(300):
             self.game.tick()
         self.assertEqual(self.store.day()["active"], 300)
-        self.assertTrue(self.game.data["gift_pending"])
+        self.assertTrue(self.game.data["gifts_pending"])
         self.assertEqual(events, ["gift"])
         self.idle = 400                                          # plus de 5 min sans rien toucher
         self.game.tick()
@@ -267,7 +287,7 @@ class GameTest(GameTestCase):
         self.work(25)
         self.assertIsNone(self.game.focus)
         self.assertEqual(done, [25])
-        self.assertTrue(self.game.data["gift_pending"])
+        self.assertTrue(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 35)
         self.game.start_focus(10)
         self.game.stop_focus(False)                              # abandon : pas de récompense
@@ -414,7 +434,7 @@ class PetTest(GameTestCase):
         self.assertEqual(self.pet.stand, 111)
 
     def test_gift_cycle(self):
-        self.game.data["gift_pending"] = True
+        self.game.data["gifts_pending"] = 1
         self.run_steps(5)
         self.assertEqual(self.pet.state, "wait")
         self.assertTrue(self.pet.gift_visible)
@@ -424,7 +444,18 @@ class PetTest(GameTestCase):
         self.assertFalse(self.pet.gift_visible)
         self.assertTrue(self.game.data["hats"])
         self.assertIn("Nouveau chapeau", self.bubble.text())
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
+
+    def test_second_gift_waits_for_the_hat_bubble(self):
+        self.game.data["gifts_pending"] = 2
+        self.run_steps(5)
+        self.pet._on_gift_clicked()
+        self.assertIn("Nouveau chapeau", self.bubble.text())
+        self.run_steps(30)
+        self.assertFalse(self.pet.gift_visible)                  # la bulle du chapeau reste lisible
+        self.assertIn("Nouveau chapeau", self.bubble.text())
+        self.run_until(lambda: self.pet.gift_visible, n=2000)
+        self.assertTrue(self.pet.gift_visible)                   # puis le 2e cadeau arrive
 
     def test_focus_session_puts_the_cat_to_work(self):
         self.game.start_focus(5)
@@ -447,12 +478,15 @@ class PetTest(GameTestCase):
 
     def test_gift_waits_while_the_user_is_away(self):
         self.game.sleeping_changed.emit(True)
-        self.game.data["gift_pending"] = True
+        self.game.data["gifts_pending"] = 1
         self.run_steps(60)
         self.assertFalse(self.pet.gift_visible)
         self.game.sleeping_changed.emit(False)
+        self.assertIn("revoilà", self.bubble.text())
         self.run_steps(5)
-        self.assertTrue(self.pet.gift_visible)
+        self.assertFalse(self.pet.gift_visible)                  # « Te revoilà ! » d'abord, sans être écrasé...
+        self.run_until(lambda: self.pet.gift_visible)
+        self.assertTrue(self.pet.gift_visible)                   # ...puis le cadeau
 
     def test_fullscreen_hides_everything(self):
         self.game.fullscreen_changed.emit(True)
@@ -488,7 +522,7 @@ class PetTest(GameTestCase):
                     x, y = rng.randint(0, 300), rng.randint(200, 600)
                     self.desk.put(hwnd, (x, y, x + rng.randint(300, 500), y + 200))
             if i % 400 == 0:
-                self.game.data["gift_pending"] = True
+                self.game.data["gifts_pending"] = 1
             self.pet.step(1 / 30)
             cx = self.pet.cx
             self.assertTrue(-1000 < cx < 2000 and 0 <= self.pet.fy <= self.floor + 1, (i, cx, self.pet.fy))

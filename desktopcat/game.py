@@ -8,7 +8,7 @@ from PySide6.QtCore import QObject, QTimer, Signal
 
 from . import autostart, winapi
 from .hats import BY_ID, RARITIES, roll_hat
-from .store import Store
+from .store import MAX_PENDING_GIFTS, Store
 
 FURS = ("ecaille", "orange", "gris", "noir", "blanc")
 SETTING_RULES = {
@@ -102,7 +102,7 @@ class Game(QObject):
 
         if active and secs:
             d["active"] += secs
-            if not self.data["gift_pending"]:
+            if not self.data["gifts_pending"]:
                 self.data["gift_progress"] += secs
             if s["track_apps"] and fg is not None and fg.pid != os.getpid():
                 self.store.add_app_seconds(fg.exe or "", secs)
@@ -122,8 +122,8 @@ class Game(QObject):
             self.sleeping = False
             self.sleeping_changed.emit(False)
 
-        if not self.data["gift_pending"] and self.data["gift_progress"] >= s["gift_every_min"] * 60:
-            self.data["gift_pending"] = True
+        if not self.data["gifts_pending"] and self.data["gift_progress"] >= s["gift_every_min"] * 60:
+            self._add_gift()
             self.data["gift_progress"] = 0
             self.gift_ready.emit()
             self.changed.emit()
@@ -139,14 +139,17 @@ class Game(QObject):
             self.store.save()
 
     # ───────── cadeaux et chapeaux
+    def _add_gift(self) -> None:
+        self.data["gifts_pending"] = min(MAX_PENDING_GIFTS, self.data["gifts_pending"] + 1)
+
     def claim_gift(self):
-        if not self.data["gift_pending"]:
+        if not self.data["gifts_pending"]:
             return None
         hat = roll_hat()
         hats = self.data["hats"]
         is_new = hat.id not in hats
         hats[hat.id] = hats.get(hat.id, 0) + 1
-        self.data["gift_pending"] = False
+        self.data["gifts_pending"] -= 1
         self.data["gift_progress"] = 0
         self.store.day()["gifts"] += 1
         if is_new:
@@ -157,7 +160,7 @@ class Game(QObject):
 
     def force_gift(self) -> None:
         """Pour tester : un cadeau tout de suite."""
-        self.data["gift_pending"] = True
+        self._add_gift()
         self.gift_ready.emit()
         self.changed.emit()
 
@@ -205,7 +208,7 @@ class Game(QObject):
                              f"Session de {total} min terminée, mais tu étais surtout absent : pas de cadeau.")
         elif completed:
             self.data["fish"] += 10 + total
-            self.data["gift_pending"] = True
+            self._add_gift()                                   # s'ajoute à un cadeau ordinaire déjà en attente
             self.notice.emit(f"{self.data['name']} est fier de toi",
                              f"Session de {total} min terminée : un cadeau t'attend.")
             self.focus_finished.emit(total)
