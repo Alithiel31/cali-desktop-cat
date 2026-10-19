@@ -27,14 +27,17 @@ def set_enabled(enabled: bool) -> bool:
         return False
     import winreg
     try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as key:
-            if enabled:
+        if enabled:
+            # CreateKey ouvre aussi une clé déjà existante et garantit que la valeur
+            # correspond au chemin actuel de l'application (déplacement / mise à jour).
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as key:
                 winreg.SetValueEx(key, VALUE_NAME, 0, winreg.REG_SZ, _command())
-            else:
-                try:
+        else:
+            try:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as key:
                     winreg.DeleteValue(key, VALUE_NAME)
-                except FileNotFoundError:
-                    pass
+            except FileNotFoundError:
+                pass
         return True
     except OSError as e:
         log.error("Démarrage automatique impossible : %s", e)

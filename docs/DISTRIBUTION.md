@@ -52,7 +52,8 @@ Comparer avec le contenu de `DesktopCat.exe.sha256` publié dans la même Releas
 - **L'exécutable n'est pas signé** : Windows SmartScreen affiche « Windows a protégé votre ordinateur ». Cliquer sur
   *Informations complémentaires* puis *Exécuter quand même*. Des antivirus peuvent aussi signaler à tort un exécutable
   PyInstaller (faux positif fréquent avec `--onefile`).
-- Le démarrage avec Windows enregistre le chemin de l'exécutable : si tu le déplaces, décoche puis recoche l'option.
+- Le démarrage avec Windows met à jour le chemin enregistré à chaque lancement. Si Windows refuse la modification,
+  l'option revient à son état précédent et le panneau affiche un avertissement.
   (À vérifier avec la version empaquetée, voir ci-dessous.)
 
 ## Ébauche — à compléter

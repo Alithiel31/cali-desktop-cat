@@ -234,7 +234,9 @@ class Game(QObject):
         except (TypeError, ValueError):
             return False
         if key == "launch_at_startup":
-            autostart.set_enabled(self.settings[key])
+            if not autostart.set_enabled(self.settings[key]):
+                self.settings[key] = not self.settings[key]
+                return False
         self.store.save()
         self.changed.emit()
         return True

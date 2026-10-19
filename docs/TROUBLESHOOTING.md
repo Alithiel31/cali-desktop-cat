@@ -86,8 +86,9 @@ Panneau, onglet Réglages : « Notifications de fin de session » doit être coc
 
 ## Le démarrage avec Windows ne marche plus
 
-La commande est enregistrée dans `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (valeur `DesktopCat`) avec le
-chemin du projet. Si tu as déplacé le dossier, décoche puis recoche « Lancer avec Windows » dans le panneau.
+La commande est enregistrée dans `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (valeur `DesktopCat`) et
+actualisée à chaque lancement. Si Windows refuse la modification, vérifie que ton compte peut modifier cette clé, puis
+réessaie d'activer « Lancer avec Windows » dans le panneau.
 
 ## Ma sauvegarde est perdue ou illisible
 

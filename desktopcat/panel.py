@@ -416,7 +416,7 @@ class Panel(QWidget):
                 ("track_apps", "Noter les applications utilisées (statistiques)"),
                 ("launch_at_startup", "Lancer avec Windows")):
             cb = QCheckBox(label)
-            cb.toggled.connect(lambda v, k=key: g.set_setting(k, v))
+            cb.toggled.connect(lambda v, k=key, box=cb: self._set_checkbox_setting(k, v, box))
             form.addRow(cb)
             self.checks[key] = cb
 
@@ -424,6 +424,17 @@ class Panel(QWidget):
         test.clicked.connect(g.force_gift)
         form.addRow(test)
         return page
+
+    def _set_checkbox_setting(self, key: str, value: bool, checkbox: QCheckBox) -> None:
+        if self.game.set_setting(key, value):
+            return
+        checkbox.blockSignals(True)
+        checkbox.setChecked(self.game.settings[key])
+        checkbox.blockSignals(False)
+        if key == "launch_at_startup":
+            QMessageBox.warning(
+                self, "Démarrage avec Windows",
+                "Windows n'a pas pu modifier le démarrage automatique. Vérifie les permissions de ton compte, puis réessaie.")
 
     def _refresh_settings(self) -> None:
         d, s = self.game.data, self.game.settings

@@ -184,6 +184,18 @@ class GameTestCase(unittest.TestCase):
 
 
 class GameTest(GameTestCase):
+    def test_startup_setting_reverts_when_registry_update_fails(self):
+        with mock.patch("desktopcat.game.autostart.set_enabled", return_value=False) as set_enabled:
+            self.assertFalse(self.game.set_setting("launch_at_startup", True))
+        set_enabled.assert_called_once_with(True)
+        self.assertFalse(self.game.settings["launch_at_startup"])
+
+    def test_startup_setting_is_saved_when_registry_update_succeeds(self):
+        with mock.patch("desktopcat.game.autostart.set_enabled", return_value=True) as set_enabled:
+            self.assertTrue(self.game.set_setting("launch_at_startup", True))
+        set_enabled.assert_called_once_with(True)
+        self.assertTrue(self.game.settings["launch_at_startup"])
+
     def test_gift_claim_and_sell(self):
         self.assertIsNone(self.game.claim_gift())
         self.game.data["gift_pending"] = True
