@@ -39,6 +39,7 @@ Tester à la main **sans toucher à ta vraie sauvegarde** : `tools\run_test_inst
 
 | Job | Commande |
 |---|---|
+| `lint` (`ci.yml`) | `pip install -r requirements-dev.txt` puis `ruff check .` (`ruff check --fix .` corrige le tri des imports et les cas simples) |
 | `tests` (`ci.yml`) | `set QT_QPA_PLATFORM=offscreen` puis `python -m unittest discover -s tests -v` |
 | `build-windows` (`release.yml`) | `pip install -r requirements-build.txt`, `python tools/make_version_file.py`, puis `pyinstaller DesktopCat.spec` |
 

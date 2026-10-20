@@ -6,9 +6,24 @@ from datetime import date, timedelta
 
 from PySide6.QtCore import QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPainter
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QMessageBox, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
-                               QWidget, QGroupBox)
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QFormLayout,
+    QFrame,
+    QGridLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QPushButton,
+    QScrollArea,
+    QSpinBox,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from . import __version__
 from .game import FEED_COST, MOOD_FULL, MOOD_HAPPY
@@ -26,7 +41,8 @@ QPushButton {{ background: {CARD}; border: 1px solid {LINE}; border-radius: 8px;
 QPushButton:hover {{ border-color: {ACCENT}; }}
 QPushButton:disabled {{ color: #666d7e; }}
 QPushButton#primary {{ background: {ACCENT}; border-color: {ACCENT}; color: #2a1d18; font-weight: 700; }}
-QLineEdit, QSpinBox, QComboBox {{ background: #171b25; border: 1px solid {LINE}; border-radius: 8px; padding: 5px 8px; }}
+QLineEdit, QSpinBox, QComboBox {{ background: #171b25; border: 1px solid {LINE}; border-radius: 8px;
+    padding: 5px 8px; }}
 QFrame#card {{ background: {CARD}; border: 1px solid {LINE}; border-radius: 12px; }}
 QFrame#card QLabel {{ background: transparent; }}
 QScrollArea {{ border: 0; }}
@@ -138,7 +154,8 @@ class Panel(QWidget):
         self.title.setStyleSheet("font: 700 20px 'Segoe UI';")
         self.fish = QLabel()
         self.fish.setToolTip("Croquettes gagnées en vendant des doublons et en finissant des sessions")
-        self.fish.setStyleSheet(f"background:{CARD};border:1px solid {LINE};border-radius:12px;padding:3px 12px;font-weight:700;")
+        self.fish.setStyleSheet(
+            f"background:{CARD};border:1px solid {LINE};border-radius:12px;padding:3px 12px;font-weight:700;")
         self.mood = QLabel()
         self.mood.setToolTip(f"Humeur du chat. Elle baisse avec le temps passé devant l'écran. "
                              f"À partir de {MOOD_HAPPY}, il est repu et les cadeaux arrivent 25 % plus vite.")
@@ -311,7 +328,8 @@ class Panel(QWidget):
         elif f:
             left = max(0, int(f["ends_at"] - self.game.clock() + 0.999))
             self.clock.setText(f"{left // 60:02d}:{left % 60:02d}")
-            self.focus_msg.setText(f"{self.game.data['name']} reste à côté de toi. Session de {f['total_min']} min en cours.")
+            self.focus_msg.setText(
+                f"{self.game.data['name']} reste à côté de toi. Session de {f['total_min']} min en cours.")
         else:
             self.clock.setText("--:--")
             self.focus_msg.setText("Lance une session : ton chat s'installe avec son ordinateur, "
@@ -323,7 +341,8 @@ class Panel(QWidget):
         lay = QVBoxLayout(page)
         row = QHBoxLayout()
         self.st = {}
-        for key, caption in (("active", "devant l'écran aujourd'hui"), ("focus", "de concentration"), ("gifts", "cadeaux reçus")):
+        for key, caption in (("active", "devant l'écran aujourd'hui"), ("focus", "de concentration"),
+                             ("gifts", "cadeaux reçus")):
             card = QFrame()
             card.setObjectName("card")
             cl = QVBoxLayout(card)
@@ -345,7 +364,8 @@ class Panel(QWidget):
         lay.addWidget(self._title("Applications aujourd'hui"))
         self.apps = AppsChart()
         lay.addWidget(self.apps)
-        note = QLabel("Le temps d'écran compte les secondes où le clavier ou la souris ont servi durant la dernière minute. "
+        note = QLabel("Le temps d'écran compte les secondes où le clavier ou la souris ont servi "
+                      "durant la dernière minute. "
                       "Le suivi des applications se coupe dans les Réglages. Tout reste sur ton PC.")
         note.setObjectName("muted")
         note.setWordWrap(True)
@@ -390,7 +410,8 @@ class Panel(QWidget):
         for i in range(6, -1, -1):
             day = date.today() - timedelta(days=i)
             v = store.data["days"].get(day.isoformat(), {})
-            days.append((("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim")[day.weekday()], v.get("active", 0), v.get("focus", 0)))
+            weekday = ("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim")[day.weekday()]
+            days.append((weekday, v.get("active", 0), v.get("focus", 0)))
         self.week.set_days(days)
         top = sorted(d.get("apps", {}).items(), key=lambda kv: kv[1], reverse=True)[:6]
         self.apps.empty_text = "Pas encore de données aujourd'hui." if self.game.settings["track_apps"] \
@@ -510,7 +531,8 @@ class Panel(QWidget):
         if key == "launch_at_startup":
             QMessageBox.warning(
                 self, "Démarrage avec Windows",
-                "Windows n'a pas pu modifier le démarrage automatique. Vérifie les permissions de ton compte, puis réessaie.")
+                "Windows n'a pas pu modifier le démarrage automatique. "
+                "Vérifie les permissions de ton compte, puis réessaie.")
 
     def _refresh_settings(self) -> None:
         d, s = self.game.data, self.game.settings

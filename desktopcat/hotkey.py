@@ -23,7 +23,7 @@ LABEL = "Ctrl+Alt+C"
 
 
 class _Filter(QAbstractNativeEventFilter):
-    def __init__(self, owner: "GlobalHotkey"):
+    def __init__(self, owner: GlobalHotkey):
         super().__init__()
         self.owner = owner
 

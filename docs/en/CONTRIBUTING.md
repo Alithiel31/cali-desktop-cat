@@ -44,6 +44,7 @@ To test by hand **without touching your real save**: `tools\run_test_instance.ba
 
 | Job | Command |
 |---|---|
+| `lint` (`ci.yml`) | `pip install -r requirements-dev.txt` then `ruff check .` (`ruff check --fix .` fixes import order and simple cases) |
 | `tests` (`ci.yml`) | `set QT_QPA_PLATFORM=offscreen` then `python -m unittest discover -s tests -v` |
 | `build-windows` (`release.yml`) | `pip install -r requirements-build.txt`, `python tools/make_version_file.py`, then `pyinstaller DesktopCat.spec` |
 

@@ -103,7 +103,8 @@ BY_ID = {h.id: h for h in HATS}
 def in_season(season: str, today: date) -> bool:
     _label, (m0, d0), (m1, d1) = SEASONS[season]
     start, end, here = (m0, d0), (m1, d1), (today.month, today.day)
-    return start <= here <= end if start <= end else here >= start or here <= end   # une saison peut chevaucher le 1er janvier
+    # une saison peut chevaucher le 1er janvier
+    return start <= here <= end if start <= end else here >= start or here <= end
 
 
 def season_label(hat: Hat) -> str:

@@ -24,9 +24,9 @@ class ScreenInfo:
 
     @property
     def native(self) -> tuple:
-        l, t, r, b = self.geom
+        left, top, right, bottom = self.geom
         d = self.dpr or 1.0
-        return (l, t, l + (r - l) * d, t + (b - t) * d)
+        return (left, top, left + (right - left) * d, top + (bottom - top) * d)
 
 
 def native_rects(screens) -> list:
@@ -35,9 +35,9 @@ def native_rects(screens) -> list:
 
 
 def _dist2(rect, x, y, half_open=False) -> float:
-    l, t, r, b = rect
-    dx = l - x if x < l else (x - r + 1e-6 if (x >= r if half_open else x > r) else 0.0)
-    dy = t - y if y < t else (y - b + 1e-6 if (y >= b if half_open else y > b) else 0.0)
+    left, top, right, bottom = rect
+    dx = left - x if x < left else (x - right + 1e-6 if (x >= right if half_open else x > right) else 0.0)
+    dy = top - y if y < top else (y - bottom + 1e-6 if (y >= bottom if half_open else y > bottom) else 0.0)
     return dx * dx + dy * dy
 
 
@@ -63,11 +63,11 @@ def screen_at_native(screens, x: float, y: float) -> int:
 
 def to_logical(rect, screens) -> tuple:
     """Rectangle de fenêtre physique -> logique. L'écran de référence est celui du milieu du bord haut."""
-    l, t, r, b = rect
-    s = screens[screen_at_native(screens, (l + r) / 2, t)]
+    left, top, right, bottom = rect
+    s = screens[screen_at_native(screens, (left + right) / 2, top)]
     gx, gy = s.geom[0], s.geom[1]
     d = s.dpr or 1.0
-    return (gx + (l - gx) / d, gy + (t - gy) / d, gx + (r - gx) / d, gy + (b - gy) / d)
+    return (gx + (left - gx) / d, gy + (top - gy) / d, gx + (right - gx) / d, gy + (bottom - gy) / d)
 
 
 @dataclass(frozen=True)
@@ -149,8 +149,8 @@ def clip_to_bounds(x0: float, x1: float, desktop_bounds: tuple) -> tuple[float, 
 def clamp_point(rects, x: float, y: float) -> tuple:
     """Ramène (x, y) dans le rectangle le plus proche (pour garder le chat sur un écran quand on le porte)."""
     best = None
-    for l, t, r, b in rects:
-        cx, cy = min(max(x, l), r), min(max(y, t), b)
+    for left, top, right, bottom in rects:
+        cx, cy = min(max(x, left), right), min(max(y, top), bottom)
         d = (x - cx) ** 2 + (y - cy) ** 2
         if best is None or d < best[0]:
             best = (d, cx, cy)

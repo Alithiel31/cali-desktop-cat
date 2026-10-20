@@ -63,7 +63,7 @@ measurement, 85 %, dates from the 19/10/2026 review).
 - [ ] Gift pace: 20 min passive versus 10 min in focus, to revisit with the "full" bonus (+25 %).
 - [ ] Long-term goal: complete collection, achievements, other seasons (Christmas...), shop.
 - [ ] Code quality: keep splitting `pet.py` (~700 lines; physics, layout, input and reactions have already been moved
-  out), make `winapi` injectable into `Game`, gradual typing and ruff.
+  out), make `winapi` injectable into `Game`, gradual typing. ruff is in place (blocking in CI); the formatter is still to be decided.
 
 ## Level 4 — Anecdotal
 - [x] `.gitignore`: global `*.png` rule removed (`tools/out/` stays excluded).

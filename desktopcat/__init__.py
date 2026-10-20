@@ -4,4 +4,5 @@ __version__ = "0.4.1"
 
 import logging as _logging
 
-_logging.getLogger("desktopcat").addHandler(_logging.NullHandler())   # sans journal actif : silence, pas de sortie parasite
+# sans journal actif : silence, pas de sortie parasite
+_logging.getLogger("desktopcat").addHandler(_logging.NullHandler())

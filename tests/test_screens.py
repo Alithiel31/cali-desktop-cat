@@ -7,9 +7,20 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from desktopcat import phrases
-from desktopcat.screens import (ScreenInfo, bounds, build_floors, clamp_point, clip_to_bounds, floor_here,
-                                native_rects, nearest_floor, nearest_rect_index, screen_at_native, snap_to_floor,
-                                to_logical)
+from desktopcat.screens import (
+    ScreenInfo,
+    bounds,
+    build_floors,
+    clamp_point,
+    clip_to_bounds,
+    floor_here,
+    native_rects,
+    nearest_floor,
+    nearest_rect_index,
+    screen_at_native,
+    snap_to_floor,
+    to_logical,
+)
 
 # Deux écrans côte à côte : A (1920x1080, 100 %) puis B (4K à 200 % = 1920x1080 logiques).
 A = ScreenInfo((0, 0, 1920, 1080), (0, 0, 1920, 1040), 1.0)

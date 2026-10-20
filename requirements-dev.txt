@@ -1,0 +1,2 @@
+# Outils de développement (lint). Version figée pour que la CI ne change pas toute seule.
+ruff==0.17.1

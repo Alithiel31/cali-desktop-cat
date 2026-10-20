@@ -21,6 +21,9 @@ Categories: `Added`, `Changed`, `Fixed`, `Security`.
 - CI: `actions/download-artifact` moves to v8, in line with `upload-artifact` v7.
 - **Reproducible builds**: `requirements-build.txt` pins PySide6 (6.12.0) and PyInstaller (6.22.3) to build the exe;
   `release.yml` uses it instead of an unversioned `pip install pyinstaller`.
+- **ruff linter**: `pyproject.toml` (120 columns, rules E, F, W, I, B, UP), blocking `lint` job in `ci.yml`,
+  `requirements-dev.txt`. Code brought into line: sorted imports, `l` variables renamed, assigned lambdas replaced by `def`,
+  `zip(strict=…)`, long lines wrapped; no behaviour change. No automatic formatter.
 - **Versioned `DesktopCat.spec`**: the build options (icon, metadata, no console, UPX disabled) live in the `.spec`, used by
   the local build and by `release.yml`. `*.spec` leaves `.gitignore`.
 - Repository tidy-up: historical prototypes moved from `tools/spikes/` to `archive/spikes/`; global `*.png` rule removed
