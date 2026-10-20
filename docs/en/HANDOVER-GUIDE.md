@@ -51,10 +51,9 @@ No real secret is needed for the project to work or stored in the repository.
 - **Administrator access to the GitHub repository** (branch settings, Releases, Dependabot).
 - The release workflow only uses the automatically provided `GITHUB_TOKEN`.
 
-Code signing (SignPath Foundation) is in preparation (see [DISTRIBUTION.md](./DISTRIBUTION.md)). Once the project is
-accepted, the repository's `SIGNPATH_API_TOKEN` secret and `SIGNPATH_ORGANIZATION_ID` variable, as well as the SignPath
-account (which approves every Release), will become the **critical** items of this list — to be recorded here at that
-point.
+Code signing through SignPath Foundation was rejected (October 2026). Distribution will go through the Microsoft
+Store (see [DISTRIBUTION.md](./DISTRIBUTION.md#signing-and-microsoft-store)): the Microsoft developer account
+(Partner Center) will then become a **critical** item of this list — to be recorded here at that point.
 
 ---
 

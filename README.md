@@ -18,10 +18,10 @@ concentration, suivies d'une pause Pomodoro. Il se promène sur tous tes écrans
 Télécharger `DesktopCat.exe` dans les [Releases](https://github.com/Alithiel31/cali-desktop-cat/releases) et le lancer :
 aucune installation, aucun droit administrateur. L'empreinte SHA256 est publiée à côté de l'exe.
 
-> L'exe n'est **pas encore signé** : SmartScreen affiche un avertissement (« Informations complémentaires » >
+> L'exe des Releases n'est **pas signé** : SmartScreen affiche un avertissement (« Informations complémentaires » >
 > « Exécuter quand même »), et **Smart App Control** (Windows 11), s'il est actif, le bloque sans recours.
-> Une demande de signature gratuite est en cours (voir [Code signing policy](#code-signing-policy)).
-> En attendant, on peut lancer l'appli depuis les sources (ci-dessous).
+> La publication sur le **Microsoft Store** (qui signe les paquets qu'il publie) est la voie retenue, mais elle n'est
+> pas encore disponible. En attendant, on peut lancer l'appli depuis les sources (ci-dessous).
 
 ## Désinstaller
 1. Panneau > Réglages : décocher **Lancer avec Windows** (retire l'entrée du registre de démarrage).
@@ -85,20 +85,6 @@ elle note chaque seconde le **nom de l'exécutable** de la fenêtre active (40 a
 `%APPDATA%/DesktopCat/save.json`. Ce suivi se coupe dans **Réglages** (« Noter les applications utilisées »), et le
 bouton **Effacer mes statistiques** (onglet Statistiques) efface tout l'historique, copies de sécurité comprises.
 Détail : [SECURITY.md](SECURITY.md).
-
-## Code signing policy
-Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
-[SignPath Foundation](https://signpath.org/) *(application in progress: current releases are not signed yet)*.
-
-- **Product:** Desktop Cat — repository [Alithiel31/cali-desktop-cat](https://github.com/Alithiel31/cali-desktop-cat), MIT License.
-- **What is signed:** only `DesktopCat.exe` attached to the GitHub Releases of this repository, built from this
-  source code by GitHub Actions (`.github/workflows/release.yml`). Nothing else is signed.
-- **Committers and reviewers:** [Jacques Duchamplecheval (alithiel31)](https://github.com/Alithiel31)
-- **Approvers:** [Jacques Duchamplecheval (alithiel31)](https://github.com/Alithiel31) — every release is approved
-  manually before signing.
-- **Privacy policy:** this program will not transfer any information to other networked systems unless specifically
-  requested by the user or the person installing or operating it. See [Vie privée](#vie-privée) for what it stores
-  locally.
 
 ## Documentation
 - [Architecture](docs/ARCHITECTURE.md) : modules, boucles, coordonnées, points d'extension.

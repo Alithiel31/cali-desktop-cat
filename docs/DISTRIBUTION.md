@@ -59,30 +59,31 @@ Comparer avec le contenu de `DesktopCat.exe.sha256` publié dans la même Releas
 - **L'exécutable n'est pas signé** : Windows SmartScreen affiche « Windows a protégé votre ordinateur ». Cliquer sur
   *Informations complémentaires* puis *Exécuter quand même*. **Smart App Control** (Windows 11), s'il est actif, le
   bloque sans recours (« bloqué par la stratégie Device Guard »), y compris un exe construit en local. Des antivirus
-  peuvent aussi signaler à tort un exécutable PyInstaller (faux positif fréquent avec `--onefile`).
+  peuvent aussi signaler à tort un exécutable PyInstaller (faux positif fréquent avec `--onefile`). La voie retenue pour y remédier est le Microsoft Store (voir plus bas).
 - Le démarrage avec Windows met à jour le chemin enregistré à chaque lancement. Si Windows refuse la modification,
   l'option revient à son état précédent et le panneau affiche un avertissement.
   (À vérifier avec la version empaquetée, voir « Ébauche » ci-dessous.)
 
-## Signature (SignPath Foundation)
+## Signature et Microsoft Store
 
-Signature gratuite pour les projets open source : le certificat est au nom de SignPath Foundation (c'est l'éditeur
-affiché par Windows), qui a déjà une réputation auprès de SmartScreen et Smart App Control.
+La candidature à SignPath Foundation (signature gratuite pour l'open source) a été **refusée** en octobre 2026 : le
+projet n'est pas encore assez connu (peu d'interactions sur le dépôt). Elle pourra être retentée quand il aura plus de
+traction.
 
-Conditions remplies (voir <https://signpath.org/terms>) : licence MIT, aucun code propriétaire, projet publié
-(v0.4.0, puis v0.4.1), fonctionnement décrit dans le README, aucune donnée transmise, désinstallation documentée, section
-**Code signing policy** dans le README, builds faits par GitHub Actions depuis le dépôt, nom et version du produit
-dans les métadonnées de l'exe (`tools/make_version_file.py`).
+Voie retenue : le **Microsoft Store**. Les paquets publiés sur le Store sont signés par le Store, ce qui doit lever
+l'avertissement SmartScreen et le blocage de Smart App Control (à vérifier sur une machine où Smart App Control est
+actif, une fois le paquet disponible). Les Releases GitHub continuent de fournir l'exe non signé.
 
-Étapes :
-1. 2FA activée sur GitHub (et sur SignPath à la création du compte).
-2. Candidature sur <https://signpath.org/apply> : dépôt, Release la plus récente (v0.4.1), licence, lien vers la Code signing policy.
-3. Une fois accepté : créer le secret `SIGNPATH_API_TOKEN` et la variable `SIGNPATH_ORGANIZATION_ID` dans le dépôt,
-   puis décommenter le bloc « Signature » de `release.yml` (vérifier les noms de projet et de politique).
-4. À chaque Release : approuver la demande de signature sur signpath.io.
-5. Vérifier sur une machine avec Smart App Control actif. S'il bloque encore (DLL Qt non signées extraites par
-   `--onefile`), l'Observateur d'événements (Microsoft > Windows > CodeIntegrity > Operational, événement 3077)
-   nomme le fichier refusé ; envisager alors `--onedir`.
+À faire (rien n'est encore engagé) :
+- [ ] Créer un compte développeur Microsoft (Partner Center) et réserver le nom « Desktop Cat ».
+- [ ] Étudier le paquet : MSIX à partir de l'exe PyInstaller (ou de `--onedir`), icônes et métadonnées demandées.
+- [ ] Automatiser le build du paquet dans `release.yml`, ou fixer une procédure manuelle de soumission.
+- [ ] Préparer la fiche du Store (description, captures, politique de confidentialité : aucune donnée transmise, voir
+  [SECURITY.md](../SECURITY.md)).
+- [ ] Vérifier dans l'environnement du paquet : démarrage avec Windows (clé `Run`), raccourci global, dossier
+  `%APPDATA%\DesktopCat` (sauvegarde, journal).
+- [ ] Passer la certification, puis tester sur une machine avec Smart App Control actif. S'il bloque encore,
+  l'Observateur d'événements (Microsoft > Windows > CodeIntegrity > Operational, événement 3077) nomme le fichier refusé.
 
 ## Ébauche — à compléter
 
@@ -91,6 +92,6 @@ dans les métadonnées de l'exe (`tools/make_version_file.py`).
 - [x] Numéro de version affiché dans le panneau, l'infobulle de l'icône et les métadonnées de l'exe.
 - [ ] Fichier `.spec` versionné au lieu de la ligne de commande (aujourd'hui `*.spec` est dans `.gitignore`, le `DesktopCat.spec` local est un résidu de PyInstaller).
 - [ ] Démarrage automatique vérifié avec l'exécutable empaqueté (chemin dans le registre).
-- [ ] Signature de code : candidature SignPath (voir ci-dessus). Note SmartScreen / Smart App Control dans le README : faite.
+- [x] Candidature SignPath : refusée (octobre 2026) ; voie retenue : Microsoft Store (voir ci-dessus). Note SmartScreen / Smart App Control dans le README : faite.
 - [ ] Dépendances figées (`pyproject.toml` + fichier de verrouillage) pour des builds reproductibles.
 - [ ] Mise à jour : décider si l'appli prévient d'une nouvelle Release (aujourd'hui, aucun accès réseau — à ne pas casser à la légère, cf. [SECURITY.md](../SECURITY.md)).

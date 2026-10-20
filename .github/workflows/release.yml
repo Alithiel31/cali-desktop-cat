@@ -57,28 +57,6 @@ jobs:
           pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico
           --version-file build/version_info.txt main.py
 
-      # ───── Signature (SignPath Foundation) : à activer une fois le projet accepté.
-      # Secrets à créer dans le dépôt : SIGNPATH_API_TOKEN, et en variables : SIGNPATH_ORGANIZATION_ID.
-      # Le flux : l'exe non signé part en artefact, SignPath le récupère, l'approbateur valide sur signpath.io,
-      # l'exe signé revient et remplace dist/DesktopCat.exe avant l'empreinte. Vérifier les noms exacts
-      # (projet, politique, version de l'action) dans la documentation SignPath au moment de l'activer.
-      #
-      # - id: unsigned
-      #   uses: actions/upload-artifact@v7
-      #   with:
-      #     name: DesktopCat-unsigned
-      #     path: dist/DesktopCat.exe
-      #
-      # - uses: signpath/github-action-submit-signing-request@v1
-      #   with:
-      #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-      #     organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-      #     project-slug: desktop-cat
-      #     signing-policy-slug: release-signing
-      #     github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
-      #     wait-for-completion: true
-      #     output-artifact-directory: dist
-
       - name: Empreinte SHA256
         shell: pwsh
         run: |
