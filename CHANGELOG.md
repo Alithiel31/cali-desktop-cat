@@ -15,6 +15,10 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Changed
 
+- **Distribution** : la candidature SignPath Foundation est refusée ; la voie retenue est le Microsoft Store. Documentation
+  (README, distribution, feuille de route, sécurité, guide de reprise) mise à jour, section « Code signing policy »
+  du README et bloc SignPath commenté de `release.yml` retirés.
+- CI : `actions/download-artifact` passe en v8, aligné sur `upload-artifact` v7.
 - Rangement du dépôt : prototypes historiques déplacés de `tools/spikes/` vers `archive/spikes/` ; règle globale `*.png`
   retirée du `.gitignore` (seul `tools/out/` reste ignoré), pour pouvoir versionner captures et images.
 - Documentation remise à jour pour la 0.4.1 : architecture (boucle ralentie, modules, tableau des tests),

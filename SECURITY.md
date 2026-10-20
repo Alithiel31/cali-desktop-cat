@@ -29,7 +29,7 @@ Desktop Cat est une application **locale** : aucun serveur, aucun compte, aucune
 | Registre | Une seule valeur écrite : `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DesktopCat` (démarrage avec Windows, désactivable). La clé `StartupApproved` (Gestionnaire des tâches) est lue ; sa valeur n'est supprimée que lorsque tu recoches la case. |
 | Raccourci global | `RegisterHotKey` pour Ctrl+Alt+C (désactivable) : l'appli ne lit aucune autre frappe. |
 | Fichier de sauvegarde | Lu et nettoyé au démarrage (`store.py`) : un fichier abîmé ou malveillant est écarté, jamais exécuté. |
-| Exécutable distribué | `DesktopCat.exe` (PyInstaller) publié dans les Releases, avec son empreinte SHA256. **Non signé** (demande SignPath Foundation en préparation) : Windows SmartScreen affichera un avertissement. |
+| Exécutable distribué | `DesktopCat.exe` (PyInstaller) publié dans les Releases, avec son empreinte SHA256. **Non signé** (voie retenue : Microsoft Store) : Windows SmartScreen affichera un avertissement. |
 
 ## Périmètre
 
@@ -48,7 +48,7 @@ Hors périmètre : une faille de PySide6/Qt, de Python ou de PyInstaller eux-mê
 
 - [ ] Activer Dependabot et les alertes de sécurité du dépôt (voir [`.github/dependabot.yml`](./.github/dependabot.yml)).
 - [ ] Ajouter un scan de secrets (gitleaks) et CodeQL (Python) en CI, comme sur QcWeather.
-- [ ] Signer l'exécutable (certificat de signature de code) — aujourd'hui non signé.
+- [ ] Publier sur le Microsoft Store (paquet signé par le Store) — l'exe des Releases reste non signé.
 - [ ] Épingler les actions GitHub par SHA une fois le pipeline de release stabilisé.
 
 ## Versions supportées

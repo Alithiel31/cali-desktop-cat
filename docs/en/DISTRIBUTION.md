@@ -60,30 +60,30 @@ Compare with the content of `DesktopCat.exe.sha256` published in the same Releas
 - **The executable is not signed**: Windows SmartScreen shows "Windows protected your PC". Click *More info* then
   *Run anyway*. **Smart App Control** (Windows 11), if enabled, blocks it with no way around ("blocked by Device Guard
   policy"), including an exe built locally. Antivirus products may also wrongly flag a PyInstaller executable (a common
-  false positive with `--onefile`).
+  false positive with `--onefile`). The chosen remedy is the Microsoft Store (see below).
 - Launch with Windows updates the registered path at every launch. If Windows refuses the change, the option goes back
   to its previous state and the panel shows a warning.
   (To verify with the packaged version, see "Draft" below.)
 
-## Signing (SignPath Foundation)
+## Signing and Microsoft Store
 
-Free signing for open-source projects: the certificate is in the name of SignPath Foundation (that is the publisher
-Windows displays), which already has a reputation with SmartScreen and Smart App Control.
+The SignPath Foundation application (free signing for open source) was **rejected** in October 2026: the project is
+not well known enough yet (few interactions on the repository). It can be tried again once it has more traction.
 
-Conditions met (see <https://signpath.org/terms>): MIT license, no proprietary code, published project (v0.4.0, then
-v0.4.1), how it works described in the README, no data transmitted, uninstall documented, **Code signing policy**
-section in the README, builds made by GitHub Actions from the repository, product name and version in the exe's
-metadata (`tools/make_version_file.py`).
+Chosen route: the **Microsoft Store**. Packages published on the Store are signed by the Store, which should remove
+the SmartScreen warning and the Smart App Control block (to verify on a machine where Smart App Control is active,
+once the package is available). The GitHub Releases keep providing the unsigned exe.
 
-Steps:
-1. 2FA enabled on GitHub (and on SignPath when creating the account).
-2. Apply at <https://signpath.org/apply>: repository, latest Release (v0.4.1), license, link to the Code signing policy.
-3. Once accepted: create the `SIGNPATH_API_TOKEN` secret and the `SIGNPATH_ORGANIZATION_ID` variable in the repository,
-   then uncomment the "Signature" block of `release.yml` (check the project and policy names).
-4. For every Release: approve the signing request on signpath.io.
-5. Verify on a machine with Smart App Control active. If it still blocks (unsigned Qt DLLs extracted by `--onefile`),
-   the Event Viewer (Microsoft > Windows > CodeIntegrity > Operational, event 3077) names the refused file; consider
-   `--onedir` then.
+To do (nothing is committed yet):
+- [ ] Create a Microsoft developer account (Partner Center) and reserve the name "Desktop Cat".
+- [ ] Study the package: MSIX built from the PyInstaller exe (or from `--onedir`), required icons and metadata.
+- [ ] Automate the package build in `release.yml`, or define a manual submission procedure.
+- [ ] Prepare the Store listing (description, screenshots, privacy policy: no data transmitted, see
+  [SECURITY.md](./SECURITY.md)).
+- [ ] Verify inside the package environment: launch with Windows (`Run` key), global hotkey, `%APPDATA%\DesktopCat`
+  folder (save file, log).
+- [ ] Go through certification, then test on a machine with Smart App Control active. If it still blocks, the Event
+  Viewer (Microsoft > Windows > CodeIntegrity > Operational, event 3077) names the refused file.
 
 ## Draft — to be completed
 
@@ -94,7 +94,7 @@ Steps:
 - [ ] Versioned `.spec` file instead of the command line (today `*.spec` is in `.gitignore`; the local
   `DesktopCat.spec` is a PyInstaller leftover).
 - [ ] Launch with Windows verified with the packaged executable (path in the registry).
-- [ ] Code signing: SignPath application (see above). SmartScreen / Smart App Control note in the README: done.
+- [x] SignPath application: rejected (October 2026); chosen route: Microsoft Store (see above). SmartScreen / Smart App Control note in the README: done.
 - [ ] Pinned dependencies (`pyproject.toml` + lock file) for reproducible builds.
 - [ ] Updates: decide whether the app notifies about a new Release (today, no network access — not to be broken
   lightly, cf. [SECURITY.md](./SECURITY.md)).

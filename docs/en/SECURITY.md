@@ -34,7 +34,7 @@ therefore different from a web service:
 | Registry | A single value written: `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DesktopCat` (launch with Windows, can be turned off). The `StartupApproved` key (Task Manager) is read; its value is only deleted when you re-tick the box. |
 | Global hotkey | `RegisterHotKey` for Ctrl+Alt+C (can be turned off): the app reads no other keystroke. |
 | Save file | Read and cleaned at startup (`store.py`): a damaged or malicious file is discarded, never executed. |
-| Distributed executable | `DesktopCat.exe` (PyInstaller) published in the Releases, with its SHA256 hash. **Unsigned** (a SignPath Foundation application is in preparation): Windows SmartScreen will show a warning. |
+| Distributed executable | `DesktopCat.exe` (PyInstaller) published in the Releases, with its SHA256 hash. **Unsigned** (chosen route: Microsoft Store): Windows SmartScreen will show a warning. |
 
 ## Scope
 
@@ -56,7 +56,7 @@ the user's machine, social engineering.
 
 - [ ] Enable Dependabot and the repository's security alerts (see [`.github/dependabot.yml`](../../.github/dependabot.yml)).
 - [ ] Add secret scanning (gitleaks) and CodeQL (Python) to CI, as on QcWeather.
-- [ ] Sign the executable (code-signing certificate) — currently unsigned.
+- [ ] Publish on the Microsoft Store (package signed by the Store) — the exe in the Releases stays unsigned.
 - [ ] Pin GitHub Actions by SHA once the release pipeline is stable.
 
 ## Supported versions

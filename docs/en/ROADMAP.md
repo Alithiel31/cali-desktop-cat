@@ -20,13 +20,14 @@ measurement, 85 %, dates from the 19/10/2026 review).
 - [x] GitHub Actions CI (Windows + Ubuntu, Python 3.12 and 3.13); CD: exe build and Release on a `v*` tag.
 - [x] `CHANGELOG.md`, `CONTRIBUTING.md` and project documentation.
 
-## Level 1 — Urgent: signing, then v0.4.x
-- [ ] **Code signing (SignPath Foundation)**: Smart App Control blocks the unsigned exe with no way around, including on
-  the dev machine. Preparation done in v0.4.1 (Code signing policy, metadata, commented block in `release.yml`);
-  remaining: 2FA, application, activation. Details: [DISTRIBUTION.md](DISTRIBUTION.md#signing-signpath-foundation).
+## Level 1 — Urgent: distribution (Microsoft Store), then v0.4.x
+- [ ] **Distribution via the Microsoft Store**: Smart App Control blocks the unsigned exe with no way around, including
+  on the dev machine. The SignPath Foundation application was rejected (project not well known enough yet); the Store,
+  which signs the packages it publishes, is the chosen route. Remaining: developer account, MSIX package, certification.
+  Details: [DISTRIBUTION.md](DISTRIBUTION.md#signing-and-microsoft-store).
 - [x] **Validate on a real Windows**: Windows tests in CI and on the dev machine (236 tests), manual checklist
   ([MANUAL-TESTING.md](MANUAL-TESTING.md)) run with Python on 19/10/2026.
-- [ ] **Test the exe** on a machine without Smart App Control (or once signed): startup, log, save file, launch with
+- [ ] **Test the exe** on a machine without Smart App Control (or once published on the Store): startup, log, save file, launch with
   Windows, Task Manager.
 - [x] **Privacy**: "Noter les applications utilisées" setting + "Effacer mes statistiques" button (readable backups
   included).

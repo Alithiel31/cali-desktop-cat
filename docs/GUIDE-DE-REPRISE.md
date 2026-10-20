@@ -51,10 +51,9 @@ Aucun secret réel n'est nécessaire au fonctionnement du projet ni stocké dans
 - **Accès administrateur au dépôt GitHub** (réglages des branches, Releases, Dependabot).
 - Le workflow de release n'utilise que le `GITHUB_TOKEN` fourni automatiquement.
 
-La signature de code (SignPath Foundation) est en préparation (voir [DISTRIBUTION.md](./DISTRIBUTION.md)). Une fois le
-projet accepté, le secret `SIGNPATH_API_TOKEN` et la variable `SIGNPATH_ORGANIZATION_ID` du dépôt, ainsi que le compte
-SignPath (qui approuve chaque Release), deviendront les éléments **critiques** de cette liste — à consigner ici à ce
-moment-là.
+La signature de code via SignPath Foundation a été refusée (octobre 2026). La distribution passera par le Microsoft
+Store (voir [DISTRIBUTION.md](./DISTRIBUTION.md#signature-et-microsoft-store)) : le compte développeur Microsoft
+(Partner Center) deviendra alors un élément **critique** de cette liste — à consigner ici à ce moment-là.
 
 ---
 

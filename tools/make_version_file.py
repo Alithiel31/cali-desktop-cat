@@ -4,7 +4,7 @@
     pyinstaller ... --version-file build/version_info.txt main.py
 
 Tout vient de `desktopcat.__version__` : une seule source de vérité pour le panneau, le tag et l'exe.
-SignPath vérifie que le nom du produit et la version sont identiques d'un build à l'autre.
+Le nom du produit et la version sont ainsi identiques d'un build à l'autre.
 """
 import os
 import sys

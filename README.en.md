@@ -21,10 +21,10 @@ your screens, and **Ctrl+Alt+C** shows or hides it.
 Download `DesktopCat.exe` from the [Releases](https://github.com/Alithiel31/cali-desktop-cat/releases) page and run it:
 no installer, no administrator rights. The SHA256 hash is published next to the exe.
 
-> The exe is **not signed yet**: SmartScreen shows a warning ("Informations complémentaires" > "Exécuter quand même",
-> i.e. "More info" > "Run anyway"), and **Smart App Control** (Windows 11), if enabled, blocks it with no way around.
-> A free code-signing application is in progress (see [Code signing policy](#code-signing-policy)).
-> Meanwhile, you can run the app from source (below).
+> The exe in the Releases is **not signed**: SmartScreen shows a warning ("Informations complémentaires" > "Exécuter
+> quand même", i.e. "More info" > "Run anyway"), and **Smart App Control** (Windows 11), if enabled, blocks it with no
+> way around. Publishing on the **Microsoft Store** (which signs the packages it publishes) is the chosen route, but it
+> is not available yet. Meanwhile, you can run the app from source (below).
 
 ## Uninstall
 1. Panel > Settings (Réglages): untick **Lancer avec Windows** ("Launch with Windows"; this removes the startup registry entry).
@@ -89,20 +89,6 @@ records every second the **executable name** of the active window (40 apps per d
 "Record the apps used"), and the **Effacer mes statistiques** ("Erase my statistics") button on the Statistics tab
 erases the whole history, backups included.
 Details: [docs/en/SECURITY.md](docs/en/SECURITY.md).
-
-## Code signing policy
-Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
-[SignPath Foundation](https://signpath.org/) *(application in progress: current releases are not signed yet)*.
-
-- **Product:** Desktop Cat — repository [Alithiel31/cali-desktop-cat](https://github.com/Alithiel31/cali-desktop-cat), MIT License.
-- **What is signed:** only `DesktopCat.exe` attached to the GitHub Releases of this repository, built from this
-  source code by GitHub Actions (`.github/workflows/release.yml`). Nothing else is signed.
-- **Committers and reviewers:** [Jacques Duchamplecheval (alithiel31)](https://github.com/Alithiel31)
-- **Approvers:** [Jacques Duchamplecheval (alithiel31)](https://github.com/Alithiel31) — every release is approved
-  manually before signing.
-- **Privacy policy:** this program will not transfer any information to other networked systems unless specifically
-  requested by the user or the person installing or operating it. See [Privacy](#privacy) for what it stores
-  locally.
 
 ## Documentation
 Every document exists in French and English; the English versions live in [docs/en/](docs/en/) (plus this README).
