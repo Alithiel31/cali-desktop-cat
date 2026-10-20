@@ -64,7 +64,7 @@ jobs:
       # (projet, politique, version de l'action) dans la documentation SignPath au moment de l'activer.
       #
       # - id: unsigned
-      #   uses: actions/upload-artifact@v4
+      #   uses: actions/upload-artifact@v7
       #   with:
       #     name: DesktopCat-unsigned
       #     path: dist/DesktopCat.exe
@@ -85,7 +85,7 @@ jobs:
           $hash = (Get-FileHash dist/DesktopCat.exe -Algorithm SHA256).Hash.ToLower()
           "$hash  DesktopCat.exe" | Out-File dist/DesktopCat.exe.sha256 -Encoding ascii
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: DesktopCat-windows
           path: |
