@@ -10,10 +10,14 @@ Desktop Cat is distributed as a single executable, `DesktopCat.exe`, built by **
 ## Building the executable locally
 
 ```bash
-pip install pyinstaller
+pip install -r requirements-build.txt
 python tools/make_version_file.py
 pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
 ```
+
+`requirements-build.txt` pins the PySide6 and PyInstaller versions used to build the exe (those of the last tested
+build): bump them together, after a validated build. Dependabot proposes upgrades through `requirements.txt`; the test
+CI validates them, then the chosen version is carried over to `requirements-build.txt`.
 
 Result: `dist/DesktopCat.exe`. `build/`, `dist/` and `*.spec` are ignored by Git.
 `tools/make_version_file.py` writes the Windows metadata (product name, version taken from `desktopcat.__version__`,
@@ -44,7 +48,7 @@ The `release.yml` workflow:
 | Hash | Writes `DesktopCat.exe.sha256`. |
 | Publication | Separate job, the only one with `contents: write`: `gh release create` with the exe, the hash and generated notes. |
 
-On a PR that touches `main.py`, `requirements.txt`, `desktopcat/**` or the workflow, the build runs **as a dry run**
+On a PR that touches `main.py`, `requirements.txt`, `requirements-build.txt`, `desktopcat/**` or the workflow, the build runs **as a dry run**
 (no publication) to catch a packaging regression before the merge.
 
 ## Verifying a download
@@ -95,6 +99,6 @@ To do (nothing is committed yet):
   `DesktopCat.spec` is a PyInstaller leftover).
 - [ ] Launch with Windows verified with the packaged executable (path in the registry).
 - [x] SignPath application: rejected (October 2026); chosen route: Microsoft Store (see above). SmartScreen / Smart App Control note in the README: done.
-- [ ] Pinned dependencies (`pyproject.toml` + lock file) for reproducible builds.
+- [x] Pinned build versions (`requirements-build.txt`). Full lock file with hashes: set aside for now (two dependencies, one maintainer).
 - [ ] Updates: decide whether the app notifies about a new Release (today, no network access — not to be broken
   lightly, cf. [SECURITY.md](./SECURITY.md)).

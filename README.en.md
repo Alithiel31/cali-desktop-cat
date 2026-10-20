@@ -68,7 +68,7 @@ meantime, it is dropped without reward).
 - Save file: `%APPDATA%/DesktopCat/save.json`.
 
 ## Executable
-    pip install pyinstaller
+    pip install -r requirements-build.txt
     python tools/make_version_file.py
     pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
 

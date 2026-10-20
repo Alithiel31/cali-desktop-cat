@@ -40,9 +40,9 @@ Tester à la main **sans toucher à ta vraie sauvegarde** : `tools\run_test_inst
 | Job | Commande |
 |---|---|
 | `tests` (`ci.yml`) | `set QT_QPA_PLATFORM=offscreen` puis `python -m unittest discover -s tests -v` |
-| `build-windows` (`release.yml`) | `pip install pyinstaller`, `python tools/make_version_file.py`, puis `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py` |
+| `build-windows` (`release.yml`) | `pip install -r requirements-build.txt`, `python tools/make_version_file.py`, puis `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py` |
 
-Le build de l'exécutable se déclenche sur une PR qui touche `main.py`, `requirements.txt`, `desktopcat/**` ou le workflow lui-même.
+Le build de l'exécutable se déclenche sur une PR qui touche `main.py`, `requirements.txt`, `requirements-build.txt`, `desktopcat/**` ou le workflow lui-même.
 
 ## Ouvrir une Pull Request
 

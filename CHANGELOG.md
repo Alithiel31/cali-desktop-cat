@@ -19,6 +19,8 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
   (README, distribution, feuille de route, sécurité, guide de reprise) mise à jour, section « Code signing policy »
   du README et bloc SignPath commenté de `release.yml` retirés.
 - CI : `actions/download-artifact` passe en v8, aligné sur `upload-artifact` v7.
+- **Builds reproductibles** : `requirements-build.txt` fige PySide6 (6.12.0) et PyInstaller (6.22.3) pour fabriquer l'exe ;
+  `release.yml` l'utilise à la place d'un `pip install pyinstaller` sans version.
 - Rangement du dépôt : prototypes historiques déplacés de `tools/spikes/` vers `archive/spikes/` ; règle globale `*.png`
   retirée du `.gitignore` (seul `tools/out/` reste ignoré), pour pouvoir versionner captures et images.
 - Documentation remise à jour pour la 0.4.1 : architecture (boucle ralentie, modules, tableau des tests),

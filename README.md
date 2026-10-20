@@ -65,7 +65,7 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
 - Sauvegarde : `%APPDATA%/DesktopCat/save.json`.
 
 ## Exécutable
-    pip install pyinstaller
+    pip install -r requirements-build.txt
     python tools/make_version_file.py
     pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
 

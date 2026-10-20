@@ -48,7 +48,8 @@ mesure, 85 %, date de la revue du 19/10/2026).
 - [ ] **Plein écran et vidéo** : seule la fenêtre active est examinée (une vidéo plein écran sur l'autre écran ne cache
   pas le chat s'il y va). Et un film regardé sans toucher la souris endort le chat : piste,
   `CallNtPowerInformation(SystemExecutionState)` et le drapeau `ES_DISPLAY_REQUIRED` posé par les lecteurs vidéo.
-- [ ] **Builds reproductibles** : versions figées (PySide6, PyInstaller), `.spec` versionné ; envisager `--onedir`
+- [x] **Versions de build figées** : `requirements-build.txt` (PySide6, PyInstaller).
+- [ ] **Builds reproductibles** : `.spec` versionné ; envisager `--onedir`
   (démarrage plus rapide, moins de faux positifs antivirus, et peut-être nécessaire pour Smart App Control).
   Icône et numéro de version : faits (v0.4.1).
 

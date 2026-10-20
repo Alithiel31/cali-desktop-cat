@@ -10,10 +10,14 @@ GitHub Actions (`.github/workflows/release.yml`).
 ## Fabriquer l'exécutable en local
 
 ```bash
-pip install pyinstaller
+pip install -r requirements-build.txt
 python tools/make_version_file.py
 pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
 ```
+
+`requirements-build.txt` fige les versions de PySide6 et de PyInstaller utilisées pour fabriquer l'exe (celles du dernier
+build testé) : les relever ensemble, après un build validé. Dependabot propose les montées via `requirements.txt` ;
+la CI de tests les valide, puis on reporte la version retenue dans `requirements-build.txt`.
 
 Résultat : `dist/DesktopCat.exe`. `build/`, `dist/` et `*.spec` sont ignorés par Git.
 `tools/make_version_file.py` écrit les métadonnées Windows (nom du produit, version tirée de `desktopcat.__version__`,
@@ -43,7 +47,7 @@ Le workflow `release.yml` :
 | Empreinte | Écrit `DesktopCat.exe.sha256`. |
 | Publication | Job séparé, seul à avoir `contents: write` : `gh release create` avec l'exe, l'empreinte et des notes générées. |
 
-Sur une PR qui touche `main.py`, `requirements.txt`, `desktopcat/**` ou le workflow, le build tourne **à blanc**
+Sur une PR qui touche `main.py`, `requirements.txt`, `requirements-build.txt`, `desktopcat/**` ou le workflow, le build tourne **à blanc**
 (sans publication) pour attraper une régression de packaging avant le merge.
 
 ## Vérifier un téléchargement
@@ -93,5 +97,5 @@ actif, une fois le paquet disponible). Les Releases GitHub continuent de fournir
 - [ ] Fichier `.spec` versionné au lieu de la ligne de commande (aujourd'hui `*.spec` est dans `.gitignore`, le `DesktopCat.spec` local est un résidu de PyInstaller).
 - [ ] Démarrage automatique vérifié avec l'exécutable empaqueté (chemin dans le registre).
 - [x] Candidature SignPath : refusée (octobre 2026) ; voie retenue : Microsoft Store (voir ci-dessus). Note SmartScreen / Smart App Control dans le README : faite.
-- [ ] Dépendances figées (`pyproject.toml` + fichier de verrouillage) pour des builds reproductibles.
+- [x] Versions de build figées (`requirements-build.txt`). Fichier de verrouillage complet avec empreintes : écarté pour l'instant (deux dépendances, un mainteneur).
 - [ ] Mise à jour : décider si l'appli prévient d'une nouvelle Release (aujourd'hui, aucun accès réseau — à ne pas casser à la légère, cf. [SECURITY.md](../SECURITY.md)).

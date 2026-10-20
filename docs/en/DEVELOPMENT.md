@@ -19,7 +19,8 @@ pip install -r requirements.txt
 python main.py
 ```
 
-`requirements.txt` has a single line: `PySide6-Essentials>=6.6,<7` (Qt without the modules we do not need).
+`requirements.txt` has a single line: `PySide6-Essentials>=6.12.0,<7` (Qt without the modules we do not need).
+`requirements-build.txt` adds PyInstaller and pins the build versions (see [DISTRIBUTION.md](./DISTRIBUTION.md)).
 
 ## Tests
 

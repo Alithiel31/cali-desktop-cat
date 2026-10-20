@@ -7,6 +7,7 @@ on:
     paths:
       - "main.py"
       - "requirements.txt"
+      - "requirements-build.txt"
       - "desktopcat/**"
       - "assets/**"
       - "tools/make_version_file.py"
@@ -27,7 +28,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: |
+            requirements.txt
+            requirements-build.txt
 
       # Le tag doit correspondre à desktopcat.__version__ (ex. tag v0.3.0 <-> "0.3.0")
       - name: Vérifier que le tag correspond à la version
@@ -42,7 +45,7 @@ jobs:
           }
 
       - name: Installer les dépendances
-        run: python -m pip install -r requirements.txt pyinstaller
+        run: python -m pip install -r requirements-build.txt
 
       - name: Tests avant de packager
         env:
