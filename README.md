@@ -67,7 +67,7 @@ Une session de moins de 10 min ne rapporte ni cadeau ni croquettes. Elle survit 
 ## Exécutable
     pip install -r requirements-build.txt
     python tools/make_version_file.py
-    pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
+    pyinstaller DesktopCat.spec
 
 ## Structure du projet
     main.py          point d'entrée

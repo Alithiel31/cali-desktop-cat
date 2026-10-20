@@ -12,14 +12,14 @@ Desktop Cat is distributed as a single executable, `DesktopCat.exe`, built by **
 ```bash
 pip install -r requirements-build.txt
 python tools/make_version_file.py
-pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
+pyinstaller DesktopCat.spec
 ```
 
 `requirements-build.txt` pins the PySide6 and PyInstaller versions used to build the exe (those of the last tested
 build): bump them together, after a validated build. Dependabot proposes upgrades through `requirements.txt`; the test
 CI validates them, then the chosen version is carried over to `requirements-build.txt`.
 
-Result: `dist/DesktopCat.exe`. `build/`, `dist/` and `*.spec` are ignored by Git.
+Result: `dist/DesktopCat.exe`. `build/` and `dist/` are ignored by Git; `DesktopCat.spec` is versioned (build options, icon, metadata).
 `tools/make_version_file.py` writes the Windows metadata (product name, version taken from `desktopcat.__version__`,
 author) shown in Properties > Details. Quit the cat before rebuilding: a running exe cannot be replaced
 ("Access denied").
@@ -44,7 +44,7 @@ The `release.yml` workflow:
 | Check tag/version | Fails if the tag (`v0.4.2`) does not match `desktopcat.__version__` (`0.4.2`). |
 | Tests | Replays the whole suite before packaging. |
 | Metadata | `tools/make_version_file.py` -> `build/version_info.txt`. |
-| Build | `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py` on `windows-latest`. |
+| Build | `pyinstaller DesktopCat.spec` on `windows-latest`. |
 | Hash | Writes `DesktopCat.exe.sha256`. |
 | Publication | Separate job, the only one with `contents: write`: `gh release create` with the exe, the hash and generated notes. |
 
@@ -95,8 +95,7 @@ To do (nothing is committed yet):
   dev machine).
 - [x] Executable icon (`assets/desktopcat.ico`, see `tools/make_icon.py`).
 - [x] Version number shown in the panel, the tray icon's tooltip and the exe's metadata.
-- [ ] Versioned `.spec` file instead of the command line (today `*.spec` is in `.gitignore`; the local
-  `DesktopCat.spec` is a PyInstaller leftover).
+- [x] Versioned `.spec` file (`DesktopCat.spec`) instead of the command line.
 - [ ] Launch with Windows verified with the packaged executable (path in the registry).
 - [x] SignPath application: rejected (October 2026); chosen route: Microsoft Store (see above). SmartScreen / Smart App Control note in the README: done.
 - [x] Pinned build versions (`requirements-build.txt`). Full lock file with hashes: set aside for now (two dependencies, one maintainer).
