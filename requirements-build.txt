@@ -1,0 +1,6 @@
+# Versions figées pour fabriquer DesktopCat.exe (release.yml et build local).
+# Ce sont celles du dernier build testé : les relever ensemble, après un build validé.
+# Le développement et la CI de tests restent sur requirements.txt (bornes larges).
+-r requirements.txt
+PySide6-Essentials==6.12.0
+pyinstaller==6.22.3

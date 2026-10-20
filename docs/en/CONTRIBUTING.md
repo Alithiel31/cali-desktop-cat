@@ -45,9 +45,9 @@ To test by hand **without touching your real save**: `tools\run_test_instance.ba
 | Job | Command |
 |---|---|
 | `tests` (`ci.yml`) | `set QT_QPA_PLATFORM=offscreen` then `python -m unittest discover -s tests -v` |
-| `build-windows` (`release.yml`) | `pip install pyinstaller`, `python tools/make_version_file.py`, then `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py` |
+| `build-windows` (`release.yml`) | `pip install -r requirements-build.txt`, `python tools/make_version_file.py`, then `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py` |
 
-The executable build runs on a PR that touches `main.py`, `requirements.txt`, `desktopcat/**` or the workflow itself.
+The executable build runs on a PR that touches `main.py`, `requirements.txt`, `requirements-build.txt`, `desktopcat/**` or the workflow itself.
 
 ## Opening a Pull Request
 
