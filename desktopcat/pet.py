@@ -7,30 +7,33 @@ Plusieurs écrans : un sol par écran. Des écrans collés dont les bas se touch
 que le chat traverse en marchant ; sinon il saute ou tombe de l'un à l'autre.
 
 États : idle, walk, nap, sleep (utilisateur absent), work (session de concentration), wait (cadeau posé),
-        drag (porté à la souris), fall (chute libre), jump (saut vers une autre surface).
+        stalk (guette la souris), drag (porté à la souris), fall (chute libre), jump (saut vers une autre surface).
 """
 from __future__ import annotations
 
-import math
 import random
 import time
 
 from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QColor, QCursor, QGuiApplication, QPainter
+from PySide6.QtGui import QCursor, QGuiApplication, QPainter
 from PySide6.QtCore import QRect
-from PySide6.QtWidgets import QApplication, QMenu, QWidget
+from PySide6.QtWidgets import QWidget
 
-from . import winapi
+from . import hunt, winapi
+from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
+from .pet_layout import compute_placement
+from .pet_input import PetInput
+from .pet_companion import PetCompanion
 from .phrases import meow_delay, pick_meow
-from .screens import (ScreenInfo, bounds, build_floors, clamp_point, native_rects, nearest_floor,
-                      nearest_rect_index, to_logical)
+from .screens import (ScreenInfo, bounds, build_floors, clip_to_bounds, floor_here, native_rects,
+                      nearest_rect_index, snap_to_floor)
 from .sprite import FOOT_ROW, GRID_H, GRID_W, draw_cat
-from .surfaces import LWin, Surface, compute_surfaces
+from .surfaces import Surface
+from .world import build_surfaces, floor_surfaces, window_geometry
 
-GRAVITY = 2200.0          # px/s²
-MAX_FALL = 2400.0         # px/s
 BASE_SPEED = 95.0         # px/s pour une échelle de 4
-STANDING = ("idle", "walk", "nap", "wait", "work", "sleep")
+LOOP_MS = 16              # boucle normale : ~60 images/s
+LOOP_SLOW_MS = 100        # chat caché, ou endormi parce que l'utilisateur est absent : 10 passages/s suffisent
 
 
 def _clamp(v, lo, hi):
@@ -91,8 +94,16 @@ class Pet(QWidget):
         self.then = None
         self.frame = 0
         self._frame_t = 0.0
-        self.jump: dict | None = None
+        self.jump: Jump | None = None
         self.sys_sleep = False
+
+        # chasse au curseur (aucun tirage au hasard ici : la suite des tirages reste celle des tests existants)
+        self._cursor_last = None             # dernière position vue de la souris
+        self._cursor_moved_at: float | None = None   # ms ; None tant que la souris n'a jamais bougé
+        self._hunt_cool = 20_000.0           # pas de chasse avant (ms)
+        self._stalk_since = 0.0
+        self.hunt_x = 0.0
+        self._pounce = False                 # le saut en cours est un bond sur la souris
         self.hidden = False
         self.user_hidden = False
         self._fullscreen = False
@@ -112,9 +123,11 @@ class Pet(QWidget):
         self._focus_text = ""
 
         self._press = None
+        self.input = PetInput(self)
         self._pet_timer = QTimer(self)       # un clic simple attend de savoir si c'est un double-clic
         self._pet_timer.setSingleShot(True)
         self._pet_timer.timeout.connect(self._pet)
+        self.companion = PetCompanion(self)
         self._place(force=True)
         self.show()
 
@@ -122,6 +135,8 @@ class Pet(QWidget):
         game.fullscreen_changed.connect(self._on_fullscreen)
         game.focus_changed.connect(self._on_focus)
         game.focus_finished.connect(self._on_focus_finished)
+        game.break_finished.connect(self.companion.break_finished)
+        game.fed.connect(self.companion.fed)
         game.changed.connect(self._on_changed)
         gift.clicked.connect(self._on_gift_clicked)
 
@@ -129,7 +144,7 @@ class Pet(QWidget):
         self.loop = QTimer(self)
         self.loop.setTimerType(Qt.TimerType.PreciseTimer)
         self.loop.timeout.connect(self._on_loop)
-        self.loop.start(16)
+        self.loop.start(LOOP_MS)
         self.anim = QTimer(self)
         self.anim.timeout.connect(self.update)
         self.anim.start(80)
@@ -182,11 +197,7 @@ class Pet(QWidget):
 
     def _snap_to_floor(self) -> None:
         """Ramène le chat sur le sol le plus proche (un écran vient de disparaître sous ses pieds)."""
-        i = nearest_floor(self.floors, self.cx, self.fy)
-        f = self.floors[i]
-        self.floor_idx = i
-        self.fx = _clamp(self.cx, f.x0, f.x1) - self.CW / 2
-        self.fy = f.y
+        self.floor_idx, self.fx, self.fy = snap_to_floor(self.floors, self.cx, self.fy, self.CW)
 
     @property
     def work(self) -> tuple:
@@ -201,22 +212,16 @@ class Pet(QWidget):
         return nearest_rect_index(self.works, self.cx, self.fy - self.FOOT / 2)
 
     def _floor_surfaces(self) -> list:
-        return [Surface(None, f.y, f.x0, f.x1, f.x0, "sol", floor=f.idx) for f in self.floors]
+        return floor_surfaces(self.floors)
 
     def _floor_here(self):
         """Le sol sous ses pieds : celui de l'écran courant, ou son voisin de la même chaîne s'il l'a traversé."""
-        cur = self.floors[self.floor_idx]
-        if cur.x0 <= self.cx <= cur.x1:
-            return cur
-        for f in self.floors:
-            if f.chain == cur.chain and f.x0 <= self.cx <= f.x1:
-                self.floor_idx = f.idx
-                return f
-        return cur
+        self.floor_idx = floor_here(self.floors, self.cx, self.floor_idx)
+        return self.floors[self.floor_idx]
 
     def _clip(self, x0: float, x1: float) -> tuple:
         """Partie d'un segment qui reste sur un écran (une fenêtre peut dépasser du bureau)."""
-        return max(x0, self.bounds[0]), min(x1, self.bounds[2])
+        return clip_to_bounds(x0, x1, self.bounds)
 
     @property
     def speed(self) -> float:
@@ -232,9 +237,21 @@ class Pet(QWidget):
     # ───────────────────────── boucle
     def _on_loop(self) -> None:
         now = time.perf_counter()
-        dt = min(now - self._last, 0.05)
+        dt = min(now - self._last, 2.5 * self.loop.interval() / 1000)     # plafond : un gel ne fait pas un bond
         self._last = now
         self.step(dt)
+        self._adapt_loop()
+
+    def loop_interval(self) -> int:
+        """Rythme de la boucle voulu dans l'état actuel. Endormi (utilisateur absent), le chat ne fait que respirer :
+        inutile de le recalculer 60 fois par seconde. La sieste (« nap ») garde le rythme normal : l'utilisateur
+        est là et peut déplacer la fenêtre sous le chat."""
+        return LOOP_SLOW_MS if self.hidden or self.state == "sleep" else LOOP_MS
+
+    def _adapt_loop(self) -> None:
+        want = self.loop_interval()
+        if self.loop.interval() != want:
+            self.loop.setInterval(want)
 
     def step(self, dt: float) -> None:
         """Avance la simulation de dt secondes (appelée par la minuterie, ou directement dans les tests)."""
@@ -266,24 +283,12 @@ class Pet(QWidget):
 
     # ───────────────────────── surfaces
     def _refresh_surfaces(self) -> None:
-        surfaces = []
-        if self.settings["perch_windows"]:
-            wins = [LWin(w.hwnd, w.title, *to_logical(w.rect, self.screens), w.zoomed)
-                    for w in winapi.list_windows(exclude=self._own_hwnds())]
-            for work in self.works:                  # chaque écran voit les bords de fenêtres qui le traversent
-                surfaces += compute_surfaces(wins, work, self.FOOT, self.CW * 0.9)
-        surfaces += self._floor_surfaces()
-        self.surfaces = surfaces
+        self.surfaces = build_surfaces(self.screens, self.works, self.floors, self.settings["perch_windows"],
+                                       self._own_hwnds(), self.FOOT, self.CW)
 
     def _window_geometry(self, hwnd):
         """(y du bord haut, gauche, droite) de la fenêtre telle qu'elle est MAINTENANT, ou None si elle a disparu."""
-        if not self.settings["perch_windows"]:
-            return None
-        r = winapi.window_rect(hwnd)
-        if r is None:
-            return None
-        l, t, rr, _b = to_logical(r, self.screens)
-        return (t, l, rr)
+        return window_geometry(hwnd, self.screens, self.settings["perch_windows"])
 
     def _current_surface(self):
         """(y, x0, x1) de la surface sous ses pieds, ou None si elle a disparu."""
@@ -354,28 +359,69 @@ class Pet(QWidget):
             self.timer -= dt
             if self.timer <= 0:
                 self._idle(1.0)
+        elif st == "stalk":
+            self._step_stalk(dt, y, x0, x1)
+
+    # ───────────────────────── chasse au curseur
+    def _track_cursor(self) -> None:
+        pos = QCursor.pos()
+        p = (pos.x(), pos.y())
+        if p != self._cursor_last:
+            if self._cursor_last is not None:
+                self._cursor_moved_at = self.t
+            self._cursor_last = p
+
+    def _try_hunt(self, x0: float, x1: float) -> bool:
+        """Commence l'affût si la souris vient de s'arrêter à sa portée."""
+        if not self.settings["hunt_cursor"] or self.t < self._hunt_cool or self.sys_sleep or self.game.focus:
+            return False
+        moved = None if self._cursor_moved_at is None else self._cursor_moved_at / 1000
+        if not hunt.cursor_is_resting(self.t / 1000, moved):
+            return False
+        pos = QCursor.pos()
+        if not hunt.cursor_in_reach(pos.x(), pos.y(), self.cx, self.fy, x0, x1, self.CW, self.FOOT, self.S):
+            return False
+        self.state = "stalk"
+        self.timer = self.rng.uniform(*hunt.STALK_S)
+        self.hunt_x = float(pos.x())
+        self._stalk_since = self.t
+        self.dir = 1 if self.hunt_x > self.cx else -1
+        return True
+
+    def _step_stalk(self, dt: float, y: float, x0: float, x1: float) -> None:
+        if self._cursor_moved_at is not None and self._cursor_moved_at > self._stalk_since:
+            self.surprised_until = self.t + 500                # la proie s'est enfuie
+            self._hunt_cool = self.t + hunt.ESCAPED_COOLDOWN_S * 1000
+            self._idle(1.5)
+            return
+        self.timer -= dt
+        if self.timer > 0:
+            return
+        cx0, cx1 = self._clip(x0, x1)
+        m = self.CW * 0.25
+        land = _clamp(self.hunt_x, cx0 + m, cx1 - m)
+        if self.stand is None:
+            dest = Surface(None, y, x0, x1, x0, "sol", floor=self.floor_idx)
+        else:
+            dest = Surface(self.stand, y, x0, x1, self.stand_left, "fenêtre")
+        self._hunt_cool = self.t + self.rng.uniform(*hunt.COOLDOWN_S) * 1000
+        self._begin_jump(dest, land)
+        self._pounce = True
 
     def _step_walk(self, dt: float, x0: float, x1: float) -> None:
         x0, x1 = self._clip(x0, x1)
-        m = self.CW * 0.25
-        lo, hi = x0 + m, x1 - m
-        target = _clamp(self.target, lo, hi) if hi >= lo else self.cx
-        d = target - self.cx
-        step = self.speed * dt
-        self._frame_t += dt
-        if self._frame_t > 0.17:
-            self._frame_t = 0.0
-            self.frame ^= 1
-        if abs(d) <= step:
-            self.fx += d
+        old_cx = self.cx
+        new_cx, self._frame_t, self.frame, direction, arrived = advance_walk(
+            old_cx, self.target, x0, x1, self.CW, self.speed, dt, self._frame_t, self.frame)
+        self.fx += new_cx - old_cx
+        if arrived:
             then, self.then = self.then, None
             if then == "work" and self.game.focus:
                 self.state = "work"
             else:
                 self._idle()
         else:
-            self.fx += math.copysign(step, d)
-            self.dir = 1 if d > 0 else -1
+            self.dir = direction
 
     def _decide(self) -> None:
         r = self.rng.random()
@@ -384,6 +430,8 @@ class Pet(QWidget):
             return
         _y, x0, x1 = surf
         x0, x1 = self._clip(x0, x1)
+        if self._try_hunt(x0, x1):
+            return
         m = self.CW * 0.25
         lo, hi = x0 + m, x1 - m
         can_walk = hi - lo > 20
@@ -431,32 +479,22 @@ class Pet(QWidget):
         return True
 
     def _begin_jump(self, dest: Surface, land_cx: float) -> None:
-        dist = abs(land_cx - self.cx)
-        dy = self.fy - dest.y                     # > 0 : la destination est plus haut
-        up = max(0.0, dy)
-        self.jump = {
-            "x0": self.fx, "y0": self.fy, "x1": land_cx - self.CW / 2, "y1": dest.y, "k": 0.0, "dest": dest,
-            "dur": 0.45 + dist / 1400 + up / 1500,
-            "h": (max(60.0, up + 45.0)) * self.S / 4,
-        }
+        self.jump = make_jump(self.fx, self.fy, land_cx, dest.y, self.CW, self.S, dest)
         self.dir = 1 if land_cx >= self.cx else -1
         self.stand = None
         self.state = "jump"
         self.then = None
 
     def _step_jump(self, dt: float) -> None:
-        j = self.jump
-        j["k"] = min(1.0, j["k"] + dt / j["dur"])
-        k = j["k"]
-        self.fx = j["x0"] + (j["x1"] - j["x0"]) * k
-        self.fy = j["y0"] + (j["y1"] - j["y0"]) * k - 4 * j["h"] * k * (1 - k)
-        if k >= 1.0:
-            self.fx, self.fy = j["x1"], j["y1"]
-            dest, self.jump = j["dest"], None
+        jump = self.jump
+        self.fx, self.fy, arrived = advance_jump(jump, dt)
+        if arrived:
+            dest, self.jump = jump.dest, None
             self._land(dest, soft=True)
 
     # ───────────────────────── chute et atterrissage
     def _start_fall(self) -> None:
+        self._pounce = False
         if self.state != "fall":
             self.state = "fall"
             self.vy = 0.0
@@ -467,21 +505,12 @@ class Pet(QWidget):
         self._scan_acc = 0.0
 
     def _step_fall(self, dt: float) -> None:
-        prev = self.fy
-        self.vy = min(self.vy + GRAVITY * dt, MAX_FALL)
-        self.fy += self.vy * dt
-        best = None
-        for s in self.surfaces:
-            if s.x0 <= self.cx <= s.x1 and prev - 0.5 <= s.y <= self.fy + 0.5:
-                if best is None or s.y < best.y:
-                    best = s
-        if best is None and self.fy >= max(f.y for f in self.floors):
-            # il passe sous tous les sols sans en avoir croisé un (entre deux écrans, hors bureau) : on le repose
-            f = self.floors[nearest_floor(self.floors, self.cx, self.fy)]
-            self.fx = _clamp(self.cx, f.x0, f.x1) - self.CW / 2
-            best = Surface(None, f.y, f.x0, f.x1, f.x0, "sol", floor=f.idx)
-        if best is not None:
-            self._land(best)
+        center_x = self.cx
+        center_x, self.fy, self.vy, landing = advance_fall(
+            center_x, self.fy, self.vy, dt, self.surfaces, self.floors)
+        self.fx += center_x - self.cx
+        if landing is not None:
+            self._land(landing)
 
     def _land(self, s: Surface, soft: bool = False) -> None:
         if s.hwnd is not None:
@@ -500,6 +529,9 @@ class Pet(QWidget):
         self.stand_left = s.wleft
         if not soft:
             self.surprised_until = self.t + 400
+        if self._pounce:
+            self._pounce = False
+            self.companion.caught()
         if self.sys_sleep:
             self.state = "sleep"
         elif self.game.focus:
@@ -509,6 +541,7 @@ class Pet(QWidget):
 
     # ───────────────────────── suivi de la fenêtre active, cadeaux, bulle
     def _step_misc(self, dt: float) -> None:
+        self._track_cursor()
         if self.t > self.next_blink:
             self.blink_until = self.t + 140
             self.next_blink = self.t + self.rng.uniform(2200, 5200)
@@ -523,7 +556,8 @@ class Pet(QWidget):
             self._follow_active()
 
         data = self.game.data
-        if data["gift_pending"] and not self.gift_visible and not self.sys_sleep \
+        # `_temp` : on laisse finir la bulle en cours (celle du chapeau qu'on vient d'ouvrir, quand un 2e cadeau attend)
+        if data["gifts_pending"] and not self.gift_visible and not self.sys_sleep and not self._temp \
                 and self.state in ("idle", "walk", "nap"):
             self._show_gift()
 
@@ -533,16 +567,7 @@ class Pet(QWidget):
         self._bubble_tick()
 
     def _try_meow(self) -> None:
-        """Un miaulement spontané dans une bulle, seulement s'il ne dérange rien."""
-        free = (self.state in ("idle", "walk", "work") and not self._temp and not self.gift_visible
-                and not self.sys_sleep and self._press is None)
-        if not free:
-            self.next_meow = self.t + 4000          # on réessaie bientôt
-            return
-        self.say(pick_meow(self.rng, "work" if self.state == "work" else "idle"), 2200)
-        if self.rng.random() < 0.3:
-            self.fx_particle("heart")
-        self.next_meow = self.t + meow_delay(self.rng)
+        self.companion.try_meow()
 
     def _follow_active(self) -> None:
         if not self.settings["follow_active"]:
@@ -557,65 +582,23 @@ class Pet(QWidget):
             self._jump_somewhere(prefer_hwnd=hwnd, reach_up=600)
 
     def _show_gift(self) -> None:
-        self.state = "wait"
-        self.gift_visible = True
-        self.gift.show()
-        self.say("Miaou ! J'ai un cadeau pour toi 🎁", 6000)
+        self.companion.show_gift()
 
     def say(self, html: str, ms: float = 3500, border: str = "#2a1d18") -> None:
-        self._temp = True
-        self._temp_until = self.t + ms
-        self._focus_text = ""
-        self.bubble.show_html(html, border)
+        self.companion.say(html, ms, border)
 
     def _bubble_tick(self) -> None:
-        if self._temp and self.t > self._temp_until:
-            self._temp = False
-            self.bubble.hide()
-        if self._temp:
-            return
-        f = self.game.focus
-        if f:
-            left = max(0, math.ceil(f["ends_at"] - self.game.clock()))
-            text = f"⏱ {left // 60:02d}:{left % 60:02d}"
-            if text != self._focus_text:
-                self._focus_text = text
-                self.bubble.show_html(text)
-        elif self.bubble.isVisible():
-            self.bubble.hide()
-            self._focus_text = ""
+        self.companion.bubble_tick()
 
     def fx_particle(self, kind: str) -> None:
-        head_x = self.fx + self.CW * (0.62 if self.dir > 0 else 0.38)
-        self.fxl.spawn(kind, head_x + self.rng.uniform(-12, 12), self.fy - self.FOOT * 0.85)
+        self.companion.spawn_particle(kind)
 
     # ───────────────────────── réactions aux événements du jeu
     def _on_gift_clicked(self) -> None:
-        res = self.game.claim_gift()
-        self.gift_visible = False
-        self.gift.hide()
-        if self.state == "wait":
-            self._idle(3.0)
-        if not res:
-            return
-        hat, rar = res["hat"], res["rarity"]
-        self.happy_until = self.t + 3500
-        head = ("Nouveau chapeau : " + hat.name) if res["is_new"] else f"{hat.name} (doublon ×{res['count']})"
-        label_color = QColor(rar["color"]).darker(150).name()        # le gris/jaune clair d'une rareté se lit mal sur le crème
-        self.say(f"{head} — <b style='color:{label_color}'>{rar['label']}</b>", 6500, rar["color"])
-        for i in range(5):
-            QTimer.singleShot(i * 150, lambda: self.fx_particle("star"))
+        self.companion.gift_clicked()
 
     def _on_sleeping(self, asleep: bool) -> None:
-        self.sys_sleep = asleep
-        if asleep:
-            if self.state in STANDING:
-                self.state = "sleep"
-        elif self.state == "sleep":
-            self._idle(1.0)
-            self.happy_until = self.t + 2000
-            self.say("Te revoilà !", 2500)
-            self.fx_particle("heart")
+        self.companion.sleeping_changed(asleep)
 
     def _on_fullscreen(self, full: bool) -> None:
         self._fullscreen = full
@@ -646,20 +629,13 @@ class Pet(QWidget):
             self.show()
             if self.gift_visible:
                 self.gift.show()
+        self._adapt_loop()
 
     def _on_focus(self, f) -> None:
-        if f:
-            self.say("Au travail ! Je reste avec toi 🐾", 3500)
-            if self.state in ("idle", "walk", "nap", "wait"):
-                self._go_work()
-        elif self.state == "work":
-            self._idle(1.0)
+        self.companion.focus_changed(f)
 
     def _on_focus_finished(self, total: int) -> None:
-        self.happy_until = self.t + 4000
-        self.say("Bravo, session terminée !", 4000)
-        for i in range(4):
-            QTimer.singleShot(i * 200, lambda: self.fx_particle("heart"))
+        self.companion.focus_finished(total)
 
     def _on_changed(self) -> None:
         self._apply_scale()
@@ -670,50 +646,21 @@ class Pet(QWidget):
 
     # ───────────────────────── souris : caresser, porter, menu
     def mousePressEvent(self, e) -> None:
-        g = e.globalPosition().toPoint()
-        if e.button() == Qt.MouseButton.LeftButton:
-            self._press = {"g": g, "moved": False, "off": (e.position().x(), e.position().y())}
-        elif e.button() == Qt.MouseButton.RightButton:
-            self._menu(g)
+        self.input.press(e)
 
     def mouseMoveEvent(self, e) -> None:
-        p = self._press
-        if not p:
-            return
-        g = e.globalPosition().toPoint()
-        if not p["moved"] and math.hypot(g.x() - p["g"].x(), g.y() - p["g"].y()) > 5:
-            p["moved"] = True
-            self.state = "drag"
-            self.stand, self.jump, self.vy = None, None, 0.0
-            self.setCursor(Qt.CursorShape.ClosedHandCursor)
-        if p["moved"]:
-            nx = g.x() - p["off"][0]
-            ny = g.y() - p["off"][1]
-            if abs(nx - self.fx) > 1:
-                self.dir = 1 if nx > self.fx else -1
-            # on le garde sur un écran : le point (centre, pieds) est ramené dans la zone utile la plus proche
-            zones = [(w[0], w[1] + self.FOOT, w[2], w[3]) for w in self.works]
-            cx, fy = clamp_point(zones, nx + self.CW / 2, ny + self.FOOT)
-            self.fx, self.fy = cx - self.CW / 2, fy
+        self.input.move(e)
 
     def mouseReleaseEvent(self, e) -> None:
-        p, self._press = self._press, None
-        if not p or e.button() != Qt.MouseButton.LeftButton:
-            return
-        if p["moved"]:
-            self.unsetCursor()
-            self.state = "fall"
-            self.vy = 0.0
-        else:
-            self._pet_timer.start(min(400, QApplication.doubleClickInterval()))
+        self.input.release(e)
 
     def mouseDoubleClickEvent(self, e) -> None:
-        self._pet_timer.stop()                       # c'était un double-clic : pas de caresse
-        self.open_panel.emit()
+        self.input.double_click()
 
     def _pet(self) -> None:
         if self.sys_sleep:
             return
+        self.game.petted()
         self.happy_until = self.t + 2200
         if not self._temp and self.settings["meows"] and self.rng.random() < 0.5:
             self.say(pick_meow(self.rng, "petted"), 2000)
@@ -721,17 +668,6 @@ class Pet(QWidget):
             QTimer.singleShot(i * 220, lambda: self.fx_particle("heart"))
         if self.state == "nap":
             self._idle(2.0)
-
-    def _menu(self, pos) -> None:
-        menu = QMenu()
-        menu.addAction("Ouvrir le panneau", self.open_panel.emit)
-        if self.game.focus:
-            menu.addAction("Arrêter la concentration", self.stop_focus.emit)
-        else:
-            menu.addAction("Concentration 25 min", lambda: self.start_focus.emit(25))
-        menu.addSeparator()
-        menu.addAction("Quitter", self.quit_app.emit)
-        menu.exec(pos)
 
     # ───────────────────────── rendu et placement
     def paintEvent(self, event) -> None:
@@ -743,23 +679,19 @@ class Pet(QWidget):
         draw_cat(p, self.S, pose=pose, frame=self.frame if st == "walk" else 0, flip=self.dir < 0,
                  fur=d["fur"], hat=d["equipped"], t=self.t,
                  blink=self.t < self.blink_until, happy=self.t < self.happy_until and pose != "sleep",
-                 surprised=st in ("drag", "fall") or self.t < self.surprised_until)
+                 surprised=st in ("drag", "fall", "stalk") or self.t < self.surprised_until)
         p.end()
 
     def _place(self, force: bool = False) -> None:
-        x, y = round(self.fx), round(self.fy - self.FOOT)
+        gift_size = (self.gift.width(), self.gift.height()) if self.gift_visible else None
+        bubble_size = (self.bubble.width(), self.bubble.height()) if self.bubble.isVisible() else None
+        placement = compute_placement(self.fx, self.fy, self.FOOT, self.CW, self.dir, self.work,
+                                      gift_size, bubble_size, self.S, GRID_W)
+        x, y = placement.pet
         if force or (x, y) != (self.x(), self.y()):
             self.move(x, y)
-
-        w0, w1 = self.work[0], self.work[2]
-        if self.gift_visible:
-            gw = self.gift.width()
-            gx = self.fx + 24 * self.S if self.dir > 0 else self.fx + (GRID_W - 24) * self.S - gw
-            self.gift.move(round(_clamp(gx, w0, w1 - gw)), round(self.fy - self.gift.height() + self.S))
-        if self.bubble.isVisible():
-            bw, bh = self.bubble.width(), self.bubble.height()
-            bx = _clamp(self.fx + self.CW / 2 - bw / 2, w0, max(w0, w1 - bw))
-            by = max(self.work[1], self.fy - self.FOOT - bh - 4)
-            head_x = self.fx + self.CW * (0.62 if self.dir > 0 else 0.38)
-            self.bubble.set_tail_x(head_x - bx)          # la pointe vise la tête, même si la bulle est décalée
-            self.bubble.move(round(bx), round(by))
+        if placement.gift is not None:
+            self.gift.move(*placement.gift)
+        if placement.bubble is not None:
+            self.bubble.set_tail_x(placement.bubble_tail_x)  # la pointe vise la tête, même si la bulle est décalée
+            self.bubble.move(*placement.bubble)

@@ -7,8 +7,8 @@ from PySide6.QtCore import QLockFile, QUrl
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from desktopcat import log
-from desktopcat.game import Game
+from desktopcat import __version__, hotkey as hotkey_module, log
+from desktopcat.game import FEED_COST, Game
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet
 from desktopcat.sprite import render_pixmap
@@ -20,6 +20,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Desktop Cat")
     app.setQuitOnLastWindowClosed(False)
+    app.setWindowIcon(QIcon(render_pixmap(4, pose="sit", t=0)))     # panneau et boîtes de dialogue
 
     lock = QLockFile(os.path.join(tempfile.gettempdir(), "desktopcat.lock"))
     lock.setStaleLockTime(30_000)   # un verrou laissé par un plantage (processus disparu) est repris après 30 s
@@ -37,8 +38,16 @@ def main() -> int:
 
     panel = None
 
+    # ───────── raccourci global : afficher / cacher le chat
+    hotkey = hotkey_module.GlobalHotkey()
+    hotkey.activated.connect(lambda: pet.set_user_hidden(not pet.user_hidden))
+    hotkey.set_enabled(store.data["settings"]["hotkey"])
+    game.changed.connect(lambda: hotkey.set_enabled(game.settings["hotkey"]))
+    app.aboutToQuit.connect(hotkey.unregister)
+
     def open_panel(tab=None):
         nonlocal panel
+        game.sync_autostart()           # la case du panneau montre l'état réel du registre
         if panel is None:
             panel = Panel(game)
         panel.show()
@@ -49,7 +58,7 @@ def main() -> int:
 
     # ───────── icône de la zone de notification
     tray = QSystemTrayIcon(QIcon(render_pixmap(2, pose="sit", fur=store.data["fur"], t=0)))
-    tray.setToolTip("Desktop Cat")
+    tray.setToolTip(f"Desktop Cat {__version__}")
     menu = QMenu()
 
     def rebuild_menu():
@@ -59,8 +68,14 @@ def main() -> int:
             menu.addAction("Arrêter la concentration", lambda: game.stop_focus(False))
         else:
             menu.addAction("Concentration 25 min", lambda: game.start_focus(25))
-        menu.addAction("Afficher le chat" if pet.user_hidden else "Cacher le chat",
-                       lambda: pet.set_user_hidden(not pet.user_hidden))
+        if game.brk:
+            menu.addAction("Passer la pause", game.skip_break)
+        feed = menu.addAction(f"Donner des croquettes ({FEED_COST} 🐟)", game.feed)
+        feed.setEnabled(game.can_feed())
+        label = "Afficher le chat" if pet.user_hidden else "Cacher le chat"
+        if hotkey.registered:
+            label += f"\t{hotkey_module.LABEL}"
+        menu.addAction(label, lambda: pet.set_user_hidden(not pet.user_hidden))
         menu.addSeparator()
         if log_file:
             menu.addAction("Ouvrir le journal", lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(log_file)))

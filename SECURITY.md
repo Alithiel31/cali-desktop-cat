@@ -1,5 +1,7 @@
 # Sécurité
 
+Français · [English](docs/en/SECURITY.md)
+
 ## Signaler une vulnérabilité
 
 Merci de ne **pas** ouvrir d'issue publique pour signaler une faille de sécurité — une issue GitHub classique l'expose à tout le monde avant qu'un correctif n'existe.
@@ -22,11 +24,12 @@ Desktop Cat est une application **locale** : aucun serveur, aucun compte, aucune
 
 | Surface | Détail |
 |---|---|
-| Données locales | `%APPDATA%\DesktopCat\` : sauvegarde JSON, journal. Les statistiques contiennent le **nom des exécutables** des fenêtres actives (40 par jour, 60 jours). Rien n'est envoyé nulle part. |
+| Données locales | `%APPDATA%\DesktopCat\` : sauvegarde JSON, journal. Les statistiques contiennent le **nom des exécutables** des fenêtres actives (40 par jour, 60 jours), sauf si le suivi est coupé dans les Réglages. « Effacer mes statistiques » les retire aussi des copies de sécurité lisibles. Rien n'est envoyé nulle part. |
 | Appels Windows | `winapi.py` lit la liste des fenêtres, la fenêtre active et l'inactivité via `ctypes`. Lecture seule. |
-| Registre | Une seule valeur écrite : `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DesktopCat` (démarrage avec Windows, désactivable). |
+| Registre | Une seule valeur écrite : `HKCU\Software\Microsoft\Windows\CurrentVersion\Run\DesktopCat` (démarrage avec Windows, désactivable). La clé `StartupApproved` (Gestionnaire des tâches) est lue ; sa valeur n'est supprimée que lorsque tu recoches la case. |
+| Raccourci global | `RegisterHotKey` pour Ctrl+Alt+C (désactivable) : l'appli ne lit aucune autre frappe. |
 | Fichier de sauvegarde | Lu et nettoyé au démarrage (`store.py`) : un fichier abîmé ou malveillant est écarté, jamais exécuté. |
-| Exécutable distribué | `DesktopCat.exe` (PyInstaller) publié dans les Releases, avec son empreinte SHA256. **Non signé** : Windows SmartScreen affichera un avertissement. |
+| Exécutable distribué | `DesktopCat.exe` (PyInstaller) publié dans les Releases, avec son empreinte SHA256. **Non signé** (demande SignPath Foundation en préparation) : Windows SmartScreen affichera un avertissement. |
 
 ## Périmètre
 

@@ -1,5 +1,7 @@
 # Architecture
 
+Français · [English](en/ARCHITECTURE.md)
+
 Desktop Cat est une appli PySide6 (Qt 6) pour Windows. Une seule règle guide le découpage :
 **la logique pure (maths, règles du jeu) est séparée de ce qui touche à Qt et à Windows**, ce qui permet de
 tester l'essentiel sur n'importe quel système.
@@ -9,11 +11,14 @@ tester l'essentiel sur n'importe quel système.
 ```
 main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄── Bubble / GiftBox / FxLayer
                                           │        │
+                                          │        ├── motion.py, pet_layout.py, pet_input.py, pet_companion.py
+                                          │        ├── hunt.py      (chasse à la souris)
                                           │        ├── screens.py   (géométrie multi-écrans)
                                           │        ├── surfaces.py  (bords de fenêtres praticables)
                                           │        └── sprite.py    (dessin pixel art) ◄── hats.py
                                           ├── winapi.py             (tout ce qui parle à Windows)
-                                          └── autostart.py          (lancement avec Windows)
+                                          ├── autostart.py          (lancement avec Windows)
+                                          └── hotkey.py             (raccourci global Ctrl+Alt+C)
                                    Panel (fenêtre de contrôle) ◄── Game
 ```
 
@@ -23,12 +28,19 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 |---|---|---|---|
 | `store.py` | Sauvegarde JSON (`%APPDATA%/DesktopCat/save.json`), valeurs par défaut, nettoyage d'un fichier abîmé, statistiques par jour. Écriture atomique (`.tmp` puis `os.replace`). Copies de sécurité, copie quotidienne avec restauration automatique, migrations de format. | non | non |
 | `game.py` | Règles du jeu : minuterie d'une seconde, cadeaux, chapeaux, concentration, temps d'écran, réglages validés (`SETTING_RULES`). Émet des signaux ; aucune interface. | oui (`QObject`, signaux) | via `winapi` |
-| `pet.py` | Le chat : fenêtre transparente, physique, états (idle, walk, nap, sleep, work, wait, drag, fall, jump), souris, bulle, cadeau. | oui | via `winapi` |
+| `pet.py` | Le chat : fenêtre transparente, états (idle, walk, nap, sleep, work, wait, drag, fall, jump), souris, bulle, cadeau et orchestration des mouvements. | oui | via `world.py` |
+| `motion.py` | Calculs physiques de la marche, des sauts et des chutes, indépendants de Qt et de Windows. | non | non |
+| `world.py` | Convertit les fenêtres Windows en surfaces praticables en coordonnées Qt. | non | via `winapi` |
+| `pet_layout.py` | Calcule la position du chat, du cadeau et de la bulle dans la zone visible, sans Qt. | non | non |
+| `pet_input.py` | Traduit les événements souris et le menu contextuel en actions sur le chat. | oui | non |
+| `pet_companion.py` | Réactions expressives aux cadeaux, aux bulles, au sommeil et aux sessions de concentration. | oui | non |
 | `screens.py` | Géométrie multi-écrans (conversion pixels physiques ↔ logiques, sols, chaînes d'écrans collés). Fonctions pures. | non | non |
 | `surfaces.py` | Calcule les bords hauts de fenêtres sur lesquels le chat peut marcher, en retirant les parties masquées par les fenêtres au-dessus. Fonctions pures. | non | non |
 | `winapi.py` | `ctypes` vers `user32`/`dwmapi`/`kernel32` : liste des fenêtres, fenêtre active, inactivité, plein écran. Sur un autre système, renvoie des valeurs neutres. | non | oui (isolé ici) |
 | `sprite.py` | Dessin du chat et du cadeau, case par case, sur une grille. Pelages, poses, yeux, chapeaux. | oui | non |
 | `hats.py` | Catalogue des chapeaux, raretés, tirage pondéré. | non | non |
+| `hunt.py` | Règles de la chasse à la souris (souris au repos, à portée). Fonctions pures. | non | non |
+| `hotkey.py` | Raccourci global Ctrl+Alt+C (`RegisterHotKey` + filtre d'événements natifs de Qt). | oui | oui |
 | `phrases.py` | Textes des miaous et délai aléatoire (le hasard est passé en paramètre). | non | non |
 | `widgets.py` | `Bubble` (bulle), `GiftBox` (cadeau), `FxLayer` (cœurs, étoiles, « z »). | oui | non |
 | `panel.py` | Fenêtre de contrôle : garde-robe, concentration, statistiques, réglages. | oui | non |
@@ -42,8 +54,10 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
   cadeaux. Compte l'activité, fait avancer la progression du prochain cadeau, le temps
   d'écran par application, la session de concentration, détecte l'absence (endormissement) et le plein écran.
   Sauvegarde toutes les 30 s.
-- **`Pet.step(dt)`** : environ 60 fois par seconde (minuterie de 16 ms). `dt` est plafonné à 50 ms. C'est cette méthode
-  que les tests appellent directement.
+- **`Pet.step(dt)`** : environ 60 fois par seconde (minuterie de 16 ms, `LOOP_MS`). Quand le chat est caché ou endormi
+  parce que l'utilisateur est absent, la minuterie passe à 100 ms (`LOOP_SLOW_MS`, 10 passages par seconde) pour ménager
+  la batterie ; la sieste (« nap ») garde le rythme normal. `dt` est plafonné (2,5 fois l'intervalle de la minuterie).
+  C'est cette méthode que les tests appellent directement.
 - **Scan des fenêtres** : toutes les 0,2 s dans `step` (`_refresh_surfaces`), qui reconstruit la liste des surfaces.
 - **Animation** : repeinture toutes les 80 ms.
 
@@ -81,12 +95,20 @@ Si la surface disparaît (fenêtre fermée, réduite, déplacée), il tombe jusq
 | `test_screens.py` | Géométrie multi-écrans. |
 | `test_features.py` | Comportement du chat et du panneau (états, sauts, plein écran, miaous, bulle...). |
 | `test_log.py` | Journal d'erreurs : exceptions, slots Qt, fils, messages Qt, échecs de sauvegarde. |
+| `test_gameplay.py` | Chapeaux saisonniers, humeur et croquettes, pauses, chasse à la souris, raccourci. |
+| `test_store_backups.py` | Sauvegarde : copies horodatées, copie quotidienne, restauration, migrations de format. |
+| `test_autostart.py` | Lancement avec Windows, sur un faux registre (le vrai n'est jamais touché). |
+| `test_motion.py` | Trajectoires des sauts et des chutes, marche (sans Qt). |
+| `test_pet_layout.py` | Placement visuel du chat, du cadeau et de la bulle (sans Qt). |
+| `test_world.py` | Pont entre les fenêtres natives et les surfaces praticables. |
+| `test_tools.py` | Outils de build : métadonnées Windows de l'exécutable. |
 
 Les tests sont **indépendants de la machine** : faux écrans (`ScreenInfo`), fausse souris (`FixedCursor`), faux bureau.
 Une garde dans `GameTestCase` fait échouer tout test qui lirait les vrais écrans.
 
-Non couvert : l'API Windows réelle (`winapi.py`) et les échelles d'affichage mixtes. Ils se valident à la main, voir
-`tools/run_test_instance.bat`.
+Les appels réels à l'API Windows (`winapi.py`) ne sont testés que sous Windows (jobs Windows de la CI) ; les échelles
+d'affichage mixtes, le raccourci global et le perchage avec Steam/Discord se valident à la main :
+[TEST-MANUEL.md](TEST-MANUEL.md) et `tools/run_test_instance.bat`.
 
 ## Points d'extension
 
