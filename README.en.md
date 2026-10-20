@@ -70,7 +70,7 @@ meantime, it is dropped without reward).
 ## Executable
     pip install -r requirements-build.txt
     python tools/make_version_file.py
-    pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
+    pyinstaller DesktopCat.spec
 
 ## Project structure
     main.py          entry point

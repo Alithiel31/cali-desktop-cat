@@ -8,6 +8,7 @@ on:
       - "main.py"
       - "requirements.txt"
       - "requirements-build.txt"
+      - "DesktopCat.spec"
       - "desktopcat/**"
       - "assets/**"
       - "tools/make_version_file.py"
@@ -57,8 +58,7 @@ jobs:
 
       - name: Construire l'exécutable
         run: >-
-          pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico
-          --version-file build/version_info.txt main.py
+          pyinstaller DesktopCat.spec
 
       - name: Empreinte SHA256
         shell: pwsh

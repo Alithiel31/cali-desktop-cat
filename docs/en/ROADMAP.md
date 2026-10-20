@@ -48,7 +48,8 @@ measurement, 85 %, dates from the 19/10/2026 review).
   hide the cat if it goes there). And a film watched without touching the mouse puts the cat to sleep: lead,
   `CallNtPowerInformation(SystemExecutionState)` and the `ES_DISPLAY_REQUIRED` flag set by video players.
 - [x] **Pinned build versions**: `requirements-build.txt` (PySide6, PyInstaller).
-- [ ] **Reproducible builds**: versioned `.spec`; consider `--onedir` (faster
+- [x] **Versioned `.spec`**: `DesktopCat.spec`, used by `release.yml`.
+- [ ] **Consider `--onedir`** (faster
   startup, fewer antivirus false positives, and maybe required for Smart App Control).
   Icon and version number: done (v0.4.1).
 

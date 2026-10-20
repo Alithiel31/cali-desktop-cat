@@ -21,6 +21,8 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 - CI : `actions/download-artifact` passe en v8, aligné sur `upload-artifact` v7.
 - **Builds reproductibles** : `requirements-build.txt` fige PySide6 (6.12.0) et PyInstaller (6.22.3) pour fabriquer l'exe ;
   `release.yml` l'utilise à la place d'un `pip install pyinstaller` sans version.
+- **`DesktopCat.spec` versionné** : les options du build (icône, métadonnées, sans console, UPX désactivé) vivent dans le
+  `.spec`, utilisé par le build local et par `release.yml`. `*.spec` quitte le `.gitignore`.
 - Rangement du dépôt : prototypes historiques déplacés de `tools/spikes/` vers `archive/spikes/` ; règle globale `*.png`
   retirée du `.gitignore` (seul `tools/out/` reste ignoré), pour pouvoir versionner captures et images.
 - Documentation remise à jour pour la 0.4.1 : architecture (boucle ralentie, modules, tableau des tests),

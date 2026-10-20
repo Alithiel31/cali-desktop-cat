@@ -12,14 +12,14 @@ GitHub Actions (`.github/workflows/release.yml`).
 ```bash
 pip install -r requirements-build.txt
 python tools/make_version_file.py
-pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py
+pyinstaller DesktopCat.spec
 ```
 
 `requirements-build.txt` fige les versions de PySide6 et de PyInstaller utilisées pour fabriquer l'exe (celles du dernier
 build testé) : les relever ensemble, après un build validé. Dependabot propose les montées via `requirements.txt` ;
 la CI de tests les valide, puis on reporte la version retenue dans `requirements-build.txt`.
 
-Résultat : `dist/DesktopCat.exe`. `build/`, `dist/` et `*.spec` sont ignorés par Git.
+Résultat : `dist/DesktopCat.exe`. `build/` et `dist/` sont ignorés par Git ; `DesktopCat.spec` est versionné (options du build, icône, métadonnées).
 `tools/make_version_file.py` écrit les métadonnées Windows (nom du produit, version tirée de `desktopcat.__version__`,
 auteur) visibles dans Propriétés > Détails. Quitter le chat avant de reconstruire : un exe en cours d'exécution ne
 peut pas être remplacé (« Accès refusé »).
@@ -43,7 +43,7 @@ Le workflow `release.yml` :
 | Vérifier tag/version | Échoue si le tag (`v0.4.2`) ne correspond pas à `desktopcat.__version__` (`0.4.2`). |
 | Tests | Rejoue toute la suite avant de packager. |
 | Métadonnées | `tools/make_version_file.py` -> `build/version_info.txt`. |
-| Build | `pyinstaller --noconsole --onefile --name DesktopCat --icon assets/desktopcat.ico --version-file build/version_info.txt main.py` sur `windows-latest`. |
+| Build | `pyinstaller DesktopCat.spec` sur `windows-latest`. |
 | Empreinte | Écrit `DesktopCat.exe.sha256`. |
 | Publication | Job séparé, seul à avoir `contents: write` : `gh release create` avec l'exe, l'empreinte et des notes générées. |
 
@@ -94,7 +94,7 @@ actif, une fois le paquet disponible). Les Releases GitHub continuent de fournir
 - [x] Premières Releases `v0.4.0` et `v0.4.1` publiées (testées avec Python ; l'exe est bloqué par Smart App Control sur la machine de dev).
 - [x] Icône de l'exécutable (`assets/desktopcat.ico`, voir `tools/make_icon.py`).
 - [x] Numéro de version affiché dans le panneau, l'infobulle de l'icône et les métadonnées de l'exe.
-- [ ] Fichier `.spec` versionné au lieu de la ligne de commande (aujourd'hui `*.spec` est dans `.gitignore`, le `DesktopCat.spec` local est un résidu de PyInstaller).
+- [x] Fichier `.spec` versionné (`DesktopCat.spec`) au lieu de la ligne de commande.
 - [ ] Démarrage automatique vérifié avec l'exécutable empaqueté (chemin dans le registre).
 - [x] Candidature SignPath : refusée (octobre 2026) ; voie retenue : Microsoft Store (voir ci-dessus). Note SmartScreen / Smart App Control dans le README : faite.
 - [x] Versions de build figées (`requirements-build.txt`). Fichier de verrouillage complet avec empreintes : écarté pour l'instant (deux dépendances, un mainteneur).

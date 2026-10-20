@@ -7,7 +7,6 @@ venv/
 # Build
 build/
 dist/
-*.spec
 
 # Sorties générées
 tools/out/
