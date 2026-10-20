@@ -10,7 +10,6 @@ dist/
 *.spec
 
 # Sorties générées
-*.png
 tools/out/
 
 # Sauvegardes locales / éditeurs

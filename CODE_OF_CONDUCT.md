@@ -1,5 +1,7 @@
 # Code de conduite
 
+Français · [English](docs/en/CODE_OF_CONDUCT.md)
+
 ## Engagement
 
 Dans l'intérêt de maintenir un espace ouvert et accueillant, les personnes qui participent à ce projet — via une issue, une pull request, une discussion ou tout autre échange lié au dépôt — s'engagent à en faire une expérience respectueuse et sans harcèlement pour tout le monde, indépendamment de l'expérience, de l'identité ou du point de vue.

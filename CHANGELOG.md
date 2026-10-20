@@ -1,9 +1,25 @@
 # CHANGELOG
 
+Français · [English](docs/en/CHANGELOG.md)
+
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; versions selon [SemVer](https://semver.org/lang/fr/).
 Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ## [Non publié]
+
+### Added
+
+- **Documentation en anglais** : `README.en.md`, `tools/README.en.md` et `docs/en/` (une version de chaque document de `docs/`,
+  plus `CONTRIBUTING`, `SECURITY`, `SUPPORT`, `CODE_OF_CONDUCT` et `CHANGELOG`). Chaque document français renvoie à sa
+  version anglaise, et inversement.
+
+### Changed
+
+- Rangement du dépôt : prototypes historiques déplacés de `tools/spikes/` vers `archive/spikes/` ; règle globale `*.png`
+  retirée du `.gitignore` (seul `tools/out/` reste ignoré), pour pouvoir versionner captures et images.
+- Documentation remise à jour pour la 0.4.1 : architecture (boucle ralentie, modules, tableau des tests),
+  feuille de route (chiffres, niveaux, `pet.py`), distribution (exemples, signature), dépannage (overlays, Ctrl+Alt+C,
+  `StartupApproved`), guide de reprise, contribution, sécurité (raccourci global, registre).
 
 ## [0.4.1] - 2026-10-19
 

@@ -1,5 +1,7 @@
 # Guide de reprise
 
+Français · [English](en/HANDOVER-GUIDE.md)
+
 [Retour au README](../README.md)
 
 Desktop Cat a un seul mainteneur réel (**Jacques Duchamplecheval**, alias GitHub `Alithiel31`). Ce document existe
@@ -19,8 +21,12 @@ obligatoire. La reprise est donc bien plus simple que celle d'un service héberg
 4. [docs/DEVELOPPEMENT.md](./DEVELOPPEMENT.md) — lancer, tester, conventions
 5. [docs/DISTRIBUTION.md](./DISTRIBUTION.md) — fabriquer et publier l'exécutable
 6. [docs/ROADMAP.md](./ROADMAP.md) — ce qui est fait, ce qui reste, dans l'ordre conseillé
-7. [docs/TROUBLESHOOTING.md](./TROUBLESHOOTING.md), [SECURITY.md](../SECURITY.md), [CONTRIBUTING.md](../CONTRIBUTING.md)
-8. [CHANGELOG.md](../CHANGELOG.md) — historique des décisions
+7. [docs/TEST-MANUEL.md](./TEST-MANUEL.md) — la checklist à passer sur un vrai Windows avant une Release
+8. [docs/TROUBLESHOOTING.md](./TROUBLESHOOTING.md), [SECURITY.md](../SECURITY.md), [CONTRIBUTING.md](../CONTRIBUTING.md)
+9. [docs/VEILLE-DEPENDANCES.md](./VEILLE-DEPENDANCES.md), [docs/ACCESSIBILITE.md](./ACCESSIBILITE.md)
+10. [CHANGELOG.md](../CHANGELOG.md) — historique des décisions
+
+La documentation existe aussi en anglais (`docs/en/`, `README.en.md`) : les deux versions vont ensemble.
 
 ---
 
@@ -45,8 +51,10 @@ Aucun secret réel n'est nécessaire au fonctionnement du projet ni stocké dans
 - **Accès administrateur au dépôt GitHub** (réglages des branches, Releases, Dependabot).
 - Le workflow de release n'utilise que le `GITHUB_TOKEN` fourni automatiquement.
 
-Si l'exécutable est un jour signé (voir [DISTRIBUTION.md](./DISTRIBUTION.md)), le certificat de signature de code
-deviendra l'élément **critique** de cette liste — à consigner ici à ce moment-là.
+La signature de code (SignPath Foundation) est en préparation (voir [DISTRIBUTION.md](./DISTRIBUTION.md)). Une fois le
+projet accepté, le secret `SIGNPATH_API_TOKEN` et la variable `SIGNPATH_ORGANIZATION_ID` du dépôt, ainsi que le compte
+SignPath (qui approuve chaque Release), deviendront les éléments **critiques** de cette liste — à consigner ici à ce
+moment-là.
 
 ---
 
@@ -54,7 +62,8 @@ deviendra l'élément **critique** de cette liste — à consigner ici à ce mom
 
 1. Cloner le dépôt, créer un environnement Python 3.12 ou 3.13, `pip install -r requirements.txt`.
 2. `python -m unittest discover -s tests` — tout doit passer.
-3. `python main.py` sur une machine Windows pour valider à la main (de préférence via `tools\run_test_instance.bat`).
+3. `python main.py` sur une machine Windows pour valider à la main (de préférence via `tools\run_test_instance.bat`,
+   puis la checklist de [TEST-MANUEL.md](./TEST-MANUEL.md)).
 4. Pour publier : voir [DISTRIBUTION.md](./DISTRIBUTION.md).
 
 ---
