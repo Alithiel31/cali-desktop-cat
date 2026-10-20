@@ -167,7 +167,7 @@ class Store:
 
     @staticmethod
     def _read(path: str) -> dict:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             saved = json.load(f)
         if not isinstance(saved, dict):
             raise ValueError("la sauvegarde n'est pas un objet JSON")
@@ -190,7 +190,8 @@ class Store:
             # perdre des champs inconnus) : dans les deux cas, on garde le fichier tel quel avant d'y toucher.
             self._keep_copy(f".v{version}.bak")
             if version > SCHEMA_VERSION:
-                log.warning("La sauvegarde est au format v%s, plus récent que cette appli (v%s)", version, SCHEMA_VERSION)
+                log.warning("La sauvegarde est au format v%s, plus récent que cette appli (v%s)",
+                            version, SCHEMA_VERSION)
         self._daily_backup()
         self._apply(self._upgrade(saved))
 

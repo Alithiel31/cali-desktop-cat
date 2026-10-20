@@ -7,7 +7,8 @@ from PySide6.QtCore import QLockFile, QUrl
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from desktopcat import __version__, hotkey as hotkey_module, log
+from desktopcat import __version__, log
+from desktopcat import hotkey as hotkey_module
 from desktopcat.game import FEED_COST, Game
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet

@@ -232,7 +232,7 @@ class MigrationTest(BackupTestCase):
         self.write({"version": 99, "fish": 5, "champ_futur": {"x": 1}})
         st = Store(self.path)
         self.assertEqual(st.data["fish"], 5)
-        self.assertTrue(st.save())                               # l'appli réécrit sans le champ qu'elle ne connaît pas...
+        self.assertTrue(st.save())  # l'appli réécrit sans le champ qu'elle ne connaît pas...
         self.assertNotIn("champ_futur", self.read())
         self.assertEqual(self.read(self.path + ".v99.bak")["champ_futur"], {"x": 1})   # ...mais l'original est gardé
 
@@ -320,7 +320,8 @@ class AtomicWriteTest(BackupTestCase):
         order = []
         real_fsync, real_replace = os.fsync, os.replace
         with mock.patch.object(store_module.os, "fsync", lambda fd: (order.append("fsync"), real_fsync(fd))), \
-                mock.patch.object(store_module.os, "replace", lambda a, b: (order.append("replace"), real_replace(a, b))):
+                mock.patch.object(store_module.os, "replace",
+                                  lambda a, b: (order.append("replace"), real_replace(a, b))):
             self.assertTrue(Store(self.path).save())
         self.assertEqual(order, ["fsync", "replace"])
 

@@ -13,7 +13,7 @@ class LWin:
     """Une fenêtre, en pixels logiques. L'ordre de la liste est l'ordre d'empilement (dessus en premier)."""
     hwnd: int
     title: str
-    l: float
+    l: float  # noqa: E741 (l, t, r, b = left, top, right, bottom, comme dans tout le code)
     t: float
     r: float
     b: float

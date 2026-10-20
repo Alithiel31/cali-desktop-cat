@@ -39,7 +39,8 @@ def square_cat(scale: int = 8) -> QImage:
 
 def cat_head(scale: int = 8) -> QImage:
     x, y, w, h = HEAD
-    return render_pixmap(scale, pose="sit", fur="ecaille", t=0).toImage().copy(x * scale, y * scale, w * scale, h * scale)
+    img = render_pixmap(scale, pose="sit", fur="ecaille", t=0).toImage()
+    return img.copy(x * scale, y * scale, w * scale, h * scale)
 
 
 def png_bytes(img: QImage) -> bytes:
@@ -57,7 +58,7 @@ def write_ico(path: str, images) -> None:
     header = struct.pack("<HHH", 0, 1, len(pngs))
     offset = len(header) + 16 * len(pngs)
     entries, blobs = b"", b""
-    for im, data in zip(images, pngs):
+    for im, data in zip(images, pngs, strict=True):
         w = im.width() if im.width() < 256 else 0              # 0 signifie 256 dans le format .ico
         h = im.height() if im.height() < 256 else 0
         entries += struct.pack("<BBBBHHII", w, h, 0, 0, 1, 32, len(data), offset)

@@ -22,8 +22,15 @@ from PySide6.QtWidgets import QApplication
 
 from desktopcat import hats, hotkey, hunt, phrases
 from desktopcat import pet as pet_module
-from desktopcat.game import (FEED_COST, FEED_GAIN, MIN_REWARD_MIN, MOOD_DECAY_S, MOOD_FULL, MOOD_HAPPY,
-                             MOOD_HUNGRY, PET_MOOD_CAP)
+from desktopcat.game import (
+    FEED_COST,
+    FEED_GAIN,
+    MIN_REWARD_MIN,
+    MOOD_DECAY_S,
+    MOOD_FULL,
+    MOOD_HUNGRY,
+    PET_MOOD_CAP,
+)
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet
 from desktopcat.store import Store

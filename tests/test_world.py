@@ -7,8 +7,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from desktopcat.screens import ScreenInfo, build_floors
 from desktopcat.surfaces import Surface
-from desktopcat.world import build_surfaces, window_geometry
 from desktopcat.winapi import WinInfo
+from desktopcat.world import build_surfaces, window_geometry
 
 
 class WorldTest(unittest.TestCase):
@@ -18,7 +18,8 @@ class WorldTest(unittest.TestCase):
         self.floors = build_floors(self.works)
 
     def test_window_geometry_converts_native_rect_and_respects_setting(self):
-        get_rect = lambda _hwnd: (100, 120, 500, 500)
+        def get_rect(_hwnd):
+            return (100, 120, 500, 500)
 
         self.assertEqual(window_geometry(7, self.screens, True, get_rect), (120, 100, 500))
         self.assertIsNone(window_geometry(7, self.screens, False, get_rect))
@@ -26,7 +27,8 @@ class WorldTest(unittest.TestCase):
 
     def test_build_surfaces_converts_windows_and_always_includes_floors(self):
         windows = [WinInfo(7, "Éditeur", (100, 300, 600, 700), False)]
-        list_windows = lambda exclude=(): [window for window in windows if window.hwnd not in exclude]
+        def list_windows(exclude=()):
+            return [window for window in windows if window.hwnd not in exclude]
 
         surfaces = build_surfaces(self.screens, self.works, self.floors, True, {7}, 40, 80, list_windows)
         self.assertEqual(surfaces, [Surface(None, 760, 0, 1000, 0, "sol", floor=0)])

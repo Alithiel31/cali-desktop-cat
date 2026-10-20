@@ -100,7 +100,8 @@ class StoreTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = os.path.join(tmp, "save.json")
             with open(path, "w") as f:
-                f.write('{"settings": {"scale": "gros", "inconnu": 1, "perch_windows": false}, "hats": {"a": 0, "b": 3}}')
+                f.write('{"settings": {"scale": "gros", "inconnu": 1, "perch_windows": false}, '
+                        '"hats": {"a": 0, "b": 3}}')
             st = Store(path)
             self.assertEqual(st.data["settings"]["scale"], 4)
             self.assertFalse(st.data["settings"]["perch_windows"])
@@ -180,7 +181,8 @@ class WinApiSmokeTest(unittest.TestCase):
 
 
 class FixedCursor:
-    """Fausse souris à une abscisse donnée : sans elle, les tests dépendent de l'endroit où se trouve ta vraie souris."""
+    """Fausse souris à une abscisse donnée : sans elle, les tests dépendent de l'endroit où se trouve
+    ta vraie souris."""
 
     def __init__(self, x: int = 960):
         self.x = x
@@ -189,7 +191,8 @@ class FixedCursor:
         return QPoint(self.x, 400)
 
 
-DEFAULT_SCREENS = (ScreenInfo((0, 0, 1920, 1080), (0, 0, 1920, 1040), 1.0),)     # un écran 1920 × 1080, barre des tâches 40 px
+# un écran 1920 × 1080, barre des tâches 40 px
+DEFAULT_SCREENS = (ScreenInfo((0, 0, 1920, 1080), (0, 0, 1920, 1040), 1.0),)
 
 
 def _no_real_screens():
@@ -211,7 +214,7 @@ class GameTestCase(unittest.TestCase):
             mock.patch.object(winapi, "window_rect", self.desk.window_rect),
             mock.patch.object(winapi, "idle_seconds", lambda: self.idle),
             mock.patch.object(winapi, "foreground", lambda: self.fg),
-            mock.patch.object(pet_module, "qt_screens", _no_real_screens),      # garde : jamais les vrais écrans en test
+            mock.patch.object(pet_module, "qt_screens", _no_real_screens),  # garde : jamais les vrais écrans en test
             mock.patch.object(autostart, "_reg", lambda: None),                  # garde : jamais le vrai registre
         ]
         for p in patches:

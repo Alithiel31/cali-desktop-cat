@@ -214,6 +214,6 @@ def is_fullscreen(fg, monitor_rect) -> bool:
     """Vrai si la fenêtre active couvre tout l'écran (jeu, vidéo plein écran) et n'est pas le bureau."""
     if fg is None or fg.cls in SHELL_CLASSES or fg.pid == os.getpid():
         return False
-    l, t, r, b = fg.rect
+    left, top, right, bottom = fg.rect
     ml, mt, mr, mb = monitor_rect
-    return l <= ml and t <= mt and r >= mr and b >= mb
+    return left <= ml and top <= mt and right >= mr and bottom >= mb

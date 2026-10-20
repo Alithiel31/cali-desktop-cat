@@ -65,7 +65,7 @@ mesure, 85 %, date de la revue du 19/10/2026).
 - [ ] Rythme des cadeaux : 20 min passif contre 10 min en concentration, à revoir avec le bonus « repu » (+25 %).
 - [ ] Objectif de long terme : collection complète, succès, autres saisons (Noël…), boutique.
 - [ ] Qualité du code : continuer à découper `pet.py` (~700 lignes ; la physique, le placement, les entrées et les réactions en sont déjà sortis), rendre `winapi` injectable dans `Game`,
-  typage progressif et ruff.
+  typage progressif. ruff est en place (bloquant en CI) ; le formateur reste à décider.
 
 ## Niveau 4 — Anecdotique
 - [x] `.gitignore` : règle globale `*.png` retirée (`tools/out/` reste exclu).

@@ -20,7 +20,8 @@ from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QCloseEvent, QColor, QMouseEvent, QPalette
 from PySide6.QtWidgets import QApplication, QGroupBox
 
-from desktopcat import pet as pet_module, phrases, winapi
+from desktopcat import pet as pet_module
+from desktopcat import phrases, winapi
 from desktopcat.game import MAX_TICK_S, MIN_REWARD_MIN, Game
 from desktopcat.panel import Panel
 from desktopcat.pet import Pet
@@ -34,8 +35,9 @@ APP = QApplication.instance() or QApplication([])
 ALL_MEOWS = {m for pool in phrases.MEOWS.values() for m in pool}
 
 
-def screen(l, t, r, b, dpr=1.0, work_bottom=None):
-    return ScreenInfo((l, t, r, b), (l, t, r, work_bottom if work_bottom is not None else b), dpr)
+def screen(left, top, right, bottom, dpr=1.0, work_bottom=None):
+    work = work_bottom if work_bottom is not None else bottom
+    return ScreenInfo((left, top, right, bottom), (left, top, right, work), dpr)
 
 
 # ─────────────────────────────────────────────────────────── sauvegarde
@@ -438,7 +440,8 @@ class MultiScreenTest(PetCase):
     def test_fullscreen_only_hides_the_cat_on_that_screen(self):
         pet = self.make_pet(self.SIDE_BY_SIDE)
         self.place(300, 800)                                          # le chat est sur A
-        cover = lambda r: winapi.Foreground(9, 1, "jeu.exe", "Jeu", r, "UnityWndClass")
+        def cover(r):
+            return winapi.Foreground(9, 1, "jeu.exe", "Jeu", r, "UnityWndClass")
         self.fg = cover((1000, 0, 2000, 800))                         # appli plein écran sur B
         self.game.tick()
         self.assertFalse(pet.hidden)
@@ -501,8 +504,9 @@ class MultiScreenTest(PetCase):
             xs.append(pet.cx)
             if pet.state in ("idle", "walk") and pet.stand is None:
                 break
-        biggest_step = max(abs(b - a) for a, b in zip(xs, xs[1:]))
-        self.assertLess(biggest_step, 40)                         # un saut fait ~10 px par pas ; une téléportation, des centaines
+        biggest_step = max(abs(b - a) for a, b in zip(xs, xs[1:], strict=False))
+        # un saut fait ~10 px par pas ; une téléportation, des centaines
+        self.assertLess(biggest_step, 40)
         self.assertIsNone(pet.stand)                              # il n'est pas resté « sur » une fenêtre absente
         self.assertEqual(pet.fy, pet.floor_y)
 

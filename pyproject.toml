@@ -1,0 +1,13 @@
+# Configuration des outils de développement. Le projet n'est pas empaqueté via pyproject :
+# les dépendances sont dans requirements.txt / requirements-build.txt, le build dans DesktopCat.spec.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["archive", "build", "dist"]
+# tests/ est un dossier de premier niveau : `from test_logic import ...` y désigne un module local
+src = [".", "tests"]
+
+[tool.ruff.lint]
+# E/W : pycodestyle, F : pyflakes, I : tri des imports, B : bugbear, UP : syntaxe Python moderne
+select = ["E", "F", "W", "I", "B", "UP"]

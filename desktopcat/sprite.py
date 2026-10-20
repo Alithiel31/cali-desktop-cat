@@ -6,7 +6,7 @@ Le chat regarde vers la droite ; `flip=True` le retourne. Les pieds touchent tou
 from __future__ import annotations
 
 import math
-from functools import lru_cache
+from functools import cache
 
 from PySide6.QtGui import QColor, QImage, QPainter, QPixmap
 
@@ -34,7 +34,7 @@ FURS = {
 }
 
 
-@lru_cache(maxsize=None)
+@cache
 def qc(color: str) -> QColor:
     return QColor(color)
 
@@ -49,7 +49,8 @@ class _Canvas:
         if self.flip:
             x = GRID_W - x - w
         s = self.s
-        self.p.fillRect(int(x * s), int(y * s), int(w * s), int(h * s), color if isinstance(color, QColor) else qc(color))
+        fill = color if isinstance(color, QColor) else qc(color)
+        self.p.fillRect(int(x * s), int(y * s), int(w * s), int(h * s), fill)
 
 
 def _render(c: _Canvas, parts, decor, oy):

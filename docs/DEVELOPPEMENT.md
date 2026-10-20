@@ -22,6 +22,9 @@ python main.py
 `requirements.txt` ne contient qu'une ligne : `PySide6-Essentials>=6.12.0,<7` (Qt sans les modules inutiles ici).
 `requirements-build.txt` y ajoute PyInstaller et fige les versions de build (voir [DISTRIBUTION.md](./DISTRIBUTION.md)).
 
+Pour le linter : `pip install -r requirements-dev.txt` (ruff), puis `ruff check .` ; la configuration est dans `pyproject.toml`
+(120 colonnes, règles E, F, W, I, B, UP).
+
 ## Tests
 
 ```bash
@@ -73,7 +76,8 @@ L'appli n'a **aucune variable de configuration** propre. Celles qui comptent son
 
 ## Ébauche — à compléter
 
-- [ ] Linter / formateur (ruff) et typage progressif — prévu au niveau 3 de la [feuille de route](./ROADMAP.md).
+- [x] Linter : ruff (`pyproject.toml`, bloquant en CI). Pas de formateur automatique pour l'instant (`ruff format` reformaterait la moitié des fichiers).
+- [ ] Typage progressif — prévu au niveau 3 de la [feuille de route](./ROADMAP.md).
 - [ ] Hook de pré-commit ou pré-push qui rejoue les tests (équivalent du hook Husky de QcWeather).
 - [ ] Mesure de couverture de tests.
 - [ ] Procédure pour valider l'API Windows réelle et les échelles d'affichage mixtes (aujourd'hui : à la main, sur un vrai double écran).

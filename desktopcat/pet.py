@@ -14,19 +14,26 @@ from __future__ import annotations
 import random
 import time
 
-from PySide6.QtCore import QTimer, Qt, Signal
+from PySide6.QtCore import QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QCursor, QGuiApplication, QPainter
-from PySide6.QtCore import QRect
 from PySide6.QtWidgets import QWidget
 
 from . import hunt, winapi
 from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
-from .pet_layout import compute_placement
-from .pet_input import PetInput
 from .pet_companion import PetCompanion
+from .pet_input import PetInput
+from .pet_layout import compute_placement
 from .phrases import meow_delay, pick_meow
-from .screens import (ScreenInfo, bounds, build_floors, clip_to_bounds, floor_here, native_rects,
-                      nearest_rect_index, snap_to_floor)
+from .screens import (
+    ScreenInfo,
+    bounds,
+    build_floors,
+    clip_to_bounds,
+    floor_here,
+    native_rects,
+    nearest_rect_index,
+    snap_to_floor,
+)
 from .sprite import FOOT_ROW, GRID_H, GRID_W, draw_cat
 from .surfaces import Surface
 from .world import build_surfaces, floor_surfaces, window_geometry
