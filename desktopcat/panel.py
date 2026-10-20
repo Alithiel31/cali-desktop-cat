@@ -7,9 +7,12 @@ from datetime import date, timedelta
 from PySide6.QtCore import QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QGuiApplication, QPainter
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFormLayout, QFrame, QGridLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget)
+                               QLineEdit, QMessageBox, QPushButton, QScrollArea, QSpinBox, QTabWidget, QVBoxLayout,
+                               QWidget, QGroupBox)
 
-from .hats import HATS, RARITIES, RARITY_ORDER
+from . import __version__
+from .game import FEED_COST, MOOD_FULL, MOOD_HAPPY
+from .hats import HATS, RARITIES, RARITY_ORDER, season_label
 from .sprite import FURS, render_pixmap
 
 ACCENT, GREEN, MUTED, LINE, CARD, BG = "#ffb454", "#6fd3a0", "#9aa4b8", "#3a4258", "#2a3040", "#1f2430"
@@ -84,6 +87,7 @@ class AppsChart(QWidget):
     def __init__(self):
         super().__init__()
         self.rows: list[tuple[str, float]] = []
+        self.empty_text = "Pas encore de données aujourd'hui."
         self.setMinimumHeight(self.ROW)
 
     def set_rows(self, rows) -> None:
@@ -96,8 +100,7 @@ class AppsChart(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         if not self.rows:
             p.setPen(QColor(MUTED))
-            p.drawText(self.rect(), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                       "Pas encore de données aujourd'hui.")
+            p.drawText(self.rect(), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, self.empty_text)
             return
         peak = max(r[1] for r in self.rows)
         name_w, time_w = 120, 64
@@ -124,7 +127,7 @@ class Panel(QWidget):
         app = QGuiApplication.instance()
         if app is not None:
             app.aboutToQuit.connect(lambda: setattr(self, "_quitting", True))
-        self.setWindowTitle("Desktop Cat")
+        self.setWindowTitle(f"Desktop Cat {__version__}")
         self.resize(540, 720)
         self.setStyleSheet(STYLE)
         self._animated: list[tuple[QLabel, str]] = []
@@ -136,8 +139,16 @@ class Panel(QWidget):
         self.fish = QLabel()
         self.fish.setToolTip("Croquettes gagnées en vendant des doublons et en finissant des sessions")
         self.fish.setStyleSheet(f"background:{CARD};border:1px solid {LINE};border-radius:12px;padding:3px 12px;font-weight:700;")
+        self.mood = QLabel()
+        self.mood.setToolTip(f"Humeur du chat. Elle baisse avec le temps passé devant l'écran. "
+                             f"À partir de {MOOD_HAPPY}, il est repu et les cadeaux arrivent 25 % plus vite.")
+        self.mood.setStyleSheet(self.fish.styleSheet())
+        self.feed_btn = QPushButton(f"Nourrir ({FEED_COST} 🐟)")
+        self.feed_btn.clicked.connect(game.feed)
         head.addWidget(self.title)
         head.addStretch(1)
+        head.addWidget(self.mood)
+        head.addWidget(self.feed_btn)
         head.addWidget(self.fish)
         root.addLayout(head)
 
@@ -211,7 +222,8 @@ class Panel(QWidget):
         name = QLabel(f"<b>{hat.name}</b>" + (f" ×{count}" if count > 1 else "") if count else "<b>???</b>")
         name.setAlignment(Qt.AlignmentFlag.AlignCenter)
         name.setWordWrap(True)
-        kind = QLabel(f"<b style='color:{rar['color']}'>{rar['label']}</b>")
+        season = f" · {season_label(hat)}" if hat.season else ""
+        kind = QLabel(f"<b style='color:{rar['color']}'>{rar['label']}</b>{season}")
         kind.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(name)
         lay.addWidget(kind)
@@ -272,9 +284,12 @@ class Panel(QWidget):
         self.start_btn.clicked.connect(lambda: self.game.start_focus(self.custom_min.value()))
         self.stop_btn = QPushButton("Arrêter")
         self.stop_btn.clicked.connect(lambda: self.game.stop_focus(False))
+        self.skip_btn = QPushButton("Passer la pause")
+        self.skip_btn.clicked.connect(self.game.skip_break)
         custom.addWidget(self.custom_min)
         custom.addWidget(self.start_btn)
         custom.addWidget(self.stop_btn)
+        custom.addWidget(self.skip_btn)
         custom.addStretch(1)
         cl.addLayout(custom)
         lay.addWidget(card)
@@ -286,7 +301,14 @@ class Panel(QWidget):
         for w in (*self.preset_buttons, self.custom_min, self.start_btn):
             w.setVisible(not f)
         self.stop_btn.setVisible(bool(f))
-        if f:
+        b = self.game.brk
+        self.skip_btn.setVisible(bool(b) and not f)
+        if b and not f:
+            left = max(0, int(b["ends_at"] - self.game.clock() + 0.999))
+            self.clock.setText(f"☕ {left // 60:02d}:{left % 60:02d}")
+            self.focus_msg.setText("Pause : lève-toi, étire-toi, bois un verre d'eau. "
+                                   "Tu peux aussi relancer une session tout de suite.")
+        elif f:
             left = max(0, int(f["ends_at"] - self.game.clock() + 0.999))
             self.clock.setText(f"{left // 60:02d}:{left % 60:02d}")
             self.focus_msg.setText(f"{self.game.data['name']} reste à côté de toi. Session de {f['total_min']} min en cours.")
@@ -324,12 +346,33 @@ class Panel(QWidget):
         self.apps = AppsChart()
         lay.addWidget(self.apps)
         note = QLabel("Le temps d'écran compte les secondes où le clavier ou la souris ont servi durant la dernière minute. "
-                      "Tout reste sur ton PC.")
+                      "Le suivi des applications se coupe dans les Réglages. Tout reste sur ton PC.")
         note.setObjectName("muted")
         note.setWordWrap(True)
         lay.addWidget(note)
+        clear = QPushButton("Effacer mes statistiques")
+        clear.setToolTip("Efface le temps d'écran, la concentration, les cadeaux comptés et les applications, "
+                         "y compris dans les copies de sécurité. Chapeaux et croquettes sont conservés.")
+        clear.clicked.connect(self._clear_stats)
+        self.clear_btn = clear
+        row2 = QHBoxLayout()
+        row2.addStretch(1)
+        row2.addWidget(clear)
+        lay.addLayout(row2)
         lay.addStretch(1)
         return page
+
+    def _confirm_clear(self) -> bool:
+        answer = QMessageBox.question(
+            self, "Effacer mes statistiques",
+            "Effacer toutes les statistiques (temps d'écran, concentration, applications) ?\n"
+            "Chapeaux et croquettes sont conservés. Cette action est définitive.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+        return answer == QMessageBox.StandardButton.Yes
+
+    def _clear_stats(self) -> None:
+        if self._confirm_clear():
+            self.game.clear_stats()
 
     @staticmethod
     def _title(text: str) -> QLabel:
@@ -350,55 +393,124 @@ class Panel(QWidget):
             days.append((("Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim")[day.weekday()], v.get("active", 0), v.get("focus", 0)))
         self.week.set_days(days)
         top = sorted(d.get("apps", {}).items(), key=lambda kv: kv[1], reverse=True)[:6]
+        self.apps.empty_text = "Pas encore de données aujourd'hui." if self.game.settings["track_apps"] \
+            else "Suivi des applications désactivé (Réglages)."
         self.apps.set_rows([(fmt_app(name), sec) for name, sec in top])
 
     # ───────────────────────── réglages
     def _build_settings(self) -> QWidget:
         page = QWidget()
-        form = QFormLayout(page)
-        form.setVerticalSpacing(12)
+        root = QVBoxLayout(page)
+        root.setContentsMargins(16, 16, 16, 16)
+        root.setSpacing(14)
         g = self.game
 
+        identity = QGroupBox("Ton chat")
+        identity_form = QFormLayout(identity)
+        identity_form.setVerticalSpacing(10)
         self.name_edit = QLineEdit()
         self.name_edit.setMaxLength(20)
+        self.name_edit.setPlaceholderText("Miso")
         self.name_edit.editingFinished.connect(lambda: g.set_name(self.name_edit.text()))
-        form.addRow("Nom du chat", self.name_edit)
+        identity_form.addRow("Nom", self.name_edit)
 
         self.fur_box = QComboBox()
         for key, f in FURS.items():
             self.fur_box.addItem(f["label"], key)
         self.fur_box.activated.connect(lambda i: g.set_fur(self.fur_box.itemData(i)))
-        form.addRow("Pelage", self.fur_box)
+        identity_form.addRow("Pelage", self.fur_box)
+        root.addWidget(identity)
 
+        rhythm = QGroupBox("Rythme et apparence")
+        rhythm_form = QFormLayout(rhythm)
+        rhythm_form.setVerticalSpacing(10)
         self.spins = {}
         for key, label, lo, hi, suffix in (
-                ("scale", "Taille du chat (3 à 6)", 3, 6, ""),
-                ("gift_every_min", "Un cadeau toutes les", 5, 120, " min d'activité"),
-                ("sleep_after_min", "Il s'endort après", 1, 60, " min d'inactivité")):
+                ("scale", "Taille du chat", 3, 6, ""),
+                ("gift_every_min", "Cadeau toutes les", 5, 120, " min d'activité"),
+                ("sleep_after_min", "Sommeil après", 1, 60, " min d'inactivité"),
+                ("break_min", "Pause après une session", 1, 30, " min")):
             sp = QSpinBox()
             sp.setRange(lo, hi)
             sp.setSuffix(suffix)
             sp.editingFinished.connect(lambda k=key, s=sp: g.set_setting(k, s.value()))
-            form.addRow(label, sp)
+            rhythm_form.addRow(label, sp)
             self.spins[key] = sp
+        root.addWidget(rhythm)
 
         self.checks = {}
-        for key, label in (
-                ("perch_windows", "Il marche sur le bord haut des fenêtres"),
-                ("jump_between_windows", "Il saute d'une fenêtre à l'autre"),
-                ("follow_active", "Il rejoint la fenêtre qu'on vient d'activer"),
-                ("meows", "Il miaule de temps en temps (bulles)"),
-                ("notifications", "Notifications de fin de session"),
-                ("launch_at_startup", "Lancer avec Windows")):
-            cb = QCheckBox(label)
-            cb.toggled.connect(lambda v, k=key: g.set_setting(k, v))
-            form.addRow(cb)
-            self.checks[key] = cb
+        descriptions = {
+            "meows": "Affiche parfois une bulle au-dessus du chat.",
+            "notifications": "Prévient quand une session de concentration se termine.",
+            "track_apps": "Garde localement le nom des applications utilisées pour les statistiques.",
+            "launch_at_startup": "Ouvre le chat automatiquement à l'ouverture de ta session Windows.",
+            "hunt_cursor": "Quand la souris s'arrête près de lui, il la guette puis bondit dessus.",
+            "focus_breaks": "Après une session réussie, le chat te propose une pause (méthode Pomodoro).",
+            "hotkey": "Affiche ou cache le chat depuis n'importe quelle application.",
+        }
+        groups = (
+            ("Comportement du chat", (
+                ("perch_windows", "Marcher sur le bord des fenêtres"),
+                ("jump_between_windows", "Sauter d'une fenêtre à l'autre"),
+                ("follow_active", "Rejoindre la fenêtre active"),
+                ("meows", "Miauler de temps en temps"),
+                ("hunt_cursor", "Chasser la souris"),
+            )),
+            ("Concentration", (("focus_breaks", "Pause après chaque session"),)),
+            ("Notifications et confidentialité", (
+                ("notifications", "Notifications de concentration"),
+                ("track_apps", "Suivi des applications"),
+            )),
+            ("Démarrage et clavier", (
+                ("launch_at_startup", "Lancer avec Windows"),
+                ("hotkey", "Raccourci Ctrl+Alt+C"),
+            )),
+        )
+        for title, items in groups:
+            section = QGroupBox(title)
+            section_layout = QVBoxLayout(section)
+            section_layout.setSpacing(7)
+            for key, label in items:
+                row = QWidget()
+                row_layout = QVBoxLayout(row)
+                row_layout.setContentsMargins(0, 2, 0, 2)
+                row_layout.setSpacing(2)
+                cb = QCheckBox(label)
+                cb.toggled.connect(lambda v, k=key, box=cb: self._set_checkbox_setting(k, v, box))
+                row_layout.addWidget(cb)
+                if key in descriptions:
+                    hint = QLabel(descriptions[key])
+                    hint.setObjectName("muted")
+                    hint.setWordWrap(True)
+                    row_layout.addWidget(hint)
+                section_layout.addWidget(row)
+                self.checks[key] = cb
+            root.addWidget(section)
 
         test = QPushButton("Recevoir un cadeau maintenant (test)")
         test.clicked.connect(g.force_gift)
-        form.addRow(test)
+        test.setToolTip("Outil de test : ajoute un cadeau à la progression actuelle.")
+        root.addWidget(test)
+        about = QLabel(f"Desktop Cat {__version__} · licence MIT · "
+                       "<a href='https://github.com/Alithiel31/cali-desktop-cat' style='color:#9aa4b8'>code source</a>")
+        about.setObjectName("muted")
+        about.setOpenExternalLinks(True)
+        about.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.about = about
+        root.addWidget(about)
+        root.addStretch(1)
         return page
+
+    def _set_checkbox_setting(self, key: str, value: bool, checkbox: QCheckBox) -> None:
+        if self.game.set_setting(key, value):
+            return
+        checkbox.blockSignals(True)
+        checkbox.setChecked(self.game.settings[key])
+        checkbox.blockSignals(False)
+        if key == "launch_at_startup":
+            QMessageBox.warning(
+                self, "Démarrage avec Windows",
+                "Windows n'a pas pu modifier le démarrage automatique. Vérifie les permissions de ton compte, puis réessaie.")
 
     def _refresh_settings(self) -> None:
         d, s = self.game.data, self.game.settings
@@ -419,6 +531,13 @@ class Panel(QWidget):
         d = self.game.data
         self.title.setText(f"Desktop Cat — {d['name']}")
         self.fish.setText(f"🐟 {d['fish']}")
+        level = self.game.mood_level()
+        face = {"repu": "😺", "content": "🐱", "affamé": "😿"}[level]
+        self.mood.setText(f"{face} {self.game.mood}")
+        self.feed_btn.setEnabled(self.game.can_feed())
+        self.feed_btn.setToolTip(f"{d['name']} est {level}." + ("" if self.game.can_feed() else
+                                 " Il n'a plus faim." if self.game.mood >= MOOD_FULL else
+                                 f" Il faut {FEED_COST} croquettes."))
         self._refresh_wardrobe()
         self._refresh_focus()
         self._refresh_stats()

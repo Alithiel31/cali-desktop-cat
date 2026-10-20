@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QCloseEvent, QColor, QMouseEvent, QPalette
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QGroupBox
 
 from desktopcat import pet as pet_module, phrases, winapi
 from desktopcat.game import MAX_TICK_S, MIN_REWARD_MIN, Game
@@ -50,7 +50,7 @@ class StoreRobustnessTest(unittest.TestCase):
 
     def test_hostile_save_file_loads_with_sane_values(self):
         hostile = {
-            "name": 123, "fur": ["x"], "fish": "beaucoup", "gift_progress": -5, "gift_pending": "oui",
+            "name": 123, "fur": ["x"], "fish": "beaucoup", "gift_progress": -5, "gifts_pending": "oui",
             "equipped": "chapeau_fantome", "hats": {"crown": 2, "halo": "x", "bow": 0, "cap": 1.9},
             "days": {"2026-01-01": "oups", "2026-01-02": {"active": "x", "apps": {"a.exe": -1, "b.exe": 5}}},
             "focus": {"ends_at": "demain", "total_min": 25},
@@ -60,7 +60,7 @@ class StoreRobustnessTest(unittest.TestCase):
         d = st.data
         self.assertEqual(d["name"], "Miso")
         self.assertEqual(d["fur"], "ecaille")
-        self.assertEqual((d["fish"], d["gift_progress"], d["gift_pending"]), (0, 0, False))
+        self.assertEqual((d["fish"], d["gift_progress"], d["gifts_pending"]), (0, 0, False))
         self.assertIsNone(d["equipped"])                            # on ne porte pas un chapeau qu'on n'a pas
         self.assertEqual(d["hats"], {"crown": 2, "cap": 1})
         self.assertEqual(d["days"]["2026-01-01"], {"active": 0, "focus": 0, "gifts": 0, "apps": {}})
@@ -109,7 +109,7 @@ class RewardsAndFocusTest(GameTestCase):
             self.game.tick()
         self.assertEqual(done, [1, MIN_REWARD_MIN - 1])
         self.assertEqual(self.game.data["fish"], 0)
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(len(notes), 2)
 
     def test_gift_farming_with_one_minute_sessions_is_closed(self):
@@ -117,13 +117,13 @@ class RewardsAndFocusTest(GameTestCase):
             self.game.start_focus(1)
             self.now += 61
             self.game.tick()
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 0)
 
     def test_minimum_session_is_rewarded(self):
         self.game.start_focus(MIN_REWARD_MIN)
         self.work(MIN_REWARD_MIN)
-        self.assertTrue(self.game.data["gift_pending"])
+        self.assertTrue(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 10 + MIN_REWARD_MIN)
 
     def test_session_spent_away_from_the_computer_gives_no_reward(self):
@@ -135,7 +135,7 @@ class RewardsAndFocusTest(GameTestCase):
         self.work(25)
         self.assertIsNone(self.game.focus)
         self.assertEqual(done, [])                               # ni « bravo » ni cadeau
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 0)
         self.assertEqual(len(notes), 1)
 
@@ -144,8 +144,18 @@ class RewardsAndFocusTest(GameTestCase):
         self.now += 25 * 60 + 1                                  # le PC dort 25 min : l'horloge avance, pas le jeu
         self.game.tick()
         self.assertIsNone(self.game.focus)
-        self.assertFalse(self.game.data["gift_pending"])
+        self.assertFalse(self.game.data["gifts_pending"])
         self.assertEqual(self.game.data["fish"], 0)
+
+    def test_focus_reward_adds_to_a_gift_already_waiting(self):
+        self.game.data["gifts_pending"] = 1                      # un cadeau ordinaire pas encore ouvert
+        self.game.start_focus(MIN_REWARD_MIN)
+        self.work(MIN_REWARD_MIN)
+        self.assertEqual(self.game.data["gifts_pending"], 2)     # avant : le cadeau de la session était perdu
+        self.assertIsNotNone(self.game.claim_gift())
+        self.assertEqual(self.game.data["gifts_pending"], 1)
+        self.assertIsNotNone(self.game.claim_gift())
+        self.assertIsNone(self.game.claim_gift())
 
     def test_half_presence_is_enough(self):
         self.game.start_focus(20)
@@ -153,7 +163,7 @@ class RewardsAndFocusTest(GameTestCase):
         self.work(10)                                            # absent la première moitié
         self.idle = 0
         self.work(10)
-        self.assertTrue(self.game.data["gift_pending"])
+        self.assertTrue(self.game.data["gifts_pending"])
 
     def test_presence_is_kept_across_an_app_restart(self):
         self.game.start_focus(20)
@@ -194,7 +204,7 @@ class RewardsAndFocusTest(GameTestCase):
         self.assertIsNone(again.focus)
         self.assertIsNone(again.data["focus"])
         self.assertEqual(again.data["fish"], 0)
-        self.assertFalse(again.data["gift_pending"])
+        self.assertFalse(again.data["gifts_pending"])
 
     def test_stopping_a_session_forgets_it(self):
         self.game.start_focus(25)
@@ -633,7 +643,7 @@ class MeowTest(PetCase):
         self.assertEqual(self.bubble.text(), "Message important")
 
     def test_no_meow_while_a_gift_waits(self):
-        self.game.data["gift_pending"] = True
+        self.game.data["gifts_pending"] = 1
         self.run_steps(5)
         self.assertTrue(self.pet.gift_visible)
         before = self.bubble.text()
@@ -723,8 +733,33 @@ class ClickTest(PetCase):
             self.assertTrue(0 <= pet.cx <= 1000 and pet.FOOT <= pet.fy <= 800, (x, y, pet.cx, pet.fy))
         pet.mouseReleaseEvent(mouse(QEvent.Type.MouseButtonRelease))
 
+    def test_context_menu_reflects_focus_state(self):
+        with mock.patch("desktopcat.pet_input.QMenu") as menu_factory:
+            self.pet.input.show_menu(QPoint(10, 10))
+        actions = [call.args[0] for call in menu_factory.return_value.addAction.call_args_list]
+        self.assertIn("Concentration 25 min", actions)
+        self.assertIn("Ouvrir le panneau", actions)
+        self.assertIn("Quitter", actions)
+
+        self.game.start_focus(25)
+        with mock.patch("desktopcat.pet_input.QMenu") as menu_factory:
+            self.pet.input.show_menu(QPoint(10, 10))
+        actions = [call.args[0] for call in menu_factory.return_value.addAction.call_args_list]
+        self.assertIn("Arrêter la concentration", actions)
+        self.assertNotIn("Concentration 25 min", actions)
+
 
 class PanelTest(GameTestCase):
+    def test_settings_are_grouped_and_keep_all_existing_controls(self):
+        panel = Panel(self.game)
+        self.addCleanup(panel.deleteLater)
+        titles = {group.title() for group in panel.tabs.widget(3).findChildren(QGroupBox)}
+        self.assertTrue({"Ton chat", "Rythme et apparence", "Comportement du chat", "Concentration",
+                         "Notifications et confidentialité", "Démarrage et clavier"} <= titles)
+        self.assertEqual(set(panel.checks), {
+            "perch_windows", "jump_between_windows", "follow_active", "meows", "notifications",
+            "track_apps", "launch_at_startup", "hunt_cursor", "focus_breaks", "hotkey"})
+
     def test_closing_hides_the_panel_but_not_when_the_session_ends(self):
         panel = Panel(self.game)
         self.addCleanup(panel.deleteLater)
@@ -815,6 +850,95 @@ class BubbleLookTest(unittest.TestCase):
         b.mousePressEvent(None)
         self.assertFalse(b.isVisible())
         self.assertEqual(clicked, [1])
+
+
+# ─────────────────────────────────────────────────────────── vie privée
+
+
+class PrivacyTest(GameTestCase):
+    FIREFOX = winapi.Foreground(6, 1, "firefox.exe", "Mozilla", (0, 0, 10, 10), "X")
+
+    def test_app_tracking_can_be_turned_off(self):
+        self.fg = self.FIREFOX
+        self.assertTrue(self.game.set_setting("track_apps", False))
+        self.game.tick()
+        self.assertEqual(self.store.day()["apps"], {})
+        self.assertEqual(self.store.day()["active"], 1)            # le temps d'écran, lui, continue de compter
+        self.game.set_setting("track_apps", True)
+        self.game.tick()
+        self.assertEqual(self.store.day()["apps"], {"firefox.exe": 1})
+
+    def test_old_save_without_the_setting_keeps_tracking(self):
+        with open(self.store.path, "w", encoding="utf-8") as f:
+            json.dump({"version": 1, "settings": {"meows": False}}, f)
+        self.assertTrue(Store(self.store.path).data["settings"]["track_apps"])
+
+    def test_clear_stats_wipes_days_and_backup_copies_but_keeps_progress(self):
+        self.fg = self.FIREFOX
+        self.work(2)
+        self.store.data["hats"] = {"cap": 2}
+        self.store.data["fish"] = 42
+        self.store.save()
+        Store(self.store.path)                                     # 1er lancement du jour : copie quotidienne
+        self.store._keep_copy(".v1.bak")                           # copie faite avant une migration
+        corrupt = self.store.path + ".2026-01-01_00-00-00.bak"
+        with open(corrupt, "w", encoding="utf-8") as f:
+            f.write("{pas du json")
+        changed = []
+        self.game.changed.connect(lambda: changed.append(1))
+
+        self.game.clear_stats()
+
+        self.assertEqual(changed, [1])
+        again = Store(self.store.path)
+        self.assertEqual(again.data["days"], {})
+        self.assertEqual(again.data["hats"], {"cap": 2})
+        self.assertEqual(again.data["fish"], 42)
+        self.assertTrue(again._daily_backups())
+        for path in again._daily_backups() + [self.store.path + ".v1.bak"]:
+            with open(path, encoding="utf-8") as f:
+                self.assertNotIn("firefox", f.read(), path)
+        with open(corrupt, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "{pas du json")             # illisible : laissée telle quelle
+
+    def test_panel_checkbox_and_clear_button(self):
+        self.fg = self.FIREFOX
+        self.game.tick()
+        panel = Panel(self.game)
+        self.addCleanup(panel.deleteLater)
+        self.assertTrue(panel.checks["track_apps"].isChecked())
+        panel.checks["track_apps"].setChecked(False)
+        self.assertFalse(self.game.settings["track_apps"])
+        self.assertIn("désactivé", panel.apps.empty_text)
+
+        with mock.patch.object(Panel, "_confirm_clear", lambda self: False):
+            panel.clear_btn.click()
+        self.assertNotEqual(self.store.data["days"], {})           # refusé : rien n'est effacé
+        with mock.patch.object(Panel, "_confirm_clear", lambda self: True):
+            panel.clear_btn.click()
+        self.assertEqual(self.store.data["days"], {})
+
+
+# ─────────────────────────────────────────────────────────── rythme de la boucle
+
+
+class LoopRateTest(PetCase):
+    def test_loop_slows_down_while_asleep_or_hidden(self):
+        pet = self.make_pet([screen(0, 0, 1920, 1080, work_bottom=1040)])
+        self.assertEqual(pet.loop_interval(), pet_module.LOOP_MS)
+        pet._on_sleeping(True)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_SLOW_MS)
+        pet._on_sleeping(False)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_MS)
+        pet.set_user_hidden(True)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_SLOW_MS)
+        pet.set_user_hidden(False)
+        self.assertEqual(pet.loop.interval(), pet_module.LOOP_MS)
+
+    def test_nap_keeps_the_normal_rate(self):
+        pet = self.make_pet([screen(0, 0, 1920, 1080, work_bottom=1040)])
+        pet._nap()
+        self.assertEqual(pet.loop_interval(), pet_module.LOOP_MS)
 
 
 if __name__ == "__main__":

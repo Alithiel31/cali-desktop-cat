@@ -1,5 +1,7 @@
 # CHANGELOG
 
+Français · [English](docs/en/CHANGELOG.md)
+
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; versions selon [SemVer](https://semver.org/lang/fr/).
 Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
@@ -7,14 +9,79 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- **Documentation en anglais** : `README.en.md`, `tools/README.en.md` et `docs/en/` (une version de chaque document de `docs/`,
+  plus `CONTRIBUTING`, `SECURITY`, `SUPPORT`, `CODE_OF_CONDUCT` et `CHANGELOG`). Chaque document français renvoie à sa
+  version anglaise, et inversement.
+
+### Changed
+
+- Rangement du dépôt : prototypes historiques déplacés de `tools/spikes/` vers `archive/spikes/` ; règle globale `*.png`
+  retirée du `.gitignore` (seul `tools/out/` reste ignoré), pour pouvoir versionner captures et images.
+- Documentation remise à jour pour la 0.4.1 : architecture (boucle ralentie, modules, tableau des tests),
+  feuille de route (chiffres, niveaux, `pet.py`), distribution (exemples, signature), dépannage (overlays, Ctrl+Alt+C,
+  `StartupApproved`), guide de reprise, contribution, sécurité (raccourci global, registre).
+
+## [0.4.1] - 2026-10-19
+
+Préparation de la signature de code (SignPath Foundation).
+
+### Added
+
+- **Icône** de l'exécutable (`assets/desktopcat.ico`, générée par `tools/make_icon.py` à partir du sprite : chat entier en
+  grand, tête seule à 48 px et moins) et du panneau.
+- **Métadonnées de l'exe** (Propriétés > Détails : Desktop Cat, version, auteur), générées par
+  `tools/make_version_file.py` à partir de `desktopcat.__version__`.
+- Numéro de version dans le titre du panneau, en bas des Réglages et dans l'infobulle de l'icône.
+- README : sections **Installer**, **Désinstaller** et **Code signing policy** ; avertissement Smart App Control.
+- `release.yml` : bloc de signature SignPath prêt, commenté jusqu'à l'acceptation du projet.
+
+## [0.4.0] - 2026-10-19
+
+Première Release publiée (la 0.3.0 n'a jamais été taguée : son contenu est inclus ici).
+
+### Added
+
+- **Nourrir le chat** : humeur de 0 à 100, repas à 5 croquettes (panneau, clic droit, icône). Repu, il rapporte les
+  cadeaux 25 % plus vite ; affamé, il réclame. Les caresses aident un peu.
+- **Chapeau saisonnier** « Citrouille », du 25 octobre au 2 novembre.
+- **Chasse à la souris** : il guette la souris qui vient de s'arrêter près de lui, puis bondit dessus (désactivable).
+- **Pause Pomodoro** après chaque session réussie (5 min réglables), minuteur ☕ dans la bulle, bouton « Passer la pause ».
+- **Raccourci Ctrl+Alt+C** pour afficher ou cacher le chat (désactivable).
+
+- Réglage « Noter les applications utilisées » pour couper le suivi des exécutables actifs.
+- Bouton « Effacer mes statistiques » (avec confirmation) : vide l'historique, copies de sécurité lisibles comprises.
+
 - Documentation de projet : `CONTRIBUTING.md`, `SECURITY.md`, `SUPPORT.md`, `CODE_OF_CONDUCT.md`, ce `CHANGELOG.md`,
   modèles d'issues et de PR, `CODEOWNERS`, Dependabot, et dans `docs/` : `DEVELOPPEMENT.md`, `DISTRIBUTION.md`,
   `GUIDE-DE-REPRISE.md`, `ACCESSIBILITE.md` (ébauche), `VEILLE-DEPENDANCES.md`.
 
+### Changed
+
+- Batterie : plus de `timeBeginPeriod(1)` (minuterie système forcée à 1 ms en permanence) ; la boucle du chat passe
+  de ~60 à 10 passages par seconde quand il est caché ou endormi parce que l'utilisateur est absent.
+- Sauvegarde au format v2 : `gift_pending` (oui/non) devient `gifts_pending` (nombre de cadeaux en attente).
+  Les sauvegardes v1 sont migrées automatiquement (copie `save.json.v1.bak` gardée).
+- Un cadeau en attente laisse finir la bulle en cours (« Te revoilà ! », chapeau qu'on vient d'ouvrir) avant
+  d'apparaître.
+
+### Fixed
+
+- Le cadeau d'une session de concentration n'est plus perdu quand un cadeau ordinaire attendait déjà : ils s'additionnent.
+- Copie quotidienne de la sauvegarde aussi quand l'appli tourne plusieurs jours sans redémarrer (PC mis en veille).
+- Sauvegarde forcée sur le disque (`fsync`) avant le remplacement : une coupure de courant ne laisse plus de fichier vide.
+  Le remplacement est retenté si un antivirus verrouille le fichier un instant.
+- Le chat ne se perche plus sur les fenêtres invisibles : overlays transparents aux clics (Steam, NVIDIA, Discord),
+  fenêtres impossibles à activer, fenêtres superposées d'opacité nulle.
+- Lecture des titres de fenêtres sans leur envoyer de message (`InternalGetWindowText`) : une fenêtre qui « ne répond
+  pas » ne peut plus geler le chat.
+- Lancement avec Windows : le registre fait foi. La case suit une désactivation faite dans le Gestionnaire des tâches
+  (`StartupApproved`), la recocher réactive vraiment le démarrage, et le chemin de l'exe est réécrit au lancement s'il
+  a changé (exe déplacé ou mis à jour).
+- `tools/run_test_instance.bat` utilise le Python du `.venv` du projet en priorité.
+
 ## [0.3.0] - 2026-10-18
 
-Première version complète. Pas encore taguée : le tag `v0.3.0` déclenchera la première Release (voir
-[docs/DISTRIBUTION.md](./docs/DISTRIBUTION.md)).
+Première version complète, jamais taguée ni publiée : tout son contenu fait partie de la 0.4.0.
 
 ### Added
 

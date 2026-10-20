@@ -15,16 +15,28 @@ import logging
 import os
 import shutil
 import sys
+import time
 from datetime import date, datetime
 
 log = logging.getLogger("desktopcat.store")
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+
+
+def _v1_vers_v2(d: dict) -> dict:
+    """v2 : « gift_pending » (oui/non) devient « gifts_pending » (nombre). Avec un simple oui/non, le cadeau d'une
+    session de concentration finie pendant qu'un cadeau ordinaire attendait était perdu."""
+    d["gifts_pending"] = 1 if d.pop("gift_pending", False) is True else 0
+    return d
+
+
 # Migrations : {version de départ: fonction(dict brut) -> dict brut à la version suivante}.
-# Pour passer à la version 2 : SCHEMA_VERSION = 2 et MIGRATIONS = {1: _v1_vers_v2}.
-MIGRATIONS: dict = {}
+# Pour passer à la version N+1 : SCHEMA_VERSION = N+1 et MIGRATIONS[N] = fonction.
+MIGRATIONS: dict = {1: _v1_vers_v2}
 KEEP_CORRUPT = 3        # copies de fichiers illisibles conservées
 KEEP_DAILY = 7          # copies quotidiennes conservées
+MAX_PENDING_GIFTS = 99  # cadeaux en attente au plus (un fichier modifié à la main ne fait pas exploser le compteur)
+REPLACE_RETRIES = 3     # un antivirus ou un outil de synchronisation peut verrouiller le fichier un instant
 
 DEFAULTS = {
     "version": SCHEMA_VERSION,
@@ -32,9 +44,10 @@ DEFAULTS = {
     "fur": "ecaille",
     "hats": {},                 # {id_chapeau: quantité}
     "equipped": None,
-    "fish": 0,                  # croquettes gagnées en vendant des doublons
+    "fish": 0,                  # croquettes gagnées en vendant des doublons et en finissant des sessions
+    "mood": 50,                 # humeur du chat, de 0 (affamé) à 100 (repu) : voir game.py
     "gift_progress": 0,         # secondes d'activité depuis le dernier cadeau
-    "gift_pending": False,
+    "gifts_pending": 0,         # cadeaux gagnés pas encore ouverts
     "settings": {
         "gift_every_min": 20,
         "sleep_after_min": 5,
@@ -45,6 +58,11 @@ DEFAULTS = {
         "jump_between_windows": True,   # saute d'une fenêtre à l'autre
         "follow_active": False,         # rejoint la fenêtre qu'on vient d'activer
         "meows": True,                  # bulles « miaou » spontanées
+        "track_apps": True,             # note le nom de l'exécutable actif pour les statistiques
+        "hunt_cursor": True,            # guette la souris immobile et bondit dessus
+        "focus_breaks": True,           # pause après chaque session de concentration réussie
+        "break_min": 5,                 # durée de cette pause
+        "hotkey": True,                 # Ctrl+Alt+C affiche ou cache le chat
     },
     "focus": None,              # session de concentration en cours : {"ends_at": epoch, "total_min": n}
     "days": {},                 # {"2026-10-18": {"active": s, "focus": s, "gifts": n, "apps": {exe: s}}}
@@ -84,8 +102,9 @@ def _sanitize(d: dict) -> dict:
     if d.get("equipped") not in d["hats"]:
         d["equipped"] = None                      # un chapeau qu'on ne possède pas (ou plus) ne se porte pas
     d["fish"] = _nat(d.get("fish"))
+    d["mood"] = min(100, _nat(d.get("mood"), DEFAULTS["mood"]))
     d["gift_progress"] = _nat(d.get("gift_progress"))
-    d["gift_pending"] = d.get("gift_pending") is True
+    d["gifts_pending"] = min(MAX_PENDING_GIFTS, _nat(d.get("gifts_pending")))
     days = d.get("days")
     d["days"] = {k: _clean_day(v) for k, v in days.items() if isinstance(k, str)} if isinstance(days, dict) else {}
     f = d.get("focus")
@@ -104,6 +123,28 @@ def _stamp() -> str:
     return datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
+def write_json_atomic(path: str, obj) -> None:
+    """Écrit `obj` en JSON sans jamais laisser de fichier à moitié écrit, même après une coupure de courant.
+
+    On écrit dans `<path>.tmp`, on force l'écriture sur le disque (`fsync` : sinon Windows peut renommer un fichier
+    dont le contenu n'est pas encore écrit, et on retrouve une sauvegarde vide au redémarrage), puis on remplace
+    l'ancien fichier. Le remplacement est retenté quelques fois : un antivirus peut verrouiller le fichier un instant.
+    Lève OSError si tout échoue."""
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False)
+        f.flush()
+        os.fsync(f.fileno())
+    for attempt in range(REPLACE_RETRIES):
+        try:
+            os.replace(tmp, path)
+            return
+        except PermissionError:
+            if attempt == REPLACE_RETRIES - 1:
+                raise
+            time.sleep(0.05 * (attempt + 1))
+
+
 def default_path() -> str:
     if sys.platform == "win32":
         base = os.environ.get("APPDATA") or os.path.expanduser("~")
@@ -115,6 +156,7 @@ def default_path() -> str:
 class Store:
     def __init__(self, path: str | None = None):
         self.path = path or default_path()
+        self._backup_day: str | None = None          # jour de la dernière copie quotidienne
         self.data = copy.deepcopy(DEFAULTS)
         self.load()
 
@@ -217,7 +259,8 @@ class Store:
 
     def _daily_backup(self) -> None:
         """Au premier lancement du jour, copie la sauvegarde telle qu'elle était à la fin de la veille."""
-        dest = os.path.join(self.backup_dir, f"save-{_today()}.json")
+        self._backup_day = _today()
+        dest = os.path.join(self.backup_dir, f"save-{self._backup_day}.json")
         try:
             os.makedirs(self.backup_dir, exist_ok=True)
             if not os.path.exists(dest):
@@ -242,18 +285,40 @@ class Store:
 
     def save(self) -> bool:
         self.data["version"] = SCHEMA_VERSION
+        if self._backup_day != _today() and os.path.exists(self.path):
+            # L'appli peut tourner des jours sans redémarrer (PC mis en veille) : la copie quotidienne se fait aussi
+            # au premier enregistrement de chaque nouveau jour, avant d'écraser l'état de la veille.
+            self._daily_backup()
         try:
             os.makedirs(os.path.dirname(self.path), exist_ok=True)
-            tmp = self.path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(self.data, f, ensure_ascii=False)
-            os.replace(tmp, self.path)          # écriture atomique : pas de fichier à moitié écrit
+            write_json_atomic(self.path, self.data)
             return True
         except OSError as e:
             log.error("Sauvegarde impossible : %s", e)
             return False
 
     # ───────── statistiques
+    def clear_stats(self) -> int:
+        """Efface toutes les statistiques (temps, concentration, cadeaux, applis), y compris dans les copies de
+        sécurité lisibles. Renvoie le nombre de copies nettoyées. Une copie illisible (fichier abîmé mis de côté)
+        ne peut pas être nettoyée : elle est laissée telle quelle, comme toute copie qu'on n'arrive pas à réécrire."""
+        self.data["days"] = {}
+        self.save()
+        copies = self._daily_backups() + glob.glob(self.path + ".*.bak")
+        cleaned = 0
+        for path in copies:
+            try:
+                saved = self._read(path)
+                if not saved.get("days"):
+                    continue
+                saved["days"] = {}
+                write_json_atomic(path, saved)
+                cleaned += 1
+            except (OSError, ValueError):
+                log.warning("Copie non nettoyée (illisible ou inaccessible) : %s", path)
+        log.info("Statistiques effacées (%d copie(s) de sécurité nettoyée(s))", cleaned)
+        return cleaned
+
     def day(self, key: str | None = None) -> dict:
         key = key or _today()
         days = self.data["days"]

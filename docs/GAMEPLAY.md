@@ -1,5 +1,7 @@
 # Règles du jeu
 
+Français · [English](en/GAMEPLAY.md)
+
 Valeurs par défaut ; la plupart sont réglables dans le panneau (onglet Réglages).
 
 ## Activité et sommeil
@@ -23,6 +25,30 @@ Valeurs par défaut ; la plupart sont réglables dans le panneau (onglet Réglag
 
 On ne vend que les doublons (il en reste toujours un exemplaire).
 
+Les cadeaux en attente s'additionnent (99 au plus) : un cadeau de concentration ne remplace pas un cadeau ordinaire.
+
+### Chapeaux saisonniers
+- **Citrouille** (épique) : seulement du 25 octobre au 2 novembre (Halloween).
+- En saison, un cadeau sur cinq donne directement un chapeau de la saison ; les autres suivent le tirage normal.
+- Hors saison, la garde-robe le montre en « ??? » avec le nom de sa saison.
+- Ajouter une saison : une entrée dans `hats.SEASONS`, et `season="…"` sur le chapeau.
+
+## Humeur et croquettes
+- L'humeur va de 0 à 100 (50 pour un nouveau chat). Elle perd 1 point toutes les 3 min d'activité (pas pendant
+  l'absence).
+- **Nourrir** (panneau, ou clic droit sur le chat) : 5 croquettes pour +25. Impossible au-dessus de 95 (il n'a plus faim).
+- Une caresse donne +1, sans dépasser 60 : rien ne remplace un repas.
+- **Repu** (70 et plus) : les cadeaux ordinaires arrivent 25 % plus vite. **Affamé** (moins de 25) : il réclame dans ses
+  miaous. Entre les deux : content.
+- Les croquettes viennent des sessions de concentration et de la revente des doublons.
+
+## Chasse à la souris
+- Quand la souris vient de s'arrêter (entre 1,2 et 15 s) à hauteur du chat, sur sa surface et à sa portée, il la guette
+  1 à 2 s puis bondit dessus.
+- Si la souris bouge pendant l'affût, elle lui échappe (il boude 8 s).
+- Entre deux chasses : 25 à 60 s. Jamais pendant une session de concentration ni quand il dort.
+- Désactivable (« Chasser la souris »).
+
 ## Concentration
 - Session de 1 à 180 min (25 min depuis l'icône ou le menu).
 - Pendant la session, le chat va au bout de l'écran (ou sur le bord de la fenêtre où il est perché), s'assoit devant son
@@ -34,9 +60,24 @@ On ne vend que les doublons (il en reste toujours un exemplaire).
 - La présence est conservée si l'appli redémarre en cours de session.
 - Elle survit à un redémarrage de l'appli. Si elle est finie entre-temps, elle est abandonnée sans récompense.
 
+### Pause (méthode Pomodoro)
+- Après chaque session **récompensée**, une pause de 5 min (réglable, 1 à 30) : minuteur ☕ dans la bulle, et le chat
+  te rappelle de te lever. À la fin, il propose de reprendre.
+- Relancer une session ou « Passer la pause » l'arrête. Désactivable (« Pause après chaque session »).
+- La pause n'est pas sauvegardée : un redémarrage de l'appli l'oublie.
+
+## Raccourci clavier
+- **Ctrl+Alt+C** affiche ou cache le chat, depuis n'importe quelle application. Désactivable.
+- Si une autre application utilise déjà ce raccourci, il reste inactif (message dans le journal).
+- Sur un clavier où AltGr+C tape un caractère, ce caractère est capturé : couper le raccourci dans les Réglages.
+
 ## Statistiques
 - Temps actif, temps de concentration et cadeaux ouverts par jour, sur 60 jours conservés.
 - Applis les plus utilisées du jour (40 maximum), d'après le nom de l'exécutable de la fenêtre active.
+  Désactivable dans les Réglages (« Noter les applications utilisées ») : le temps d'écran continue de compter.
+- **Effacer mes statistiques** (onglet Statistiques, avec confirmation) : vide l'historique, y compris dans les copies
+  quotidiennes et les copies de migration. Chapeaux, croquettes et réglages sont conservés. Une copie illisible
+  (`save.json.<date>.bak`) ne peut pas être nettoyée : la supprimer à la main si besoin.
 - Tout reste dans `%APPDATA%/DesktopCat/save.json` (et ses copies de sécurité, voir [TROUBLESHOOTING.md](TROUBLESHOOTING.md)) ;
   rien n'est envoyé nulle part.
 

@@ -122,6 +122,30 @@ def nearest_floor(floors, x: float, y: float) -> int:
     return best
 
 
+def floor_here(floors, x: float, current_idx: int):
+    """Renvoie l'indice du sol courant, ou celui de son voisin praticable sous x."""
+    current = floors[current_idx]
+    if current.x0 <= x <= current.x1:
+        return current_idx
+    for floor in floors:
+        if floor.chain == current.chain and floor.x0 <= x <= floor.x1:
+            return floor.idx
+    return current_idx
+
+
+def snap_to_floor(floors, center_x: float, feet_y: float, sprite_width: float) -> tuple[int, float, float]:
+    """Ramène le centre du sprite sur le sol le plus proche, en renvoyant (écran, gauche, pieds)."""
+    idx = nearest_floor(floors, center_x, feet_y)
+    floor = floors[idx]
+    center_x = min(max(center_x, floor.x0), floor.x1)
+    return idx, center_x - sprite_width / 2, floor.y
+
+
+def clip_to_bounds(x0: float, x1: float, desktop_bounds: tuple) -> tuple[float, float]:
+    """Intersecte un segment horizontal avec les limites globales du bureau."""
+    return max(x0, desktop_bounds[0]), min(x1, desktop_bounds[2])
+
+
 def clamp_point(rects, x: float, y: float) -> tuple:
     """Ramène (x, y) dans le rectangle le plus proche (pour garder le chat sur un écran quand on le porte)."""
     best = None

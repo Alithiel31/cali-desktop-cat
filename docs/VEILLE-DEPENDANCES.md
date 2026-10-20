@@ -1,5 +1,7 @@
 # Veille des dépendances
 
+Français · [English](en/DEPENDENCY-WATCH.md)
+
 [Retour au README](../README.md)
 
 Desktop Cat n'appelle **aucune API externe** (voir [SECURITY.md](../SECURITY.md)). Ce qu'il faut surveiller, ce sont
