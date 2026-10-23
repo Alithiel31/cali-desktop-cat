@@ -133,6 +133,22 @@ class PetCompanion:
         for i in range(3):
             QTimer.singleShot(i * 200, lambda: pet.fx_particle("heart"))
 
+    def jazz_arrived(self, toward: int) -> None:
+        """Jazz vient de s'asseoir près d'elle (`toward` : 1 s'il est à sa droite, -1 à sa gauche)."""
+        pet = self.pet
+        pet._idle(5.0)
+        pet.dir = toward
+        pet.happy_until = pet.t + 4000
+        pet.fx_particle("heart")
+        if pet.settings["meows"] and not pet._temp:
+            pet.say(pick_meow(pet.dog.rng, "jazz"), 2500)
+
+    def jazz_lies_down(self, toward: int) -> None:
+        """Jazz se couche contre elle pendant sa sieste (`toward` : 1 s'il est à sa droite, -1 à sa gauche)."""
+        pet = self.pet
+        pet.dir = toward                       # la tête tournée vers lui ; elle ne se réveille pas
+        pet.fx_particle("heart")
+
     def caught(self) -> None:
         """Le bond sur la souris vient de se terminer."""
         pet = self.pet

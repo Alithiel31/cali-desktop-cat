@@ -24,6 +24,7 @@ SETTING_RULES = {
     "meows": bool,
     "track_apps": bool,
     "hunt_cursor": bool,
+    "jazz_visits": bool,
     "focus_breaks": bool,
     "break_min": lambda v: max(1, min(30, int(v))),
     "hotkey": bool,
@@ -53,6 +54,7 @@ class Game(QObject):
     break_changed = Signal(object)      # pause après une session : dict {ends_at, total_min} ou None
     break_finished = Signal()           # la pause est arrivée à son terme (pas quand on la passe)
     fed = Signal()                      # le chat vient de manger
+    jazz_requested = Signal()           # test : faire venir Jazz tout de suite
     notice = Signal(str, str)           # (titre, message) pour une notification
 
     def __init__(self, store: Store, parent=None, clock=time.time, monitor_rects=None, mono=time.monotonic):
@@ -231,6 +233,10 @@ class Game(QObject):
         self._add_gift()
         self.gift_ready.emit()
         self.changed.emit()
+
+    def call_jazz(self) -> None:
+        """Pour tester : Jazz arrive tout de suite (sans effet s'il ne peut pas passer à cet instant)."""
+        self.jazz_requested.emit()
 
     def equip(self, hat_id) -> bool:
         if hat_id is not None and not self.data["hats"].get(hat_id):

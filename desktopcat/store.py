@@ -60,6 +60,7 @@ DEFAULTS = {
         "meows": True,                  # bulles « miaou » spontanées
         "track_apps": True,             # note le nom de l'exécutable actif pour les statistiques
         "hunt_cursor": True,            # guette la souris immobile et bondit dessus
+        "jazz_visits": True,            # Jazz, le chien, passe de temps en temps
         "focus_breaks": True,           # pause après chaque session de concentration réussie
         "break_min": 5,                 # durée de cette pause
         "hotkey": True,                 # Ctrl+Alt+C affiche ou cache le chat

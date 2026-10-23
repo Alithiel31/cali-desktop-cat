@@ -762,7 +762,7 @@ class PanelTest(GameTestCase):
                          "Notifications et confidentialité", "Démarrage et clavier"} <= titles)
         self.assertEqual(set(panel.checks), {
             "perch_windows", "jump_between_windows", "follow_active", "meows", "notifications",
-            "track_apps", "launch_at_startup", "hunt_cursor", "focus_breaks", "hotkey"})
+            "track_apps", "launch_at_startup", "hunt_cursor", "jazz_visits", "focus_breaks", "hotkey"})
 
     def test_closing_hides_the_panel_but_not_when_the_session_ends(self):
         panel = Panel(self.game)

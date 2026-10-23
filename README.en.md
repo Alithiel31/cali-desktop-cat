@@ -10,7 +10,7 @@
 
 A tortoiseshell cat that lives on your Windows desktop: it wanders around, perches on window edges, falls when
 the window disappears, jumps from one window to another, falls asleep when you are away, meows in a speech bubble now
-and then, stalks your mouse, gets hungry (you feed it kibble), brings you gifts (hats in 6 rarities, including a seasonal
+and then, stalks your mouse, is visited by Jazz (its dog big brother), gets hungry (you feed it kibble), brings you gifts (hats in 6 rarities, including a seasonal
 one at Halloween) and works alongside you during your focus sessions, followed by a Pomodoro break. It roams all of
 your screens, and **Ctrl+Alt+C** shows or hides it.
 
@@ -51,6 +51,11 @@ Double-click the cat = panel; right-click = menu (including "Donner des croquett
 Header: kibble count (🐟), the cat's mood and a **Nourrir** ("Feed") button. Tabs: Garde-robe (wardrobe: wear hats,
 sell duplicates), Concentration (focus, and break), Statistiques (7 days + apps of the day), Réglages (settings,
 including "Il miaule de temps en temps", "It meows from time to time").
+
+## Jazz
+Jazz, a Nova Scotia Duck Tolling Retriever, visits Cali from time to time: he crosses the screen, comes to greet her or,
+if she is napping, to sleep against her. He never blocks a click. "Jazz rend visite à Cali" ("Jazz visits Cali") setting;
+details are in the [game rules](docs/en/GAMEPLAY.md#jazz-calis-big-brother).
 
 ## Multiple screens
 One floor per screen (the bottom of its work area, taskbar excluded). Adjacent screens whose bottoms are less than

@@ -31,6 +31,13 @@ Open the log). The app's interface is in French; labels are quoted as they appea
   Repeat up to 95+: the option is greyed out.
 - [ ] **Hunt**: move the mouse near the cat (same height, on the floor beside it), then let go. Within a few seconds,
   it stalks it (wide-open eyes) then pounces. Repeat, moving during the stalk: it gives up.
+- [ ] **Jazz**: Settings > "Faire venir Jazz maintenant (test)" ("Bring Jazz now (test)"): a red dog comes in from one edge
+  of the screen and trots along the floor. Repeat several times: sometimes he just crosses (occasionally sitting for a
+  moment), sometimes he sits next to Cali, who turns to him (hearts), then leaves, often followed by her. A click on him
+  goes straight through.
+- [ ] **Nap together**: let Cali fall asleep (a nap on the floor, without moving), then bring Jazz: he lies down against
+  her without waking her, and leaves when she wakes up. Hide the cat (Ctrl+Alt+C) during a visit: Jazz disappears too.
+  Untick "Jazz rend visite à Cali": the test button no longer does anything.
 - [ ] **Shortcut**: in another app (browser), Ctrl+Alt+C hides the cat, once more shows it again.
   The tray menu shows "Cacher le chat   Ctrl+Alt+C". Untick the setting: the shortcut does nothing any more.
 

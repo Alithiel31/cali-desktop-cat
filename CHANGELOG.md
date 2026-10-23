@@ -9,6 +9,13 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- **Jazz, le grand frère de Cali** : un Nova Scotia Duck Tolling Retriever en pixel art (`desktopcat/dog.py` et
+  `dog_sprite.py`) rend visite à Cali de temps en temps (première visite 2 à 5 min après le lancement, puis toutes les
+  6 à 15 min). Il traverse l'écran, vient la saluer (elle se tourne vers lui, cœurs et bulle, puis le suit souvent
+  quelques secondes quand il repart) ou, si elle fait la sieste, se couche contre elle sans la réveiller. Fenêtre
+  transparente sans souris, hasard séparé de celui du chat ; jamais pendant une session de concentration, ni quand le
+  chat est caché ou endormi. Réglage « Jazz rend visite à Cali » (actif par défaut) et bouton de test dans les
+  Réglages ; `tools/preview_jazz.py` génère un aperçu de son dessin.
 - **Documentation en anglais** : `README.en.md`, `tools/README.en.md` et `docs/en/` (une version de chaque document de `docs/`,
   plus `CONTRIBUTING`, `SECURITY`, `SUPPORT`, `CODE_OF_CONDUCT` et `CHANGELOG`). Chaque document français renvoie à sa
   version anglaise, et inversement.

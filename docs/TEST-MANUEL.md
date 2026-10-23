@@ -30,6 +30,12 @@ Compter 20 à 30 min. Noter chaque point ✅ / ❌ ; pour un ❌, joindre `deskt
   Répéter jusqu'à 95+ : l'option devient grisée.
 - [ ] **Chasse** : bouger la souris près du chat (même hauteur, sur le sol à côté de lui), puis la lâcher. En quelques
   secondes, il la guette (yeux grands ouverts) puis bondit dessus. Recommencer en bougeant pendant l'affût : il abandonne.
+- [ ] **Jazz** : Réglages > « Faire venir Jazz maintenant (test) » : un chien roux entre par un bord de l'écran et trotte
+  sur le sol. Recommencer plusieurs fois : tantôt il traverse (parfois assis un instant), tantôt il vient s'asseoir près
+  de Cali, qui se tourne vers lui (cœurs), puis il repart, souvent suivi par elle. Un clic sur lui passe à travers.
+- [ ] **Sieste à deux** : laisser Cali s'endormir (sieste au sol, sans bouger), puis faire venir Jazz : il se couche contre
+  elle sans la réveiller, et repart quand elle se réveille. Cacher le chat (Ctrl+Alt+C) pendant une visite : Jazz
+  disparaît aussi. Décocher « Jazz rend visite à Cali » : le bouton de test n'a plus d'effet.
 - [ ] **Raccourci** : dans une autre appli (navigateur), Ctrl+Alt+C cache le chat, encore une fois le réaffiche.
   Le menu de l'icône affiche « Cacher le chat   Ctrl+Alt+C ». Décocher le réglage : le raccourci ne fait plus rien.
 

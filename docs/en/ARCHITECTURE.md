@@ -15,6 +15,7 @@ main.py ── creates and wires ──►  Store ──► Game ──► Pet �
                                           │        ├── hunt.py      (mouse hunting)
                                           │        ├── screens.py   (multi-screen geometry)
                                           │        ├── surfaces.py  (walkable window edges)
+                                          │        ├── dog.py       (Jazz, the visiting dog) ◄── dog_sprite.py
                                           │        └── sprite.py    (pixel-art drawing) ◄── hats.py
                                           ├── winapi.py             (everything that talks to Windows)
                                           ├── autostart.py          (launch with Windows)
@@ -34,6 +35,8 @@ main.py ── creates and wires ──►  Store ──► Game ──► Pet �
 | `pet_layout.py` | Computes the position of the cat, the gift and the bubble in the visible area, without Qt. | no | no |
 | `pet_input.py` | Translates mouse events and the context menu into actions on the cat. | yes | no |
 | `pet_companion.py` | Expressive reactions to gifts, bubbles, sleep and focus sessions. | yes | no |
+| `dog.py` | Jazz, the dog who visits Cali: transparent window with no mouse input, states away / walk / sit / greet / lie, visit, Cali following him and nap together. His random numbers are kept separate from the cat's. | yes | no |
+| `dog_sprite.py` | Drawing of Jazz (sitting, trotting, lying), same principle as `sprite.py`, on a 48 × 40 grid. | yes | no |
 | `screens.py` | Multi-screen geometry (physical ↔ logical pixel conversion, floors, chains of adjacent screens). Pure functions. | no | no |
 | `surfaces.py` | Computes the top window edges the cat can walk on, removing the parts hidden by windows above. Pure functions. | no | no |
 | `winapi.py` | `ctypes` to `user32`/`dwmapi`/`kernel32`: window list, active window, idle time, full screen. On another system it returns neutral values. | no | yes (isolated here) |
@@ -57,6 +60,8 @@ main.py ── creates and wires ──►  Store ──► Game ──► Pet �
   user is away, the timer drops to 100 ms (`LOOP_SLOW_MS`, 10 iterations per second) to spare the battery; the nap
   ("nap") keeps the normal rate. `dt` is capped (2.5 times the timer interval). This is the method the tests call
   directly.
+- **`Dog.step(dt)`**: called right after `Pet.step` by the cat's timer, but not by `step` itself: the cat's tests never
+  see Jazz. Jazz's tests call it directly.
 - **Window scan**: every 0.2 s inside `step` (`_refresh_surfaces`), which rebuilds the list of surfaces.
 - **Animation**: repaint every 80 ms.
 
