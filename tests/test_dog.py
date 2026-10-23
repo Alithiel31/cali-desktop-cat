@@ -354,3 +354,112 @@ class DogTest(GameTestCase):
         changes = sum(1 for a, b in zip(states, states[1:], strict=False) if a != b)
         self.assertLess(changes, 12)                           # pas de bascule marche/arrêt à chaque image
         self.assertEqual(pet.dog._escort, 0)
+
+    # ───────────────────────── sieste à deux
+    def make_napping_pet(self, *randoms):
+        pet = self.make_pet(FakeRng(*(randoms or (0.0,))))
+        pet.fx = 900.0
+        pet.state = "nap"
+        pet.timer = 3.0                            # sa sieste allait bientôt finir
+        return pet
+
+    def run_until_lying(self, pet):
+        for _ in range(60 * 60):
+            pet.dog.step(1 / 60)
+            if pet.dog.state == "lie":
+                return
+        self.fail("Jazz ne s'est jamais couché")
+
+    def test_he_lies_down_against_a_napping_cali_without_waking_her(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        self.assertTrue(pet.dog._approach)
+        self.run_until_lying(pet)
+        self.assertEqual(pet.state, "nap")                     # elle dort toujours
+        gap = pet.cx - self.jazz_cx(pet)
+        self.assertAlmostEqual(gap, dog_module.LIE_GAP * pet.dog.S, delta=1)
+        self.assertEqual(pet.dog.dir, 1)                       # la tête tournée vers elle
+        self.assertEqual(pet.dir, -1)                          # et elle vers lui
+        self.assertGreaterEqual(pet.timer, dog_module.JOIN_S[0])   # sa sieste dure au moins un moment
+
+    def test_both_keep_sleeping_while_time_passes(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        self.run_until_lying(pet)
+        self.run_both(pet, 5.0)
+        self.assertEqual(pet.state, "nap")
+        self.assertEqual(pet.dog.state, "lie")
+
+    def test_he_leaves_when_she_wakes_up_and_she_follows(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        self.run_until_lying(pet)
+        for _ in range(60 * 40):
+            pet.dog.step(1 / 60)
+            pet.step(1 / 60)
+            if pet.state != "nap":
+                break
+        self.assertNotEqual(pet.state, "nap")
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog.state, "walk")
+        self.assertEqual(pet.dog.dir, -1)                      # il repart par où il est venu
+        self.assertGreater(pet.dog._escort, 0)                 # réveillée, elle le suit
+
+    def test_he_leaves_if_she_is_woken_by_a_caress(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        self.run_until_lying(pet)
+        pet.state = "idle"
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog.state, "walk")
+
+    def test_he_leaves_without_an_escort_when_she_is_carried_away(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        self.run_until_lying(pet)
+        pet.state = "drag"
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog.state, "walk")
+        self.assertEqual(pet.dog._escort, 0)
+
+    def test_he_never_sleeps_longer_than_the_maximum(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        self.run_until_lying(pet)
+        pet.dog.timer = 0.0
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog.state, "walk")
+        self.assertEqual(pet.dog._escort, 0)                   # elle dort encore : personne à escorter
+
+    def test_a_napping_cali_gets_a_better_chance_of_company(self):
+        napping = self.make_napping_pet(0.0, 0.0, 0.7)         # 0,7 : sous 0,8 (sieste) mais pas sous 0,6 (câlin)
+        self.start_visit(napping)
+        self.assertTrue(napping.dog._approach)
+        awake = self.make_pet(FakeRng(0.0, 0.0, 0.7))
+        awake.fx = 900.0
+        self.start_visit(awake)
+        self.assertFalse(awake.dog._approach)
+
+    def test_he_lies_down_if_she_falls_asleep_on_his_way(self):
+        pet = self.make_greeting_pet()                         # Cali éveillée : il vient la saluer
+        self.start_visit(pet)
+        pet.state = "nap"
+        self.run_until_lying(pet)
+        self.assertEqual(pet.state, "nap")
+
+    def test_he_greets_instead_if_she_wakes_on_his_way(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        pet.state = "idle"
+        for _ in range(60 * 60):
+            pet.dog.step(1 / 60)
+            if pet.dog.state in ("greet", "lie"):
+                break
+        self.assertEqual(pet.dog.state, "greet")
+
+    def test_no_nap_visit_when_she_sleeps_because_you_are_away(self):
+        pet = self.make_napping_pet()
+        pet.sys_sleep = True
+        pet.state = "sleep"
+        self.run_dog(pet, dog_module.FIRST_VISIT_S[0] + 1)
+        self.assertFalse(pet.dog.active)

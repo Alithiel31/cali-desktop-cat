@@ -8,11 +8,14 @@ venu) ou il ne fait que passer (avec parfois un temps d'arrêt), et il ressort d
 Ses décisions n'utilisent PAS le hasard du chat (`pet.rng`), pour ne pas changer la suite de tirages du chat sur
 laquelle les tests s'appuient. Seule la dispersion des petits cœurs de Cali, purement visuelle, y puise (`fx_particle`).
 
+Si Cali fait la sieste, il vient plutôt se coucher contre elle (état `lie`) et reste tant qu'elle dort ; à son
+réveil il repart, et elle le suit souvent.
+
 Quand il repart, Cali le suit souvent quelques secondes (`_escort`) : il ralentit à son allure, elle trottine
 derrière lui, puis elle décroche et il reprend son rythme.
 
 États : away (absent, un compte à rebours tourne), walk (il trotte), sit (il s'assoit un instant en passant),
-        greet (il est assis près de Cali, qui lui répond).
+        greet (il est assis près de Cali, qui lui répond), lie (il dort contre Cali pendant sa sieste).
 """
 from __future__ import annotations
 
@@ -37,6 +40,10 @@ FOLLOW_CHANCE = 0.7             # après le tête-à-tête, Cali le suit 7 fois 
 FOLLOW_S = (4.0, 8.0)           # durée pendant laquelle elle le suit
 ESCORT_SPEED = 0.97             # son allure en escorte, par rapport à celle de Cali : elle rattrape donc peu à peu
 FOLLOW_START_PX = 8             # Cali ne repart que s'il s'est éloigné d'au moins ça
+JOIN_CHANCE = 0.8               # visites où Cali fait la sieste : il vient presque toujours se coucher près d'elle
+JOIN_S = (12.0, 25.0)           # sa sieste dure au moins ça une fois qu'il est couché contre elle
+JOIN_MAX_S = 90.0               # il ne dort jamais plus longtemps que ça, quoi qu'elle fasse
+LIE_GAP = 36                    # écart entre leurs centres quand ils dorment côte à côte, en « pixels » de grille
 TOUCH_GAP = 22                  # écart entre les centres de Cali et de Jazz assis, en « pixels » de grille
 FRAME_S = 0.14                  # durée d'une image de la marche
 BLINK_EVERY_MS = 3500
@@ -96,10 +103,12 @@ class Dog(QWidget):
         return pet.stand is None and pet.state in ("idle", "walk", "nap")
 
     def _meet_fx(self) -> float | None:
-        """Où (bord gauche du sprite) Jazz s'assoit près de Cali, du côté d'où il vient ; None si c'est hors écran."""
+        """Où (bord gauche du sprite) Jazz s'arrête près de Cali, du côté d'où il vient ; None si c'est hors écran.
+        Il se met plus près d'elle quand elle dort (couché, il est plus long)."""
         pet = self.pet
         chain = pet.floors[self.floor_idx]
-        center = pet.cx - self._side * TOUCH_GAP * self.S
+        gap = LIE_GAP if pet.state == "nap" else TOUCH_GAP
+        center = pet.cx - self._side * gap * self.S
         if not chain.cx0 + self.width_px * 0.25 <= center <= chain.cx1 - self.width_px * 0.25:
             return None
         return center - self.width_px / 2
@@ -121,7 +130,8 @@ class Dog(QWidget):
         span = abs(self._exit_x - self.fx)
         self._sit_x = self.fx + self.dir * span * self.rng.uniform(0.3, 0.7) \
             if self.rng.random() < SIT_CHANCE else None
-        self._approach = self.rng.random() < GREET_CHANCE and self._cali_free() and self._meet_fx() is not None
+        chance = JOIN_CHANCE if pet.state == "nap" else GREET_CHANCE
+        self._approach = self.rng.random() < chance and self._cali_free() and self._meet_fx() is not None
         self.t, self.frame, self._frame_t, self._happy = 0.0, 0, 0.0, False
         self._escort = 0.0
         self.state = "walk"
@@ -165,6 +175,8 @@ class Dog(QWidget):
                 self.state = "walk"
         elif self.state == "greet":
             self._step_greet(dt)
+        elif self.state == "lie":
+            self._step_lie(dt)
         else:
             self._step_walk(dt)
         if self.state != "away":
@@ -193,7 +205,10 @@ class Dog(QWidget):
                 self.dir = 1 if meet > self.fx else -1
                 if abs(meet - self.fx) <= stride:
                     self.fx = meet
-                    self._begin_greet()
+                    if self.pet.state == "nap":
+                        self._begin_join()
+                    else:
+                        self._begin_greet()
                 else:
                     self.fx += self.dir * stride
                 return
@@ -228,6 +243,24 @@ class Dog(QWidget):
             pet.fx_particle("heart")
         if self.timer <= 0:
             self._leave(friendly=True)
+
+    def _begin_join(self) -> None:
+        """Cali dort : il se couche contre elle, la tête tournée vers la sienne, sans la réveiller."""
+        pet = self.pet
+        self._approach = False
+        self._sit_x = None
+        self.state, self.timer = "lie", JOIN_MAX_S
+        self.dir = self._side
+        self._happy = False
+        pet.timer = max(pet.timer, self.rng.uniform(*JOIN_S))     # sa sieste dure au moins un moment
+        center = self.fx + self.width_px / 2
+        pet.companion.jazz_lies_down(1 if center > pet.cx else -1)
+
+    def _step_lie(self, dt: float) -> None:
+        pet = self.pet
+        self.timer -= dt
+        if pet.stand is not None or pet.state != "nap" or self.timer <= 0:    # elle se réveille (ou on la dérange)
+            self._leave(friendly=pet.stand is None and pet.state == "idle")
 
     def _leave(self, friendly: bool = False) -> None:
         """Il repart par où il est venu. `friendly` : fin normale du tête-à-tête (Cali peut alors le suivre)."""
@@ -273,8 +306,9 @@ class Dog(QWidget):
     # ───────────────────────── rendu
     def paintEvent(self, event) -> None:
         seated = self.state in ("sit", "greet")
+        pose = "lie" if self.state == "lie" else "sit" if seated else "walk"
         p = QPainter(self)
-        draw_dog(p, self.S, pose="sit" if seated else "walk", frame=0 if seated else self.frame,
+        draw_dog(p, self.S, pose=pose, frame=0 if pose != "walk" else self.frame,
                  flip=self.dir < 0, t=self.t, blink=self.t % BLINK_EVERY_MS < BLINK_MS,
                  happy=seated and self._happy)
         p.end()
