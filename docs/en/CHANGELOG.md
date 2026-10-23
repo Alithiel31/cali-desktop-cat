@@ -9,6 +9,10 @@ Categories: `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- **Cali carries the mouse**: after a successful pounce on the cursor, she holds it under her paws and takes it wherever
+  she goes (walking, jumping, falling) until you move the mouse again. She does not fall asleep on it, lets go if you
+  pick her up or a focus session starts, and does not hunt again for 25 s. Setting "Emporter la souris après le bond"
+  ("Carry the mouse after the pounce"; on by default, no effect if "Chasser la souris" is off).
 - **Jazz, Cali's big brother**: a pixel-art Nova Scotia Duck Tolling Retriever (`desktopcat/dog.py` and
   `dog_sprite.py`) pays Cali a visit from time to time (first visit 2 to 5 min after launch, then every 6 to 15 min).
   He crosses the screen, comes to greet her (she turns to him, hearts and a bubble, then often follows him for a few

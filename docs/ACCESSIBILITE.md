@@ -20,7 +20,7 @@ Français · [English](en/ACCESSIBILITY.md)
 | Notifications désactivables | Panneau, Réglages | ✅ |
 | Info-bulles sur certains contrôles | `panel.py` | ✅ Partiel |
 | Raccourci clavier global **Ctrl+Alt+C** (afficher / cacher le chat), désactivable | `hotkey.py` | ✅ |
-| Chasse à la souris et pause Pomodoro désactivables | Panneau, Réglages | ✅ |
+| Chasse à la souris, souris emportée et pause Pomodoro désactivables | Panneau, Réglages | ✅ |
 | Visites de Jazz désactivables | Panneau, Réglages (« Jazz rend visite à Cali ») | ✅ |
 
 ## Ce qui reste à vérifier

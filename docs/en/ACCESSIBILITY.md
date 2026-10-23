@@ -20,7 +20,7 @@
 | Notifications can be turned off | Panel, Settings | ✅ |
 | Tooltips on some controls | `panel.py` | ✅ Partial |
 | Global keyboard shortcut **Ctrl+Alt+C** (show / hide the cat), can be turned off | `hotkey.py` | ✅ |
-| Mouse hunting and Pomodoro break can be turned off | Panel, Settings | ✅ |
+| Mouse hunting, carried mouse and Pomodoro break can be turned off | Panel, Settings | ✅ |
 | Jazz's visits can be turned off | Panel, Settings ("Jazz rend visite à Cali") | ✅ |
 
 ## What remains to be checked

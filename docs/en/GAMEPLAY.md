@@ -47,6 +47,10 @@ Waiting gifts add up (99 at most): a focus gift does not replace an ordinary gif
 - If the mouse moves during the stalk, it escapes (the cat sulks for 8 s).
 - Between two hunts: 25 to 60 s. Never during a focus session or while asleep.
 - Can be turned off ("Chasser la souris", "Hunt the mouse").
+- **She carries the mouse**: after a successful pounce she holds the cursor in front of her paws and takes it wherever
+  she goes (walking, jumping, falling). She does not fall asleep on it. She lets go as soon as you move the mouse by more
+  than 3 px, pick her up, or a focus session starts; she does not hunt again for 25 s.
+- Can be turned off separately ("Emporter la souris après le bond", "Carry the mouse after the pounce").
 
 ## Jazz, Cali's big brother
 - Jazz (a Nova Scotia Duck Tolling Retriever) drops by from time to time: first visit 2 to 5 min after launch, then every

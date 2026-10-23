@@ -9,6 +9,10 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- **Cali emporte la souris** : après un bond réussi sur le curseur, elle le garde sous ses pattes et l'emmène partout où
+  elle va (marche, saut, chute) jusqu'à ce que tu rebouges la souris. Elle ne s'endort pas dessus, le lâche si tu
+  l'attrapes ou si une session de concentration démarre, puis ne rechasse pas avant 25 s. Réglage « Emporter la souris
+  après le bond » (actif par défaut, sans effet si « Chasser la souris » est coupé).
 - **Jazz, le grand frère de Cali** : un Nova Scotia Duck Tolling Retriever en pixel art (`desktopcat/dog.py` et
   `dog_sprite.py`) rend visite à Cali de temps en temps (première visite 2 à 5 min après le lancement, puis toutes les
   6 à 15 min). Il traverse l'écran, vient la saluer (elle se tourne vers lui, cœurs et bulle, puis le suit souvent
