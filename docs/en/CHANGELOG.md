@@ -7,6 +7,8 @@ Categories: `Added`, `Changed`, `Fixed`, `Security`.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-23
+
 ### Added
 
 - **Jazz speaks up**: he has his own bubble (click-through) with barks ("Wouf !", "Ouaf !"...) and, more rarely, the

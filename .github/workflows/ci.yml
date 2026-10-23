@@ -66,9 +66,4 @@ jobs:
       - name: Tests
         env:
           QT_QPA_PLATFORM: offscreen
-        shell: bash
-        run: |
-          # Diagnostic : faulthandler affiche où Python meurt en cas de plantage, et on lit le code de sortie de Python lui-même.
-          python -X faulthandler -m unittest discover -s tests -v && code=0 || code=$?
-          echo "Code de sortie de Python : $code"
-          exit $code
+        run: python -m unittest discover -s tests -v
