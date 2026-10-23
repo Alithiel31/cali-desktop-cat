@@ -49,6 +49,22 @@ Les cadeaux en attente s'additionnent (99 au plus) : un cadeau de concentration 
 - Entre deux chasses : 25 à 60 s. Jamais pendant une session de concentration ni quand il dort.
 - Désactivable (« Chasser la souris »).
 
+## Jazz, le grand frère de Cali
+- Jazz (un Nova Scotia Duck Tolling Retriever) passe de temps en temps : première visite 2 à 5 min après le lancement,
+  puis toutes les 6 à 15 min. Il entre par un bord de l'écran, trotte sur le sol de l'écran de Cali (en traversant les
+  écrans collés) et ressort de l'autre côté. Il n'est pas cliquable et ne gêne aucune fenêtre.
+- **Visite à Cali** (6 fois sur 10, quand elle est au sol et libre) : il s'assoit près d'elle 3,5 à 6 s ; elle se tourne
+  vers lui, avec des cœurs et une petite bulle (si les miaous sont activés). Il repart par où il est venu, et Cali le
+  suit 7 fois sur 10, pendant 4 à 8 s, avant de décrocher.
+- **Sieste à deux** : si Cali fait la sieste, il vient presque toujours (8 fois sur 10) se coucher contre elle sans la
+  réveiller ; sa sieste dure alors au moins 12 s. Il repart quand elle se réveille (90 s au plus).
+- Sinon il ne fait que passer, avec parfois un arrêt de 2 à 4 s.
+- Jamais quand le chat est caché ou endormi (utilisateur absent), ni pendant une session de concentration. Il renonce si
+  Cali devient indisponible (au travail, perchée sur une fenêtre, en plein saut, portée à la souris) ou quand elle arrive
+  au bout du sol en le suivant.
+- Désactivable (« Jazz rend visite à Cali »). Le bouton « Faire venir Jazz maintenant (test) » des Réglages le fait venir
+  tout de suite, s'il peut passer à cet instant.
+
 ## Concentration
 - Session de 1 à 180 min (25 min depuis l'icône ou le menu).
 - Pendant la session, le chat va au bout de l'écran (ou sur le bord de la fenêtre où il est perché), s'assoit devant son

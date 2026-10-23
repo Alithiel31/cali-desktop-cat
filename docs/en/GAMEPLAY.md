@@ -48,6 +48,22 @@ Waiting gifts add up (99 at most): a focus gift does not replace an ordinary gif
 - Between two hunts: 25 to 60 s. Never during a focus session or while asleep.
 - Can be turned off ("Chasser la souris", "Hunt the mouse").
 
+## Jazz, Cali's big brother
+- Jazz (a Nova Scotia Duck Tolling Retriever) drops by from time to time: first visit 2 to 5 min after launch, then every
+  6 to 15 min. He comes in from one edge of the screen, trots along the floor of Cali's screen (crossing adjacent screens)
+  and leaves by the other side. He cannot be clicked and never gets in the way of a window.
+- **Visit to Cali** (6 times out of 10, when she is on the floor and free): he sits next to her for 3.5 to 6 s; she turns
+  to him, with hearts and a small bubble (if meows are on). He leaves the way he came, and Cali follows him 7 times
+  out of 10, for 4 to 8 s, before letting go.
+- **Nap together**: if Cali is napping, he almost always (8 times out of 10) lies down against her without waking her;
+  her nap then lasts at least 12 s. He leaves when she wakes up (90 s at most).
+- Otherwise he just passes through, sometimes stopping for 2 to 4 s.
+- Never while the cat is hidden or asleep (user away), nor during a focus session. He gives up if Cali becomes
+  unavailable (working, perched on a window, mid-jump, carried with the mouse) or when she reaches the end of the floor
+  while following him.
+- Can be turned off ("Jazz rend visite à Cali", "Jazz visits Cali"). The "Faire venir Jazz maintenant (test)" ("Bring
+  Jazz now (test)") button in the Settings brings him right away, if he can come at that moment.
+
 ## Focus
 - Session of 1 to 180 min (25 min from the icon or the menu).
 - During the session, the cat goes to the end of the screen (or onto the edge of the window it is perched on), sits in

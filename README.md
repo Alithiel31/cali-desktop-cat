@@ -10,7 +10,7 @@ Français · [English](README.en.md)
 
 Un chat écaille qui vit sur ton bureau Windows : il se promène, se perche sur le bord des fenêtres,
 tombe quand elles disparaissent, saute d'une fenêtre à l'autre, dort quand tu es absent,
-miaule de temps en temps dans une bulle, guette ta souris, a faim (tu le nourris avec des croquettes), te rapporte
+miaule de temps en temps dans une bulle, guette ta souris, reçoit la visite de Jazz (son grand frère chien), a faim (tu le nourris avec des croquettes), te rapporte
 des cadeaux (chapeaux de 6 raretés, dont un de saison à Halloween) et travaille avec toi pendant tes sessions de
 concentration, suivies d'une pause Pomodoro. Il se promène sur tous tes écrans, et **Ctrl+Alt+C** l'affiche ou le cache.
 
@@ -47,6 +47,11 @@ Double-clic sur le chat = panneau ; clic droit = menu (dont « Donner des croque
 ## Panneau
 En-tête : croquettes, humeur du chat et bouton **Nourrir**. Onglets : Garde-robe (porter, vendre les doublons),
 Concentration (et pause), Statistiques (7 jours + applis du jour), Réglages (dont « Il miaule de temps en temps »).
+
+## Jazz
+Jazz, un Nova Scotia Duck Tolling Retriever, rend visite à Cali de temps en temps : il traverse l'écran, vient la saluer
+ou, si elle fait la sieste, dormir contre elle. Il ne gêne aucun clic. Réglage « Jazz rend visite à Cali » ; le détail est
+dans les [règles du jeu](docs/GAMEPLAY.md#jazz-le-grand-frère-de-cali).
 
 ## Plusieurs écrans
 Un sol par écran (le bas de sa zone utile, barre des tâches exclue). Des écrans collés dont les bas sont à moins

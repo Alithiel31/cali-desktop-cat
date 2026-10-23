@@ -15,6 +15,7 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
                                           │        ├── hunt.py      (chasse à la souris)
                                           │        ├── screens.py   (géométrie multi-écrans)
                                           │        ├── surfaces.py  (bords de fenêtres praticables)
+                                          │        ├── dog.py       (Jazz, le chien visiteur) ◄── dog_sprite.py
                                           │        └── sprite.py    (dessin pixel art) ◄── hats.py
                                           ├── winapi.py             (tout ce qui parle à Windows)
                                           ├── autostart.py          (lancement avec Windows)
@@ -34,6 +35,8 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 | `pet_layout.py` | Calcule la position du chat, du cadeau et de la bulle dans la zone visible, sans Qt. | non | non |
 | `pet_input.py` | Traduit les événements souris et le menu contextuel en actions sur le chat. | oui | non |
 | `pet_companion.py` | Réactions expressives aux cadeaux, aux bulles, au sommeil et aux sessions de concentration. | oui | non |
+| `dog.py` | Jazz, le chien qui rend visite à Cali : fenêtre transparente sans souris, états away / walk / sit / greet / lie, visite, suivi par Cali et sieste à deux. Son hasard est séparé de celui du chat. | oui | non |
+| `dog_sprite.py` | Dessin de Jazz (assis, au trot, couché), même principe que `sprite.py`, sur une grille de 48 × 40. | oui | non |
 | `screens.py` | Géométrie multi-écrans (conversion pixels physiques ↔ logiques, sols, chaînes d'écrans collés). Fonctions pures. | non | non |
 | `surfaces.py` | Calcule les bords hauts de fenêtres sur lesquels le chat peut marcher, en retirant les parties masquées par les fenêtres au-dessus. Fonctions pures. | non | non |
 | `winapi.py` | `ctypes` vers `user32`/`dwmapi`/`kernel32` : liste des fenêtres, fenêtre active, inactivité, plein écran. Sur un autre système, renvoie des valeurs neutres. | non | oui (isolé ici) |
@@ -58,6 +61,8 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
   parce que l'utilisateur est absent, la minuterie passe à 100 ms (`LOOP_SLOW_MS`, 10 passages par seconde) pour ménager
   la batterie ; la sieste (« nap ») garde le rythme normal. `dt` est plafonné (2,5 fois l'intervalle de la minuterie).
   C'est cette méthode que les tests appellent directement.
+- **`Dog.step(dt)`** : appelée juste après `Pet.step` par la minuterie du chat, mais pas par `step` lui-même : les tests du
+  chat n'en voient donc jamais Jazz. Les tests de Jazz l'appellent directement.
 - **Scan des fenêtres** : toutes les 0,2 s dans `step` (`_refresh_surfaces`), qui reconstruit la liste des surfaces.
 - **Animation** : repeinture toutes les 80 ms.
 
