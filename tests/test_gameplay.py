@@ -231,6 +231,9 @@ class MovableCursor:
     def pos(self):
         return QPoint(self.x, self.y)
 
+    def setPos(self, x, y):
+        self.x, self.y = x, y
+
 
 class PetGameplayTest(GameTestCase):
     def setUp(self):
@@ -325,6 +328,58 @@ class PetGameplayTest(GameTestCase):
         self.assertEqual(self.pet.state, "idle")
         self.run_steps(120)
         self.assertNotEqual(self.pet.state, "jump")
+
+    def catch_the_cursor(self):
+        self.pet._hunt_cool = 0
+        self.rest_cursor_at(800)
+        self.pet.timer = 1.4
+        self.run_until(lambda: self.pet._carry_at is not None, n=1200)
+
+    def test_after_the_pounce_she_carries_the_cursor_around(self):
+        self.catch_the_cursor()
+        self.assertEqual((self.cursor.x, self.cursor.y), self.pet._paws())
+        self.pet._walk_to(1400)
+        start = self.cursor.x
+        self.run_until(lambda: self.pet.state != "walk")
+        self.assertGreater(self.cursor.x, start + 300)               # la souris a suivi sa marche
+        self.assertEqual((self.cursor.x, self.cursor.y), self.pet._paws())
+        self.assertIsNotNone(self.pet._carry_at)
+        self.run_steps(300)                                          # elle la garde tant qu'on n'y touche pas
+        self.assertIsNotNone(self.pet._carry_at)
+
+    def test_moving_the_mouse_makes_her_let_go(self):
+        self.catch_the_cursor()
+        held = (self.cursor.x, self.cursor.y)
+        self.cursor.x += 40                                          # la personne reprend la souris
+        self.run_steps(2)
+        self.assertIsNone(self.pet._carry_at)
+        self.assertEqual((self.cursor.x, self.cursor.y), (held[0] + 40, held[1]))    # elle ne la ramène pas
+        self.pet._walk_to(1400)
+        self.run_steps(120)
+        self.assertEqual(self.cursor.x, held[0] + 40)
+        self.assertGreater(self.pet._hunt_cool, self.pet.t + 20_000)
+
+    def test_small_rounding_gaps_do_not_count_as_a_move(self):
+        self.catch_the_cursor()
+        self.cursor.x += 1
+        self.run_steps(2)
+        self.assertIsNotNone(self.pet._carry_at)
+
+    def test_she_does_not_carry_the_cursor_when_turned_off_or_during_focus(self):
+        self.game.set_setting("carry_cursor", False)
+        self.pet._hunt_cool = 0
+        self.rest_cursor_at(800)
+        self.pet.timer = 1.4
+        self.run_until(lambda: self.pet.state == "jump", n=1200)
+        self.run_until(lambda: self.pet.state not in ("jump", "stalk"), n=200)
+        self.assertIsNone(self.pet._carry_at)
+        self.assertEqual((self.cursor.x, self.cursor.y), (800, self.floor - 40))
+
+    def test_grabbing_her_makes_her_let_go(self):
+        self.catch_the_cursor()
+        self.pet.state = "drag"
+        self.run_steps(1)
+        self.assertIsNone(self.pet._carry_at)
 
     def test_no_hunt_when_turned_off_too_far_or_cursor_never_moved(self):
         self.pet._hunt_cool = 0

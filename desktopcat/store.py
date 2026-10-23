@@ -60,6 +60,7 @@ DEFAULTS = {
         "meows": True,                  # bulles « miaou » spontanées
         "track_apps": True,             # note le nom de l'exécutable actif pour les statistiques
         "hunt_cursor": True,            # guette la souris immobile et bondit dessus
+        "carry_cursor": True,           # après le bond, l'emporte avec elle jusqu'à ce qu'on rebouge la souris
         "jazz_visits": True,            # Jazz, le chien, passe de temps en temps
         "focus_breaks": True,           # pause après chaque session de concentration réussie
         "break_min": 5,                 # durée de cette pause

@@ -30,6 +30,9 @@ Compter 20 à 30 min. Noter chaque point ✅ / ❌ ; pour un ❌, joindre `deskt
   Répéter jusqu'à 95+ : l'option devient grisée.
 - [ ] **Chasse** : bouger la souris près du chat (même hauteur, sur le sol à côté de lui), puis la lâcher. En quelques
   secondes, il la guette (yeux grands ouverts) puis bondit dessus. Recommencer en bougeant pendant l'affût : il abandonne.
+- [ ] **Souris emportée** : après le bond, ne pas toucher à la souris : le curseur reste devant les pattes de Cali et la
+  suit quand elle marche ou saute. Bouger la souris d'une dizaine de pixels : elle la lâche et ne la reprend pas.
+  Décocher « Emporter la souris après le bond » : elle bondit toujours mais ne garde plus le curseur.
 - [ ] **Jazz** : Réglages > « Faire venir Jazz maintenant (test) » : un chien roux entre par un bord de l'écran et trotte
   sur le sol. Recommencer plusieurs fois : tantôt il traverse (parfois assis un instant), tantôt il vient s'asseoir près
   de Cali, qui se tourne vers lui (cœurs), puis il repart, souvent suivi par elle. Un clic sur lui passe à travers.

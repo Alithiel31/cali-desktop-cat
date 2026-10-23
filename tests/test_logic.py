@@ -190,6 +190,9 @@ class FixedCursor:
     def pos(self):
         return QPoint(self.x, 400)
 
+    def setPos(self, x, y):
+        pass
+
 
 # un écran 1920 × 1080, barre des tâches 40 px
 DEFAULT_SCREENS = (ScreenInfo((0, 0, 1920, 1080), (0, 0, 1920, 1040), 1.0),)

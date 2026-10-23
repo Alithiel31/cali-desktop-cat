@@ -48,6 +48,10 @@ Les cadeaux en attente s'additionnent (99 au plus) : un cadeau de concentration 
 - Si la souris bouge pendant l'affût, elle lui échappe (il boude 8 s).
 - Entre deux chasses : 25 à 60 s. Jamais pendant une session de concentration ni quand il dort.
 - Désactivable (« Chasser la souris »).
+- **Elle emporte la souris** : une fois le bond réussi, elle garde le curseur devant ses pattes et l'emmène partout où
+  elle va (marche, saut, chute). Elle ne s'endort pas dessus. Elle le lâche dès que tu bouges la souris de plus de 3 px,
+  que tu l'attrapes, ou qu'une session de concentration démarre ; elle ne rechasse pas avant 25 s.
+- Désactivable séparément (« Emporter la souris après le bond »).
 
 ## Jazz, le grand frère de Cali
 - Jazz (un Nova Scotia Duck Tolling Retriever) passe de temps en temps : première visite 2 à 5 min après le lancement,
