@@ -38,6 +38,10 @@ Open the log). The app's interface is in French; labels are quoted as they appea
   of the screen and trots along the floor. Repeat several times: sometimes he just crosses (occasionally sitting for a
   moment), sometimes he sits next to Cali, who turns to him (hearts), then leaves, often followed by her. A click on him
   goes straight through.
+- [ ] **Jazz's voice**: over several visits, he barks now and then while crossing ("Wouf !"...), sometimes the Toller
+  scream ("Aouaouaouaou !"). When he spots Cali he calls her with a scream then falls silent on arriving: her turn to
+  answer. His bubble floats above his head, stays on screen, and a click on it goes through. Untick "Miauler et
+  aboyer de temps en temps": no bubble at all, neither for Cali nor for him.
 - [ ] **Nap together**: let Cali fall asleep (a nap on the floor, without moving), then bring Jazz: he lies down against
   her without waking her, and leaves when she wakes up. Hide the cat (Ctrl+Alt+C) during a visit: Jazz disappears too.
   Untick "Jazz rend visite à Cali": the test button no longer does anything.

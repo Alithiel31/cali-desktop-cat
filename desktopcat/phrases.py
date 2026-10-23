@@ -11,12 +11,25 @@ MEOWS = {
     "caught": ["Attrapée !", "Mrrp ! Je l'ai !", "Hop !", "Ma souris !"],
 }
 
+# Jazz, lui, ne dit pas de mots : un Toller s'exprime par de petits aboiements et par son fameux « cri de Toller ».
+BARKS = {
+    "pass": ["Wouf !", "Ouaf !", "Arf !", "Wouf wouf !", "Ouaf ouaf !", "Wif !", "Wouf."],
+    "scream": ["Aouaouaouaou !", "Aou aou aouuu~", "Aouaouaou !", "Aouuuu aou aou !", "Aouaouaouaouaou !!"],
+    "greet": ["Ouaf ♥", "Aouaouaou ♥", "Wouf wouf ♥", "Ouaf !", "Aou aou~ ♥"],
+    "lie": ["Hmpf…", "Pfff…", "Mmrrf…", "Ouf…"],
+}
+
 MEOW_MIN_MS = 45_000.0
 MEOW_MAX_MS = 150_000.0
 
 
 def pick_meow(rng, mood: str = "idle") -> str:
     pool = MEOWS.get(mood) or MEOWS["idle"]
+    return pool[int(rng.random() * len(pool)) % len(pool)]
+
+
+def pick_bark(rng, kind: str = "pass") -> str:
+    pool = BARKS.get(kind) or BARKS["pass"]
     return pool[int(rng.random() * len(pool)) % len(pool)]
 
 

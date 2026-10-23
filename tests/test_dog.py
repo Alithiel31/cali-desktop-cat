@@ -13,6 +13,7 @@ from PySide6.QtCore import QRect, Qt
 
 from desktopcat import dog as dog_module
 from desktopcat import pet as pet_module
+from desktopcat import phrases
 from desktopcat.dog_sprite import DOG_FOOT_ROW, DOG_H, DOG_W
 from desktopcat.pet import Pet
 from desktopcat.widgets import Bubble, FxLayer, GiftBox
@@ -44,6 +45,7 @@ class DogTest(GameTestCase):
                   screens=lambda: list(DEFAULT_SCREENS), dog_rng=dog_rng)
         pet.loop.stop()
         pet.anim.stop()
+        pet.dog.voice = FakeRng(0.9)                # muet par défaut (0,9 > BARK_CHANCE) : les tests de voix le règlent
         self.addCleanup(lambda: [w.close() for w in (pet, pet.dog, self.bubble, self.gift, self.fxl)])
         return pet
 
@@ -463,3 +465,102 @@ class DogTest(GameTestCase):
         pet.state = "sleep"
         self.run_dog(pet, dog_module.FIRST_VISIT_S[0] + 1)
         self.assertFalse(pet.dog.active)
+
+    # ───────────────────────── sa voix : aboiements et cri de Toller
+    ALL_BARKS = {b for pool in phrases.BARKS.values() for b in pool}
+
+    def run_until_bubble(self, pet, n=60 * 60):
+        for _ in range(n):
+            pet.dog.step(1 / 60)
+            if pet.dog.bubble.isVisible():
+                return
+            if not pet.dog.active:
+                break
+        self.fail("Jazz n'a rien dit")
+
+    def test_the_barks_are_dog_noises_with_the_toller_scream(self):
+        self.assertEqual(set(phrases.BARKS), {"pass", "scream", "greet", "lie"})
+        for pool in phrases.BARKS.values():
+            self.assertTrue(pool)
+        for line in phrases.BARKS["scream"]:
+            self.assertTrue(line.startswith("Aou"), line)
+        rng = random.Random(3)
+        for kind in (*phrases.BARKS, "inconnu"):
+            self.assertIn(phrases.pick_bark(rng, kind), self.ALL_BARKS)
+
+    def test_he_calls_cali_with_the_toller_scream_when_he_spots_her(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.assertTrue(pet.dog._approach)
+        self.run_until_bubble(pet)
+        self.assertEqual(pet.dog.state, "walk")
+        self.assertIn(pet.dog.bubble.text(), phrases.BARKS["scream"])
+
+    def test_he_falls_silent_on_arrival_so_cali_can_answer(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.run_until_greeting(pet)
+        self.assertFalse(pet.dog.bubble.isVisible())
+        self.assertTrue(pet._temp)                             # la bulle de Cali
+
+    def test_he_barks_now_and_then_while_crossing(self):
+        pet = self.make_pet(FakeRng(0.9))                      # il traverse sans pause ni visite à Cali
+        pet.dog.voice = FakeRng(0.5)                           # aboie (0,5 < 0,6), mais pas de cri (0,5 > 0,2)
+        self.start_visit(pet)
+        self.run_until_bubble(pet, n=60 * 5)
+        self.assertIn(pet.dog.bubble.text(), phrases.BARKS["pass"])
+
+    def test_his_bubble_floats_above_his_head_and_stays_on_screen(self):
+        pet = self.make_pet(FakeRng(0.9))
+        pet.dog.voice = FakeRng(0.5)
+        self.start_visit(pet)
+        self.run_until_bubble(pet, n=60 * 5)
+        bubble, left, top, right, _bottom = pet.dog.bubble, *pet.work
+        self.assertLessEqual(bubble.y() + bubble.height(), pet.dog.y())
+        self.assertGreaterEqual(bubble.x(), left)
+        self.assertLessEqual(bubble.x() + bubble.width(), right)
+        self.assertGreaterEqual(bubble.y(), top)
+
+    def test_his_bubble_disappears_by_itself_and_with_the_visit(self):
+        pet = self.make_pet(FakeRng(0.9))
+        pet.dog.voice = FakeRng(0.5)
+        self.start_visit(pet)
+        self.run_until_bubble(pet, n=60 * 5)
+        self.run_dog(pet, dog_module.BARK_MS / 1000 + 0.2)
+        self.assertFalse(pet.dog.bubble.isVisible())
+        pet.dog.voice = FakeRng(0.5)
+        pet.dog._bark_in = 0.0
+        pet.dog.step(1 / 60)
+        self.assertTrue(pet.dog.bubble.isVisible())
+        pet.dog.cancel()
+        self.assertFalse(pet.dog.bubble.isVisible())
+
+    def test_his_bubble_cannot_be_clicked(self):
+        pet = self.make_pet(FakeRng(0.9))
+        self.assertTrue(pet.dog.bubble.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents))
+        self.assertTrue(pet.dog.bubble.windowFlags() & Qt.WindowType.WindowTransparentForInput)
+
+    def test_he_never_barks_when_the_bubbles_are_off(self):
+        self.game.set_setting("meows", False)
+        pet = self.make_greeting_pet()
+        pet.dog.voice = FakeRng(0.0)                           # il aboierait à chaque occasion
+        self.start_visit(pet)
+        for _ in range(60 * 60):
+            pet.dog.step(1 / 60)
+            self.assertFalse(pet.dog.bubble.isVisible())
+            if not pet.dog.active:
+                break
+
+    def test_he_says_a_sigh_when_he_lies_down_against_a_napping_cali(self):
+        pet = self.make_napping_pet()
+        self.start_visit(pet)
+        self.run_until_lying(pet)
+        self.assertIn(pet.dog.bubble.text(), phrases.BARKS["lie"])
+
+    def test_his_voice_never_touches_his_movement_random_sequence(self):
+        rng = FakeRng(0.1, 0.2, 0.3)
+        pet = self.make_pet(rng)
+        before = list(rng.values)
+        pet.dog._say("pass")
+        pet.dog._say("scream")
+        self.assertEqual(rng.values, before)                  # ses phrases n'ont pas consommé son hasard

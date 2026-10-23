@@ -63,6 +63,11 @@ Les cadeaux en attente s'additionnent (99 au plus) : un cadeau de concentration 
 - **Sieste à deux** : si Cali fait la sieste, il vient presque toujours (8 fois sur 10) se coucher contre elle sans la
   réveiller ; sa sieste dure alors au moins 12 s. Il repart quand elle se réveille (90 s au plus).
 - Sinon il ne fait que passer, avec parfois un arrêt de 2 à 4 s.
+- **Sa voix** : bulle à lui (non cliquable), avec des aboiements (« Wouf ! », « Ouaf ! ») et, plus rarement, le cri de
+  Toller (« Aouaouaouaou ! »). Il aboie de temps en temps en chemin, appelle Cali d'un cri quand il la repère, se tait en
+  arrivant près d'elle (c'est à elle de répondre), lâche un « Ouaf ♥ » pendant le tête-à-tête et soupire en se couchant.
+  Il ne parle pas par-dessus la bulle de Cali quand elle est tout près. Réglage commun avec les miaous (« Miauler et aboyer
+  de temps en temps »).
 - Jamais quand le chat est caché ou endormi (utilisateur absent), ni pendant une session de concentration. Il renonce si
   Cali devient indisponible (au travail, perchée sur une fenêtre, en plein saut, portée à la souris) ou quand elle arrive
   au bout du sol en le suivant.

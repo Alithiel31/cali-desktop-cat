@@ -461,7 +461,7 @@ class Panel(QWidget):
 
         self.checks = {}
         descriptions = {
-            "meows": "Affiche parfois une bulle au-dessus du chat.",
+            "meows": "Affiche parfois une bulle au-dessus de Cali (miaulements) et de Jazz (aboiements).",
             "notifications": "Prévient quand une session de concentration se termine.",
             "track_apps": "Garde localement le nom des applications utilisées pour les statistiques.",
             "launch_at_startup": "Ouvre le chat automatiquement à l'ouverture de ta session Windows.",
@@ -476,7 +476,7 @@ class Panel(QWidget):
                 ("perch_windows", "Marcher sur le bord des fenêtres"),
                 ("jump_between_windows", "Sauter d'une fenêtre à l'autre"),
                 ("follow_active", "Rejoindre la fenêtre active"),
-                ("meows", "Miauler de temps en temps"),
+                ("meows", "Miauler et aboyer de temps en temps"),
                 ("hunt_cursor", "Chasser la souris"),
                 ("carry_cursor", "Emporter la souris après le bond"),
                 ("jazz_visits", "Jazz rend visite à Cali"),

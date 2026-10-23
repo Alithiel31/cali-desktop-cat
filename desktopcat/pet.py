@@ -241,7 +241,7 @@ class Pet(QWidget):
 
     def _own_hwnds(self):
         out = []
-        for w in (self, self.bubble, self.gift, self.dog, *self.fxl.windows()):
+        for w in (self, self.bubble, self.gift, self.dog, self.dog.bubble, *self.fxl.windows()):
             if w.isVisible():
                 out.append(int(w.winId()))
         return out

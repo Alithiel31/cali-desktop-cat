@@ -14,6 +14,10 @@ réveil il repart, et elle le suit souvent.
 Quand il repart, Cali le suit souvent quelques secondes (`_escort`) : il ralentit à son allure, elle trottine
 derrière lui, puis elle décroche et il reprend son rythme.
 
+Il a sa propre bulle (`Bubble`, transparente aux clics) : des aboiements et, plus rarement, le « cri de Toller »
+(« Aouaouaouaou ! »). Il ne parle que si les bulles sont activées (réglage « meows ») et se tait en arrivant près de
+Cali pour lui laisser répondre. Ses phrases ont leur propre hasard (`voice`), séparé de celui de ses déplacements.
+
 États : away (absent, un compte à rebours tourne), walk (il trotte), sit (il s'assoit un instant en passant),
         greet (il est assis près de Cali, qui lui répond), lie (il dort contre Cali pendant sa sieste).
 """
@@ -26,7 +30,9 @@ from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QWidget
 
 from .dog_sprite import DOG_FOOT_ROW, DOG_H, DOG_W, draw_dog
+from .phrases import pick_bark
 from .screens import floor_here
+from .widgets import Bubble
 
 DOG_SPEED = 150.0               # px/s pour une échelle de 4 (le chat : 95) : il trotte plus vite qu'elle
 FIRST_VISIT_S = (120.0, 300.0)  # première visite : entre 2 et 5 min après le lancement
@@ -46,12 +52,20 @@ JOIN_MAX_S = 90.0               # il ne dort jamais plus longtemps que ça, quoi
 LIE_GAP = 36                    # écart entre leurs centres quand ils dorment côte à côte, en « pixels » de grille
 TOUCH_GAP = 22                  # écart entre les centres de Cali et de Jazz assis, en « pixels » de grille
 FRAME_S = 0.14                  # durée d'une image de la marche
+BARK_FIRST_S = (1.5, 5.0)       # premier aboiement possible, après son entrée
+BARK_EVERY_S = (4.0, 9.0)       # ensuite, une occasion d'aboyer toutes les 4 à 9 s...
+BARK_CHANCE = 0.6               # ...saisie 6 fois sur 10
+SCREAM_CHANCE = 0.2             # dont une fois sur cinq par le cri de Toller
+SPOT_PX = 260                   # distance (échelle 4) à laquelle il repère Cali et l'appelle
+BARK_MS = 1800                  # durée d'une bulle d'aboiement
+SCREAM_MS = 2600
+QUIET_NEAR_PX = 100             # (échelle 4) il ne parle pas par-dessus la bulle de Cali quand elle est si près
 BLINK_EVERY_MS = 3500
 BLINK_MS = 120
 
 
 class Dog(QWidget):
-    def __init__(self, pet, rng=None):
+    def __init__(self, pet, rng=None, voice=None):
         super().__init__(None, Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
                          | Qt.WindowType.Tool | Qt.WindowType.WindowDoesNotAcceptFocus
                          | Qt.WindowType.WindowTransparentForInput)
@@ -60,6 +74,13 @@ class Dog(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.pet = pet
         self.rng = rng or random.Random()
+        self.voice = voice or random.Random()      # ses phrases : hasard à part, pour ne pas changer ses déplacements
+        self.bubble = Bubble()
+        self.bubble.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.bubble.setWindowFlag(Qt.WindowType.WindowTransparentForInput, True)
+        self._bubble_until = 0.0
+        self._bark_in = 0.0
+        self._called = False            # il a déjà appelé Cali pendant cette approche
         self.S = 0
         self.t = 0.0                    # temps de visite en ms (animations)
         self.state = "away"
@@ -134,6 +155,9 @@ class Dog(QWidget):
         self._approach = self.rng.random() < chance and self._cali_free() and self._meet_fx() is not None
         self.t, self.frame, self._frame_t, self._happy = 0.0, 0, 0.0, False
         self._escort = 0.0
+        self._called = False
+        self._bark_in = self.voice.uniform(*BARK_FIRST_S)
+        self.bubble.set_scale(self.S)
         self.state = "walk"
         self._place()
         self.show()
@@ -153,6 +177,7 @@ class Dog(QWidget):
         self._sit_x = None
         self._approach = False
         self._escort = 0.0
+        self._hush()
         self.hide()
 
     # ───────────────────────── boucle
@@ -182,7 +207,53 @@ class Dog(QWidget):
         if self.state != "away":
             self._follow_floor(dt)
             self._place()
+            self._tick_voice(dt)
             self.update()
+
+    def closeEvent(self, event) -> None:
+        self.bubble.close()
+        super().closeEvent(event)
+
+    # ───────────────────────── voix
+    def _center_x(self) -> float:
+        return self.fx + self.width_px / 2
+
+    def _say(self, kind: str, ms: float = BARK_MS) -> None:
+        if not self.pet.settings["meows"]:
+            return
+        self.bubble.show_html(pick_bark(self.voice, kind))
+        self._bubble_until = self.t + ms
+        self._place_bubble()
+
+    def _hush(self) -> None:
+        self._bubble_until = 0.0
+        self.bubble.hide()
+
+    def _cali_is_talking_nearby(self) -> bool:
+        return self.pet._temp and abs(self._center_x() - self.pet.cx) < QUIET_NEAR_PX * self.S / 4
+
+    def _tick_voice(self, dt: float) -> None:
+        """Aboiements spontanés en chemin, durée de la bulle et position au-dessus de sa tête."""
+        if self.bubble.isVisible() and self.t >= self._bubble_until:
+            self.bubble.hide()
+        if self.state in ("walk", "sit"):
+            self._bark_in -= dt
+            if self._bark_in <= 0:
+                self._bark_in = self.voice.uniform(*BARK_EVERY_S)
+                if self.voice.random() < BARK_CHANCE and not self._cali_is_talking_nearby():
+                    scream = self.voice.random() < SCREAM_CHANCE
+                    self._say("scream" if scream else "pass", SCREAM_MS if scream else BARK_MS)
+        self._place_bubble()
+
+    def _place_bubble(self) -> None:
+        bubble = self.bubble
+        if not bubble.isVisible():
+            return
+        left, top, right, _bottom = self.pet.work
+        head = self._center_x() + (0.22 if self.dir > 0 else -0.22) * self.width_px
+        x = min(max(head - bubble.width() / 2, left), max(left, right - bubble.width()))
+        bubble.set_tail_x(head - x)
+        bubble.move(round(x), round(max(top, self.y() - bubble.height() - 2)))
 
     def _animate_walk(self, dt: float) -> None:
         self._frame_t += dt
@@ -203,6 +274,9 @@ class Dog(QWidget):
             else:
                 self._animate_walk(dt)
                 self.dir = 1 if meet > self.fx else -1
+                if not self._called and abs(meet - self.fx) < SPOT_PX * self.S / 4:
+                    self._called = True                 # il l'a repérée : cri de Toller
+                    self._say("scream", SCREAM_MS)
                 if abs(meet - self.fx) <= stride:
                     self.fx = meet
                     if self.pet.state == "nap":
@@ -228,6 +302,7 @@ class Dog(QWidget):
         self.state, self.timer = "greet", self.rng.uniform(*GREET_S)
         self._heart_in = self.timer / 2
         self._happy = True
+        self._hush()                                    # à elle de répondre
         center = self.fx + self.width_px / 2
         self.pet.companion.jazz_arrived(1 if center > self.pet.cx else -1)
 
@@ -241,6 +316,8 @@ class Dog(QWidget):
         self._heart_in -= dt
         if self._heart_in <= 0 < self._heart_in + dt:
             pet.fx_particle("heart")
+            if not pet._temp:
+                self._say("greet")
         if self.timer <= 0:
             self._leave(friendly=True)
 
@@ -253,6 +330,8 @@ class Dog(QWidget):
         self.dir = self._side
         self._happy = False
         pet.timer = max(pet.timer, self.rng.uniform(*JOIN_S))     # sa sieste dure au moins un moment
+        self._hush()
+        self._say("lie", BARK_MS)
         center = self.fx + self.width_px / 2
         pet.companion.jazz_lies_down(1 if center > pet.cx else -1)
 
@@ -265,6 +344,7 @@ class Dog(QWidget):
     def _leave(self, friendly: bool = False) -> None:
         """Il repart par où il est venu. `friendly` : fin normale du tête-à-tête (Cali peut alors le suivre)."""
         self._escort = self.rng.uniform(*FOLLOW_S) if friendly and self.rng.random() < FOLLOW_CHANCE else 0.0
+        self._hush()
         self.state = "walk"
         self.dir = -self._side
         self._exit_x = self._back_x

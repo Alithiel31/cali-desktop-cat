@@ -62,6 +62,11 @@ Waiting gifts add up (99 at most): a focus gift does not replace an ordinary gif
 - **Nap together**: if Cali is napping, he almost always (8 times out of 10) lies down against her without waking her;
   her nap then lasts at least 12 s. He leaves when she wakes up (90 s at most).
 - Otherwise he just passes through, sometimes stopping for 2 to 4 s.
+- **His voice**: his own bubble (not clickable), with barks ("Wouf !", "Ouaf !") and, more rarely, the Toller scream
+  ("Aouaouaouaou !"). He barks now and then on his way, calls Cali with a scream when he spots her, falls silent on
+  arriving next to her (her turn to answer), lets out an "Ouaf ♥" during the get-together and sighs when he lies down.
+  He does not talk over Cali's bubble when she is right next to him. Shared setting with the meows ("Miauler et
+  aboyer de temps en temps", "Meow and bark now and then").
 - Never while the cat is hidden or asleep (user away), nor during a focus session. He gives up if Cali becomes
   unavailable (working, perched on a window, mid-jump, carried with the mouse) or when she reaches the end of the floor
   while following him.
