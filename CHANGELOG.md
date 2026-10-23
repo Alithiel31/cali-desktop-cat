@@ -7,6 +7,8 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ## [Non publié]
 
+## [0.5.0] - 2026-10-23
+
 ### Added
 
 - **Jazz s'exprime** : il a sa propre bulle (transparente aux clics) avec des aboiements (« Wouf ! », « Ouaf ! »…) et,
