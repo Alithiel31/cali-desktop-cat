@@ -8,6 +8,9 @@ venu) ou il ne fait que passer (avec parfois un temps d'arrêt), et il ressort d
 Ses décisions n'utilisent PAS le hasard du chat (`pet.rng`), pour ne pas changer la suite de tirages du chat sur
 laquelle les tests s'appuient. Seule la dispersion des petits cœurs de Cali, purement visuelle, y puise (`fx_particle`).
 
+Quand il repart, Cali le suit souvent quelques secondes (`_escort`) : il ralentit à son allure, elle trottine
+derrière lui, puis elle décroche et il reprend son rythme.
+
 États : away (absent, un compte à rebours tourne), walk (il trotte), sit (il s'assoit un instant en passant),
         greet (il est assis près de Cali, qui lui répond).
 """
@@ -30,6 +33,10 @@ SIT_CHANCE = 0.5                # une visite « de passage » sur deux comprend 
 SIT_S = (2.0, 4.0)
 GREET_CHANCE = 0.6              # visites où Jazz vient voir Cali (si elle est là, au sol et disponible)
 GREET_S = (3.5, 6.0)            # durée du tête-à-tête
+FOLLOW_CHANCE = 0.7             # après le tête-à-tête, Cali le suit 7 fois sur 10
+FOLLOW_S = (4.0, 8.0)           # durée pendant laquelle elle le suit
+ESCORT_SPEED = 0.97             # son allure en escorte, par rapport à celle de Cali : elle rattrape donc peu à peu
+FOLLOW_START_PX = 8             # Cali ne repart que s'il s'est éloigné d'au moins ça
 TOUCH_GAP = 22                  # écart entre les centres de Cali et de Jazz assis, en « pixels » de grille
 FRAME_S = 0.14                  # durée d'une image de la marche
 BLINK_EVERY_MS = 3500
@@ -60,6 +67,7 @@ class Dog(QWidget):
         self._back_x = 0.0              # idem, du côté par lequel il est entré
         self._side = 1                  # sens de son arrivée : 1 = il vient de la gauche
         self._approach = False          # il va voir Cali
+        self._escort = 0.0              # secondes pendant lesquelles Cali le suit encore
         self._sit_x: float | None = None
         self._happy = False
         self._heart_in = 0.0
@@ -115,6 +123,7 @@ class Dog(QWidget):
             if self.rng.random() < SIT_CHANCE else None
         self._approach = self.rng.random() < GREET_CHANCE and self._cali_free() and self._meet_fx() is not None
         self.t, self.frame, self._frame_t, self._happy = 0.0, 0, 0.0, False
+        self._escort = 0.0
         self.state = "walk"
         self._place()
         self.show()
@@ -133,6 +142,7 @@ class Dog(QWidget):
         self.timer = wait_s
         self._sit_x = None
         self._approach = False
+        self._escort = 0.0
         self.hide()
 
     # ───────────────────────── boucle
@@ -169,7 +179,10 @@ class Dog(QWidget):
             self.frame ^= 1
 
     def _step_walk(self, dt: float) -> None:
-        stride = DOG_SPEED * self.S / 4 * dt
+        if self._escort > 0:
+            self._escort_step(dt)
+        speed = self.pet.speed * ESCORT_SPEED if self._escort > 0 else DOG_SPEED * self.S / 4
+        stride = speed * dt
         if self._approach:
             meet = self._meet_fx() if self._cali_free() else None
             if meet is None:                            # Cali est partie, ou trop près du bord : il passera son chemin
@@ -214,14 +227,35 @@ class Dog(QWidget):
         if self._heart_in <= 0 < self._heart_in + dt:
             pet.fx_particle("heart")
         if self.timer <= 0:
-            self._leave()
+            self._leave(friendly=True)
 
-    def _leave(self) -> None:
-        """Il repart par où il est venu."""
+    def _leave(self, friendly: bool = False) -> None:
+        """Il repart par où il est venu. `friendly` : fin normale du tête-à-tête (Cali peut alors le suivre)."""
+        self._escort = self.rng.uniform(*FOLLOW_S) if friendly and self.rng.random() < FOLLOW_CHANCE else 0.0
         self.state = "walk"
         self.dir = -self._side
         self._exit_x = self._back_x
         self._happy = False
+
+    def _escort_step(self, dt: float) -> None:
+        """Cali trottine derrière Jazz, à distance constante ; elle arrête dès qu'elle a autre chose à faire."""
+        pet = self.pet
+        surface = pet._current_surface() if pet.stand is None else None
+        if surface is None or pet.state not in ("idle", "walk"):    # sautée, portée, au travail, cadeau...
+            self._escort = 0.0
+            return
+        _y, x0, x1 = surface
+        x0, x1 = pet._clip(x0, x1)
+        margin = pet.CW * 0.25
+        target = self.fx + self.width_px / 2 + self._side * TOUCH_GAP * self.S      # juste derrière lui
+        if not x0 + margin <= target <= x1 - margin:                # elle est au bout du sol : elle le regarde partir
+            self._escort = 0.0
+            return
+        self._escort -= dt
+        if pet.state == "idle":
+            pet.timer = max(pet.timer, 1.0)                         # pas d'idée soudaine tant qu'elle le suit
+        if pet.state == "walk" or abs(target - pet.cx) > FOLLOW_START_PX:
+            pet._walk_to(target)
 
     def _follow_floor(self, dt: float) -> None:
         """Les pattes suivent le sol de l'écran sous lui (les écrans d'une chaîne n'ont pas tous la même hauteur)."""

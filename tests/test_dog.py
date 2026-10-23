@@ -20,13 +20,14 @@ from test_logic import DEFAULT_SCREENS, FixedCursor, GameTestCase
 
 
 class FakeRng:
-    """Hasard réglable : `random()` renvoie toujours `value`, `uniform(a, b)` toujours `a`."""
+    """Hasard réglable : `random()` renvoie les valeurs données dans l'ordre (puis répète la dernière),
+    `uniform(a, b)` renvoie toujours `a`."""
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, *values):
+        self.values = list(values)
 
     def random(self):
-        return self.value
+        return self.values.pop(0) if len(self.values) > 1 else self.values[0]
 
     def uniform(self, a, b):
         return a
@@ -269,3 +270,87 @@ class DogTest(GameTestCase):
         pet.dog.step(1 / 60)
         self.assertEqual(pet.dog.state, "walk")
         self.assertEqual(pet.dog.dir, -1)
+
+    # ───────────────────────── Cali le suit
+    def run_both(self, pet, seconds, dt=1 / 60):
+        for _ in range(round(seconds / dt)):
+            pet.dog.step(dt)
+            pet.step(dt)
+
+    def jazz_cx(self, pet):
+        return pet.dog.x() + pet.dog.width() / 2
+
+    def leave_after_greeting(self, pet):
+        self.start_visit(pet)
+        self.run_until_greeting(pet)
+        pet.dog.timer = 0.0                                    # fin du tête-à-tête
+        pet.dog.step(1 / 60)
+
+    def test_cali_trots_behind_jazz_when_he_leaves(self):
+        pet = self.make_greeting_pet()
+        self.leave_after_greeting(pet)
+        self.assertGreater(pet.dog._escort, 0)
+        start = pet.cx
+        self.run_both(pet, 2.0)
+        self.assertLess(pet.cx, start - 100)                   # elle l'a suivi vers la gauche
+        behind = pet.cx - self.jazz_cx(pet)                    # et reste juste derrière lui, jamais devant
+        self.assertGreater(behind, 0)
+        self.assertLess(behind, dog_module.TOUCH_GAP * pet.dog.S + 60)
+        self.assertIn(pet.state, ("walk", "idle"))
+
+    def test_jazz_slows_down_to_her_pace_while_she_follows(self):
+        pet = self.make_greeting_pet()
+        self.leave_after_greeting(pet)
+        before = pet.dog.fx
+        pet.dog.step(1)
+        self.assertAlmostEqual(before - pet.dog.fx, pet.speed * dog_module.ESCORT_SPEED, delta=1)
+
+    def test_she_stops_following_after_a_while_and_he_leaves_at_his_pace(self):
+        pet = self.make_greeting_pet()
+        self.leave_after_greeting(pet)
+        self.run_both(pet, dog_module.FOLLOW_S[0] + 1)
+        self.assertLessEqual(pet.dog._escort, 0)
+        before = pet.dog.fx
+        pet.dog.step(1)
+        self.assertAlmostEqual(before - pet.dog.fx, dog_module.DOG_SPEED * pet.dog.S / 4, delta=1)
+        self.run_both(pet, 30)
+        self.assertFalse(pet.dog.active)
+
+    def test_she_does_not_follow_when_the_dice_say_no(self):
+        self.game.set_setting("meows", False)                  # pas de tirage pour la bulle
+        pet = self.make_pet(FakeRng(0.0, 0.0, 0.0, 0.9))       # côté, pause, visite : oui ; suivi : non
+        pet.fx = 900.0
+        self.leave_after_greeting(pet)
+        self.assertEqual(pet.dog._escort, 0)
+        start = pet.cx
+        self.run_both(pet, 1.0)
+        self.assertAlmostEqual(pet.cx, start, delta=1)
+
+    def test_she_does_not_follow_when_the_greeting_was_cut_short(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.run_until_greeting(pet)
+        pet.state = "drag"
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog._escort, 0)
+
+    def test_the_escort_stops_when_cali_has_something_else_to_do(self):
+        pet = self.make_greeting_pet()
+        self.leave_after_greeting(pet)
+        pet.state = "jump"
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog._escort, 0)
+        self.assertEqual(pet.state, "jump")                    # il ne la remet pas en marche de force
+
+    def test_the_escort_stops_at_the_end_of_the_floor_instead_of_flickering(self):
+        pet = self.make_greeting_pet()
+        pet.fx = 300.0                                         # près du bord gauche : Jazz va y repartir
+        self.leave_after_greeting(pet)
+        states = []
+        for _ in range(60 * 12):
+            pet.dog.step(1 / 60)
+            pet.step(1 / 60)
+            states.append(pet.state)
+        changes = sum(1 for a, b in zip(states, states[1:], strict=False) if a != b)
+        self.assertLess(changes, 12)                           # pas de bascule marche/arrêt à chaque image
+        self.assertEqual(pet.dog._escort, 0)
