@@ -74,6 +74,7 @@ class DogTest(GameTestCase):
 
     def test_he_comes_in_from_an_edge_walks_across_and_leaves(self):
         pet = self.make_pet(FakeRng(0.0))                      # random() = 0 : vient de la gauche, avec une pause
+        pet.state = "work"                                     # Cali est occupée : il ne vient pas la voir
         self.start_visit(pet)
         floor = pet.floors[0]
         width = DOG_W * pet.dog.S
@@ -115,6 +116,7 @@ class DogTest(GameTestCase):
 
     def test_he_never_draws_from_the_cat_random_sequence(self):
         pet = self.make_pet(None)
+        pet.state = "work"                                     # occupée : pas de câlin, donc pas de petits cœurs
         before = pet.rng.getstate()
         self.run_dog(pet, 3000)
         self.assertEqual(pet.rng.getstate(), before)
@@ -168,3 +170,102 @@ class DogTest(GameTestCase):
         self.game.set_setting("jazz_visits", False)
         self.game.call_jazz()
         self.assertFalse(pet.dog.active)
+
+    # ───────────────────────── visite à Cali
+    def make_greeting_pet(self):
+        pet = self.make_pet(FakeRng(0.0))          # random() = 0 : de la gauche, avec une pause, et il vient la voir
+        pet.fx = 900.0                             # Cali au milieu du sol, libre
+        return pet
+
+    def run_until_greeting(self, pet):
+        for _ in range(60 * 60):
+            pet.dog.step(1 / 60)
+            if pet.dog.state == "greet":
+                return
+        self.fail("Jazz n'est jamais arrivé près de Cali")
+
+    def test_he_sits_next_to_cali_and_she_answers(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.assertTrue(pet.dog._approach)
+        self.run_until_greeting(pet)
+        jazz_cx = pet.dog.x() + pet.dog.width() / 2
+        self.assertAlmostEqual(pet.cx - jazz_cx, dog_module.TOUCH_GAP * pet.dog.S, delta=1)
+        self.assertEqual(pet.dir, -1)                          # elle se tourne vers lui (à sa gauche)
+        self.assertEqual(pet.state, "idle")
+        self.assertGreater(pet.happy_until, pet.t)
+        self.assertTrue(pet._temp)                             # une bulle ("Jazz !", "Mrrr ♥"...)
+
+    def test_he_stays_quiet_when_meows_are_off(self):
+        self.game.set_setting("meows", False)
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.run_until_greeting(pet)
+        self.assertFalse(pet._temp)
+
+    def test_cali_stays_put_as_long_as_he_is_there(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.run_until_greeting(pet)
+        pet.timer = 0.0                                        # sans lui, elle déciderait de repartir tout de suite
+        pet.dog.step(1 / 60)
+        self.assertGreaterEqual(pet.timer, 1.0)
+        self.assertEqual(pet.state, "idle")
+
+    def test_he_leaves_the_way_he_came(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.run_until_greeting(pet)
+        pet.dog.timer = 0.0                                    # fin du tête-à-tête
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog.state, "walk")
+        self.assertEqual(pet.dog.dir, -1)                      # retour vers la gauche
+        for _ in range(60 * 60):
+            pet.dog.step(1 / 60)
+            if not pet.dog.active:
+                break
+        self.assertFalse(pet.dog.active)
+        self.assertFalse(pet.dog.isVisible())
+
+    def test_no_greeting_when_cali_is_busy_or_not_on_the_floor(self):
+        cases = {
+            "au travail": lambda pet: setattr(pet, "state", "work"),
+            "en plein saut": lambda pet: setattr(pet, "state", "jump"),
+            "perchée sur une fenêtre": lambda pet: setattr(pet, "stand", 1234),
+        }
+        for name, setup in cases.items():
+            with self.subTest(name):
+                pet = self.make_greeting_pet()
+                setup(pet)
+                self.start_visit(pet)
+                self.assertFalse(pet.dog._approach)
+
+    def test_no_greeting_when_cali_is_too_close_to_the_edge(self):
+        pet = self.make_greeting_pet()
+        pet.fx = pet.floors[0].cx0 + 10
+        self.start_visit(pet)
+        self.assertFalse(pet.dog._approach)
+
+    def test_no_greeting_when_the_dice_say_so(self):
+        pet = self.make_pet(FakeRng(0.9))
+        pet.fx = 900.0
+        self.start_visit(pet)
+        self.assertFalse(pet.dog._approach)
+
+    def test_he_gives_up_when_cali_leaves_during_the_approach(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        pet.state = "jump"                                     # elle a sauté sur une autre surface
+        pet.dog.step(1 / 60)
+        self.assertFalse(pet.dog._approach)
+        self.assertEqual(pet.dog.dir, 1)                       # il continue son chemin
+        self.assertNotEqual(pet.dog.state, "greet")
+
+    def test_he_leaves_when_cali_is_picked_up_during_the_greeting(self):
+        pet = self.make_greeting_pet()
+        self.start_visit(pet)
+        self.run_until_greeting(pet)
+        pet.state = "drag"
+        pet.dog.step(1 / 60)
+        self.assertEqual(pet.dog.state, "walk")
+        self.assertEqual(pet.dog.dir, -1)

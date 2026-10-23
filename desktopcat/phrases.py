@@ -7,6 +7,7 @@ MEOWS = {
     "work": ["Mrp.", "Prrr… (je bosse)", "Miaou ?", "Tap tap tap…", "Mrrr."],
     "petted": ["Prrrrr~", "Mrrr ♥", "Miaou ♥", "Prrr prrr…", "Mrrp !"],
     "hungry": ["J'ai faim…", "Miaou… 🐟 ?", "Mrrr… (croquettes ?)", "Miaaaou ! (gamelle vide)"],
+    "jazz": ["Jazz !", "Mrrr ♥", "Prrr prrr…", "Mon grand frère !", "Miaou ♥"],
     "caught": ["Attrapée !", "Mrrp ! Je l'ai !", "Hop !", "Ma souris !"],
 }
 
