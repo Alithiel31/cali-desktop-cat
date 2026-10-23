@@ -75,9 +75,7 @@ class Dog(QWidget):
         self.pet = pet
         self.rng = rng or random.Random()
         self.voice = voice or random.Random()      # ses phrases : hasard à part, pour ne pas changer ses déplacements
-        self.bubble = Bubble()
-        self.bubble.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.bubble.setWindowFlag(Qt.WindowType.WindowTransparentForInput, True)
+        self._bubble: Bubble | None = None      # créée au premier aboiement seulement : une fenêtre de moins sinon
         self._bubble_until = 0.0
         self._bark_in = 0.0
         self._called = False            # il a déjà appelé Cali pendant cette approche
@@ -157,7 +155,8 @@ class Dog(QWidget):
         self._escort = 0.0
         self._called = False
         self._bark_in = self.voice.uniform(*BARK_FIRST_S)
-        self.bubble.set_scale(self.S)
+        if self._bubble is not None:
+            self._bubble.set_scale(self.S)
         self.state = "walk"
         self._place()
         self.show()
@@ -211,31 +210,46 @@ class Dog(QWidget):
             self.update()
 
     def closeEvent(self, event) -> None:
-        self.bubble.close()
+        if self._bubble is not None:
+            self._bubble.close()
         super().closeEvent(event)
 
     # ───────────────────────── voix
+    @property
+    def bubble(self) -> Bubble:
+        if self._bubble is None:
+            self._bubble = Bubble(self.S or 4)
+            self._bubble.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+            self._bubble.setWindowFlag(Qt.WindowType.WindowTransparentForInput, True)
+        return self._bubble
+
+    def windows(self) -> tuple:
+        """Ses fenêtres déjà créées en dehors de la sienne (sa bulle, si elle existe)."""
+        return (self._bubble,) if self._bubble is not None else ()
+
     def _center_x(self) -> float:
         return self.fx + self.width_px / 2
 
     def _say(self, kind: str, ms: float = BARK_MS) -> None:
         if not self.pet.settings["meows"]:
             return
+        self.bubble.set_scale(self.S or 4)
         self.bubble.show_html(pick_bark(self.voice, kind))
         self._bubble_until = self.t + ms
         self._place_bubble()
 
     def _hush(self) -> None:
         self._bubble_until = 0.0
-        self.bubble.hide()
+        if self._bubble is not None:
+            self._bubble.hide()
 
     def _cali_is_talking_nearby(self) -> bool:
         return self.pet._temp and abs(self._center_x() - self.pet.cx) < QUIET_NEAR_PX * self.S / 4
 
     def _tick_voice(self, dt: float) -> None:
         """Aboiements spontanés en chemin, durée de la bulle et position au-dessus de sa tête."""
-        if self.bubble.isVisible() and self.t >= self._bubble_until:
-            self.bubble.hide()
+        if self._bubble is not None and self._bubble.isVisible() and self.t >= self._bubble_until:
+            self._bubble.hide()
         if self.state in ("walk", "sit"):
             self._bark_in -= dt
             if self._bark_in <= 0:
@@ -246,8 +260,8 @@ class Dog(QWidget):
         self._place_bubble()
 
     def _place_bubble(self) -> None:
-        bubble = self.bubble
-        if not bubble.isVisible():
+        bubble = self._bubble
+        if bubble is None or not bubble.isVisible():
             return
         left, top, right, _bottom = self.pet.work
         head = self._center_x() + (0.22 if self.dir > 0 else -0.22) * self.width_px

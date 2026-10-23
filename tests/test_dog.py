@@ -535,6 +535,14 @@ class DogTest(GameTestCase):
         pet.dog.cancel()
         self.assertFalse(pet.dog.bubble.isVisible())
 
+    def test_his_bubble_window_is_only_created_when_he_first_speaks(self):
+        pet = self.make_pet(FakeRng(0.9))
+        self.assertIsNone(pet.dog._bubble)
+        self.assertEqual(pet.dog.windows(), ())
+        pet.dog._say("pass")
+        self.assertIsNotNone(pet.dog._bubble)
+        self.assertEqual(pet.dog.windows(), (pet.dog.bubble,))
+
     def test_his_bubble_cannot_be_clicked(self):
         pet = self.make_pet(FakeRng(0.9))
         self.assertTrue(pet.dog.bubble.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents))
