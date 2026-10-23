@@ -466,6 +466,7 @@ class Panel(QWidget):
             "track_apps": "Garde localement le nom des applications utilisées pour les statistiques.",
             "launch_at_startup": "Ouvre le chat automatiquement à l'ouverture de ta session Windows.",
             "hunt_cursor": "Quand la souris s'arrête près de lui, il la guette puis bondit dessus.",
+            "jazz_visits": "Jazz, le grand frère de Cali, traverse l'écran de temps en temps.",
             "focus_breaks": "Après une session réussie, le chat te propose une pause (méthode Pomodoro).",
             "hotkey": "Affiche ou cache le chat depuis n'importe quelle application.",
         }
@@ -476,6 +477,7 @@ class Panel(QWidget):
                 ("follow_active", "Rejoindre la fenêtre active"),
                 ("meows", "Miauler de temps en temps"),
                 ("hunt_cursor", "Chasser la souris"),
+                ("jazz_visits", "Jazz rend visite à Cali"),
             )),
             ("Concentration", (("focus_breaks", "Pause après chaque session"),)),
             ("Notifications et confidentialité", (
@@ -512,6 +514,10 @@ class Panel(QWidget):
         test.clicked.connect(g.force_gift)
         test.setToolTip("Outil de test : ajoute un cadeau à la progression actuelle.")
         root.addWidget(test)
+        jazz = QPushButton("Faire venir Jazz maintenant (test)")
+        jazz.clicked.connect(g.call_jazz)
+        jazz.setToolTip("Outil de test : Jazz traverse l'écran tout de suite (s'il peut passer à cet instant).")
+        root.addWidget(jazz)
         about = QLabel(f"Desktop Cat {__version__} · licence MIT · "
                        "<a href='https://github.com/Alithiel31/cali-desktop-cat' style='color:#9aa4b8'>code source</a>")
         about.setObjectName("muted")

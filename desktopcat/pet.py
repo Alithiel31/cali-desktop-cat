@@ -19,6 +19,7 @@ from PySide6.QtGui import QCursor, QGuiApplication, QPainter
 from PySide6.QtWidgets import QWidget
 
 from . import hunt, winapi
+from .dog import Dog
 from .motion import Jump, advance_fall, advance_jump, advance_walk, make_jump
 from .pet_companion import PetCompanion
 from .pet_input import PetInput
@@ -66,7 +67,7 @@ class Pet(QWidget):
     start_focus = Signal(int)
     stop_focus = Signal()
 
-    def __init__(self, game, bubble, gift, fx, rng=None, screens=None):
+    def __init__(self, game, bubble, gift, fx, rng=None, screens=None, dog_rng=None):
         super().__init__(None, Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint
                          | Qt.WindowType.Tool | Qt.WindowType.WindowDoesNotAcceptFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
@@ -135,6 +136,7 @@ class Pet(QWidget):
         self._pet_timer.setSingleShot(True)
         self._pet_timer.timeout.connect(self._pet)
         self.companion = PetCompanion(self)
+        self.dog = Dog(self, dog_rng)        # Jazz : son propre hasard, pour ne pas toucher à celui du chat
         self._place(force=True)
         self.show()
 
@@ -146,6 +148,7 @@ class Pet(QWidget):
         game.fed.connect(self.companion.fed)
         game.changed.connect(self._on_changed)
         gift.clicked.connect(self._on_gift_clicked)
+        game.jazz_requested.connect(self.dog.call_now)
 
         self._last = time.perf_counter()
         self.loop = QTimer(self)
@@ -236,7 +239,7 @@ class Pet(QWidget):
 
     def _own_hwnds(self):
         out = []
-        for w in (self, self.bubble, self.gift, *self.fxl.windows()):
+        for w in (self, self.bubble, self.gift, self.dog, *self.fxl.windows()):
             if w.isVisible():
                 out.append(int(w.winId()))
         return out
@@ -247,6 +250,7 @@ class Pet(QWidget):
         dt = min(now - self._last, 2.5 * self.loop.interval() / 1000)     # plafond : un gel ne fait pas un bond
         self._last = now
         self.step(dt)
+        self.dog.step(dt)
         self._adapt_loop()
 
     def loop_interval(self) -> int:
@@ -629,6 +633,7 @@ class Pet(QWidget):
         self.hidden = self._compute_hidden()
         if self.hidden:
             self.hide()
+            self.dog.cancel()
             self.bubble.hide()
             self.gift.hide()
             self.fxl.clear()
