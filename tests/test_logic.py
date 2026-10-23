@@ -2,6 +2,9 @@
 
 Tournent aussi hors Windows : Qt en mode « offscreen » et de fausses fenêtres à la place de l'API Windows.
 """
+import atexit
+import faulthandler
+import gc
 import glob
 import os
 import random
@@ -14,7 +17,7 @@ if sys.platform != "win32":
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from PySide6.QtCore import QPoint, QRect
+from PySide6.QtCore import QEvent, QPoint, QRect
 from PySide6.QtWidgets import QApplication
 
 from desktopcat import autostart, hats, winapi
@@ -27,6 +30,31 @@ from desktopcat.surfaces import LWin, compute_surfaces, subtract
 from desktopcat.widgets import Bubble, FxLayer, GiftBox
 
 APP = QApplication.instance() or QApplication([])
+
+
+def _close_qt_windows_before_exit() -> None:
+    """Ferme et supprime toutes les fenêtres Qt des tests tant que la QApplication existe encore.
+
+    Sans ça, les dizaines de fenêtres laissées par les tests (chat, bulles, cadeaux, Jazz...) sont détruites dans un
+    ordre quelconque pendant l'arrêt de Python, parfois après la QApplication : plantage intermittent à la sortie,
+    tests pourtant tous verts (vu sur la CI). faulthandler est remis en route (test_log le coupe) pour avoir une pile
+    si ça se reproduit malgré tout.
+    """
+    faulthandler.enable()
+    if QApplication.instance() is None:
+        return
+    for widget in QApplication.topLevelWidgets():
+        try:
+            widget.close()
+            widget.deleteLater()
+        except RuntimeError:                       # déjà supprimée côté C++
+            pass
+    APP.processEvents()
+    QApplication.sendPostedEvents(None, QEvent.Type.DeferredDelete)
+    gc.collect()
+
+
+atexit.register(_close_qt_windows_before_exit)
 
 
 class HatsTest(unittest.TestCase):
