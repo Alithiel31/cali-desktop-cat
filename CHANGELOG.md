@@ -9,6 +9,11 @@ Catégories : `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- **Jazz s'exprime** : il a sa propre bulle (transparente aux clics) avec des aboiements (« Wouf ! », « Ouaf ! »…) et,
+  plus rarement, le « cri de Toller » (« Aouaouaouaou ! »). Il aboie de temps en temps en traversant l'écran, appelle
+  Cali d'un cri quand il la repère, se tait en arrivant près d'elle pour la laisser répondre, lâche un petit « Ouaf ♥ »
+  pendant le tête-à-tête et soupire en se couchant contre elle. Il suit le réglage des bulles, rebaptisé « Miauler et
+  aboyer de temps en temps » ; ses phrases ont leur propre hasard (`voice`).
 - **Cali emporte la souris** : après un bond réussi sur le curseur, elle le garde sous ses pattes et l'emmène partout où
   elle va (marche, saut, chute) jusqu'à ce que tu rebouges la souris. Elle ne s'endort pas dessus, le lâche si tu
   l'attrapes ou si une session de concentration démarre, puis ne rechasse pas avant 25 s. Réglage « Emporter la souris

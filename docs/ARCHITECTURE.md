@@ -35,7 +35,7 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 | `pet_layout.py` | Calcule la position du chat, du cadeau et de la bulle dans la zone visible, sans Qt. | non | non |
 | `pet_input.py` | Traduit les événements souris et le menu contextuel en actions sur le chat. | oui | non |
 | `pet_companion.py` | Réactions expressives aux cadeaux, aux bulles, au sommeil et aux sessions de concentration. | oui | non |
-| `dog.py` | Jazz, le chien qui rend visite à Cali : fenêtre transparente sans souris, états away / walk / sit / greet / lie, visite, suivi par Cali et sieste à deux. Son hasard est séparé de celui du chat. | oui | non |
+| `dog.py` | Jazz, le chien qui rend visite à Cali : fenêtre transparente sans souris, états away / walk / sit / greet / lie, visite, suivi par Cali et sieste à deux. Sa bulle et ses aboiements (cri de Toller). Son hasard est séparé de celui du chat, et ses phrases d'un troisième (`voice`). | oui | non |
 | `dog_sprite.py` | Dessin de Jazz (assis, au trot, couché), même principe que `sprite.py`, sur une grille de 48 × 40. | oui | non |
 | `screens.py` | Géométrie multi-écrans (conversion pixels physiques ↔ logiques, sols, chaînes d'écrans collés). Fonctions pures. | non | non |
 | `surfaces.py` | Calcule les bords hauts de fenêtres sur lesquels le chat peut marcher, en retirant les parties masquées par les fenêtres au-dessus. Fonctions pures. | non | non |
@@ -44,7 +44,7 @@ main.py ── crée et relie ──►  Store ──► Game ──► Pet ◄�
 | `hats.py` | Catalogue des chapeaux, raretés, tirage pondéré. | non | non |
 | `hunt.py` | Règles de la chasse à la souris (souris au repos, à portée). Fonctions pures. | non | non |
 | `hotkey.py` | Raccourci global Ctrl+Alt+C (`RegisterHotKey` + filtre d'événements natifs de Qt). | oui | oui |
-| `phrases.py` | Textes des miaous et délai aléatoire (le hasard est passé en paramètre). | non | non |
+| `phrases.py` | Textes des miaous, aboiements de Jazz et délai aléatoire (le hasard est passé en paramètre). | non | non |
 | `widgets.py` | `Bubble` (bulle), `GiftBox` (cadeau), `FxLayer` (cœurs, étoiles, « z »). | oui | non |
 | `panel.py` | Fenêtre de contrôle : garde-robe, concentration, statistiques, réglages. | oui | non |
 | `log.py` | Journal d'erreurs : fichier tournant, capture des exceptions (dont celles des slots Qt), des messages Qt et des plantages fatals. | oui (messages Qt) | non |

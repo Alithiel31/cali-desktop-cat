@@ -9,6 +9,11 @@ Categories: `Added`, `Changed`, `Fixed`, `Security`.
 
 ### Added
 
+- **Jazz speaks up**: he has his own bubble (click-through) with barks ("Wouf !", "Ouaf !"...) and, more rarely, the
+  "Toller scream" ("Aouaouaouaou !"). He barks now and then while crossing the screen, calls Cali with a scream when he
+  spots her, falls silent on arriving next to her so she can answer, lets out a small "Ouaf ♥" during the get-together
+  and sighs when he lies down against her. He follows the bubbles setting, renamed "Miauler et aboyer de temps en
+  temps" ("Meow and bark now and then"); his lines use their own random numbers (`voice`).
 - **Cali carries the mouse**: after a successful pounce on the cursor, she holds it under her paws and takes it wherever
   she goes (walking, jumping, falling) until you move the mouse again. She does not fall asleep on it, lets go if you
   pick her up or a focus session starts, and does not hunt again for 25 s. Setting "Emporter la souris après le bond"

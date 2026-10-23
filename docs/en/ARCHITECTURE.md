@@ -35,7 +35,7 @@ main.py ── creates and wires ──►  Store ──► Game ──► Pet �
 | `pet_layout.py` | Computes the position of the cat, the gift and the bubble in the visible area, without Qt. | no | no |
 | `pet_input.py` | Translates mouse events and the context menu into actions on the cat. | yes | no |
 | `pet_companion.py` | Expressive reactions to gifts, bubbles, sleep and focus sessions. | yes | no |
-| `dog.py` | Jazz, the dog who visits Cali: transparent window with no mouse input, states away / walk / sit / greet / lie, visit, Cali following him and nap together. His random numbers are kept separate from the cat's. | yes | no |
+| `dog.py` | Jazz, the dog who visits Cali: transparent window with no mouse input, states away / walk / sit / greet / lie, visit, Cali following him and nap together. His bubble and barks (Toller scream). His random numbers are kept separate from the cat's, and his lines use a third source (`voice`). | yes | no |
 | `dog_sprite.py` | Drawing of Jazz (sitting, trotting, lying), same principle as `sprite.py`, on a 48 × 40 grid. | yes | no |
 | `screens.py` | Multi-screen geometry (physical ↔ logical pixel conversion, floors, chains of adjacent screens). Pure functions. | no | no |
 | `surfaces.py` | Computes the top window edges the cat can walk on, removing the parts hidden by windows above. Pure functions. | no | no |
@@ -44,7 +44,7 @@ main.py ── creates and wires ──►  Store ──► Game ──► Pet �
 | `hats.py` | Hat catalog, rarities, weighted draw. | no | no |
 | `hunt.py` | Rules of mouse hunting (resting mouse, within reach). Pure functions. | no | no |
 | `hotkey.py` | Global Ctrl+Alt+C shortcut (`RegisterHotKey` + Qt native event filter). | yes | yes |
-| `phrases.py` | Meow texts and random delay (the randomness is passed as a parameter). | no | no |
+| `phrases.py` | Meow texts, Jazz's barks and random delay (the randomness is passed as a parameter). | no | no |
 | `widgets.py` | `Bubble` (speech bubble), `GiftBox` (gift), `FxLayer` (hearts, stars, "z"). | yes | no |
 | `panel.py` | Control window: wardrobe, focus, statistics, settings. | yes | no |
 | `log.py` | Error log: rotating file, capture of exceptions (including those in Qt slots), Qt messages and fatal crashes. | yes (Qt messages) | no |

@@ -36,6 +36,10 @@ Compter 20 à 30 min. Noter chaque point ✅ / ❌ ; pour un ❌, joindre `deskt
 - [ ] **Jazz** : Réglages > « Faire venir Jazz maintenant (test) » : un chien roux entre par un bord de l'écran et trotte
   sur le sol. Recommencer plusieurs fois : tantôt il traverse (parfois assis un instant), tantôt il vient s'asseoir près
   de Cali, qui se tourne vers lui (cœurs), puis il repart, souvent suivi par elle. Un clic sur lui passe à travers.
+- [ ] **Voix de Jazz** : pendant plusieurs visites, il aboie de temps en temps en traversant (« Wouf ! »…), parfois le
+  cri de Toller (« Aouaouaouaou ! »). Quand il repère Cali, il l'appelle d'un cri puis se tait en arrivant : c'est elle
+  qui répond. Sa bulle flotte au-dessus de sa tête, reste dans l'écran, et un clic dessus passe au travers. Décocher
+  « Miauler et aboyer de temps en temps » : plus aucune bulle, ni pour Cali ni pour lui.
 - [ ] **Sieste à deux** : laisser Cali s'endormir (sieste au sol, sans bouger), puis faire venir Jazz : il se couche contre
   elle sans la réveiller, et repart quand elle se réveille. Cacher le chat (Ctrl+Alt+C) pendant une visite : Jazz
   disparaît aussi. Décocher « Jazz rend visite à Cali » : le bouton de test n'a plus d'effet.
