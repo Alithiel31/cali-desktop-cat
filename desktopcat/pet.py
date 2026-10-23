@@ -40,6 +40,7 @@ from .surfaces import Surface
 from .world import build_surfaces, floor_surfaces, window_geometry
 
 BASE_SPEED = 95.0         # px/s pour une échelle de 4
+CARRY_SLACK_PX = 3        # écart toléré (arrondis d'affichage) avant de conclure que la personne a bougé la souris
 LOOP_MS = 16              # boucle normale : ~60 images/s
 LOOP_SLOW_MS = 100        # chat caché, ou endormi parce que l'utilisateur est absent : 10 passages/s suffisent
 
@@ -112,6 +113,7 @@ class Pet(QWidget):
         self._stalk_since = 0.0
         self.hunt_x = 0.0
         self._pounce = False                 # le saut en cours est un bond sur la souris
+        self._carry_at: tuple | None = None  # position où elle tient la souris ; None si elle ne l'emporte pas
         self.hidden = False
         self.user_hidden = False
         self._fullscreen = False
@@ -377,6 +379,9 @@ class Pet(QWidget):
     def _track_cursor(self) -> None:
         pos = QCursor.pos()
         p = (pos.x(), pos.y())
+        if self._carry_at is not None:
+            self._step_carry(p)
+            return
         if p != self._cursor_last:
             if self._cursor_last is not None:
                 self._cursor_moved_at = self.t
@@ -398,6 +403,42 @@ class Pet(QWidget):
         self._stalk_since = self.t
         self.dir = 1 if self.hunt_x > self.cx else -1
         return True
+
+    def _paws(self) -> tuple:
+        """Où elle tient la souris : devant ses pattes."""
+        return round(self.cx + self.dir * self.CW * 0.3), round(self.fy - self.FOOT * 0.12)
+
+    def _start_carry(self) -> None:
+        """Le bond vient de réussir : elle garde la souris sous ses pattes."""
+        if not (self.settings["carry_cursor"] and self.settings["hunt_cursor"]) or self.sys_sleep or self.game.focus:
+            return
+        self._carry_at = (-10**6, -10**6)               # remplacée aussitôt par la vraie position
+        self._move_cursor(self._paws())
+
+    def _move_cursor(self, target: tuple) -> None:
+        QCursor.setPos(*target)
+        pos = QCursor.pos()                              # Windows arrondit (échelle d'affichage) : on lit le résultat
+        self._carry_at = (pos.x(), pos.y())
+        self._cursor_last = self._carry_at
+
+    def _step_carry(self, seen: tuple) -> None:
+        """Elle emmène la souris partout où elle va, tant que la personne ne la rebouge pas."""
+        ax, ay = self._carry_at
+        user_moved = abs(seen[0] - ax) > CARRY_SLACK_PX or abs(seen[1] - ay) > CARRY_SLACK_PX
+        if user_moved or self.state == "drag" or self.sys_sleep or self.game.focus or self.hidden \
+                or not self.settings["carry_cursor"]:
+            self._release_cursor(seen)
+        elif self._paws() != (ax, ay):
+            self._move_cursor(self._paws())
+
+    def _release_cursor(self, seen: tuple) -> None:
+        self._carry_at = None
+        self._cursor_last = seen
+        self._cursor_moved_at = self.t
+        # pas de nouvelle chasse tout de suite
+        self._hunt_cool = max(self._hunt_cool, self.t + hunt.COOLDOWN_S[0] * 1000)
+        if self.state in ("idle", "walk"):
+            self.surprised_until = self.t + 400
 
     def _step_stalk(self, dt: float, y: float, x0: float, x1: float) -> None:
         if self._cursor_moved_at is not None and self._cursor_moved_at > self._stalk_since:
@@ -449,7 +490,7 @@ class Pet(QWidget):
         if r < 0.40 and can_walk:
             self._walk_to(self.rng.uniform(lo, hi))
         elif r < 0.50:
-            self._nap()
+            self._idle() if self._carry_at is not None else self._nap()    # elle ne s'endort pas sur la souris
         elif r < 0.62 and can_walk:                              # curieux : va voir la souris
             self._walk_to(_clamp(QCursor.pos().x(), lo, hi))
         elif r < 0.80 and self.settings["jump_between_windows"]:
@@ -543,6 +584,7 @@ class Pet(QWidget):
         if self._pounce:
             self._pounce = False
             self.companion.caught()
+            self._start_carry()
         if self.sys_sleep:
             self.state = "sleep"
         elif self.game.focus:

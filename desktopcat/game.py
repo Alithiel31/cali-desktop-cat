@@ -24,6 +24,7 @@ SETTING_RULES = {
     "meows": bool,
     "track_apps": bool,
     "hunt_cursor": bool,
+    "carry_cursor": bool,
     "jazz_visits": bool,
     "focus_breaks": bool,
     "break_min": lambda v: max(1, min(30, int(v))),
